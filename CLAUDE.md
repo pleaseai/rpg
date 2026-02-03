@@ -95,6 +95,7 @@ bun run src/cli.ts encode ./my_project
 - **graphology**: Graph data structure and algorithms
 - **tree-sitter**: AST parsing for multiple languages
 - **lancedb**: Vector DB for semantic search (Bun-native, disk-based)
+- **@huggingface/transformers**: Local embedding with MongoDB LEAF models
 - **zod**: Schema validation for graph data
 - **commander**: CLI framework
 - **vitest**: Testing framework (Jest-compatible, for MCP compatibility)
@@ -163,3 +164,22 @@ Or with the installed package:
 - **Vitest over Bun Test**: Jest compatibility for planned MCP server development
 - **LanceDB over ChromaDB**: No external server required, Bun-native, disk-based persistence
 - **Paper-based implementation**: Original implementation based on research papers, not forked from Microsoft code
+
+## Semantic Extraction
+
+RPG encoding uses LLM for semantic feature extraction. Options:
+
+| Mode | Performance | Cost | Use Case |
+|------|-------------|------|----------|
+| `useLLM: true` + Gemini 3 Flash | Best (78% SWE-bench) | Free tier | Recommended default |
+| `useLLM: true` + Claude Haiku 4.5 | High (73% SWE-bench) | $1/$5 per 1M | Production fallback |
+| `useLLM: true` + GPT-4o | High (70% SWE-bench) | $3/$10 per 1M | Paper baseline |
+| `useLLM: false` (heuristic) | ~15% lower | Free | Offline/testing |
+
+## Embedding Options
+
+| Provider | Model | Dimension | Cost |
+|----------|-------|-----------|------|
+| HuggingFace (local) | MongoDB/mdbr-leaf-ir | 768 | Free |
+| HuggingFace (local) | MongoDB/mdbr-leaf-mt | 1024 | Free |
+| OpenAI | text-embedding-3-small | 1536 | $0.02/1M |
