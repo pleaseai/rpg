@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises'
 import { z } from 'zod'
 import { RPGEncoder } from '../encoder/encoder'
 import type { RepositoryPlanningGraph } from '../graph'
@@ -20,10 +21,17 @@ export type SearchInput = z.infer<typeof SearchInputSchema>
 /**
  * Input schema for rpg_fetch tool
  */
-export const FetchInputSchema = z.object({
-  codeEntities: z.array(z.string()).optional(),
-  featureEntities: z.array(z.string()).optional(),
-})
+export const FetchInputSchema = z
+  .object({
+    codeEntities: z.array(z.string()).optional(),
+    featureEntities: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => (data.codeEntities?.length ?? 0) > 0 || (data.featureEntities?.length ?? 0) > 0,
+    {
+      message: 'At least one of codeEntities or featureEntities must be provided',
+    }
+  )
 
 export type FetchInput = z.infer<typeof FetchInputSchema>
 
@@ -195,8 +203,7 @@ export async function executeEncode(input: EncodeInput) {
 
     let rpgPath: string | undefined
     if (input.outputPath) {
-      const fs = await import('node:fs/promises')
-      await fs.writeFile(input.outputPath, result.rpg.toJSON())
+      await writeFile(input.outputPath, result.rpg.toJSON())
       rpgPath = input.outputPath
     }
 

@@ -1,27 +1,27 @@
-import { describe, it, expect, beforeEach } from 'vitest'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { RepositoryPlanningGraph } from '../src/graph'
-import {
-  SearchInputSchema,
-  FetchInputSchema,
-  ExploreInputSchema,
-  EncodeInputSchema,
-  StatsInputSchema,
-  executeSearch,
-  executeFetch,
-  executeExplore,
-  executeStats,
-} from '../src/mcp/tools'
 import {
   RPGError,
   RPGErrorCode,
-  rpgNotLoadedError,
-  nodeNotFoundError,
-  invalidPathError,
   encodeFailedError,
   invalidInputError,
+  invalidPathError,
+  nodeNotFoundError,
+  rpgNotLoadedError,
 } from '../src/mcp/errors'
+import {
+  EncodeInputSchema,
+  ExploreInputSchema,
+  FetchInputSchema,
+  SearchInputSchema,
+  StatsInputSchema,
+  executeExplore,
+  executeFetch,
+  executeSearch,
+  executeStats,
+} from '../src/mcp/tools'
 
 describe('MCP Tool Schemas', () => {
   describe('SearchInputSchema', () => {
@@ -66,11 +66,21 @@ describe('MCP Tool Schemas', () => {
       expect(result.featureEntities).toEqual(['authentication'])
     })
 
-    it('should accept empty input', () => {
+    it('should reject empty input (requires at least one entity type)', () => {
       const input = {}
+      expect(() => FetchInputSchema.parse(input)).toThrow()
+    })
+
+    it('should accept input with only codeEntities', () => {
+      const input = { codeEntities: ['file1.ts'] }
       const result = FetchInputSchema.parse(input)
-      expect(result.codeEntities).toBeUndefined()
-      expect(result.featureEntities).toBeUndefined()
+      expect(result.codeEntities).toEqual(['file1.ts'])
+    })
+
+    it('should accept input with only featureEntities', () => {
+      const input = { featureEntities: ['auth'] }
+      const result = FetchInputSchema.parse(input)
+      expect(result.featureEntities).toEqual(['auth'])
     })
   })
 

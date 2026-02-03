@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { RepositoryPlanningGraph } from '../graph'
-import { RPGError } from './errors'
+import { RPGError, invalidPathError } from './errors'
 import {
   EncodeInputSchema,
   ExploreInputSchema,
@@ -153,8 +153,12 @@ function formatError(error: unknown): {
  * Load RPG from file path
  */
 export async function loadRPG(filePath: string): Promise<RepositoryPlanningGraph> {
-  const content = await readFile(filePath, 'utf-8')
-  return RepositoryPlanningGraph.fromJSON(content)
+  try {
+    const content = await readFile(filePath, 'utf-8')
+    return RepositoryPlanningGraph.fromJSON(content)
+  } catch (error) {
+    throw invalidPathError(filePath)
+  }
 }
 
 /**
