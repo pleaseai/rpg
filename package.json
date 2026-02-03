@@ -1,0 +1,63 @@
+{
+  "name": "rpg-please",
+  "version": "0.1.0",
+  "description": "Repository Planning Graph - A unified framework for repository understanding and generation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "rpg": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "bun run --watch src/cli.ts",
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "lint": "biome check src/",
+    "lint:fix": "biome check --write src/",
+    "format": "biome format --write src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@lancedb/lancedb": "^0.13.0",
+    "commander": "^12.0.0",
+    "graphology": "^0.25.4",
+    "graphology-types": "^0.24.7",
+    "openai": "^4.70.0",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-python": "^0.21.0",
+    "tree-sitter-typescript": "^0.21.2",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/bun": "^1.1.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/ui": "^2.1.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "repository",
+    "code-generation",
+    "code-understanding",
+    "llm",
+    "graph",
+    "software-engineering",
+    "ast"
+  ],
+  "author": "Minsu Lee <amondnet@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amondnet/rpg.git"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
