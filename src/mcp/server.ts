@@ -6,6 +6,7 @@ import { RPGError, invalidPathError } from './errors'
 import {
   EncodeInputSchema,
   ExploreInputSchema,
+  FetchInputBaseSchema,
   FetchInputSchema,
   RPG_TOOLS,
   SearchInputSchema,
@@ -37,8 +38,8 @@ export function createMcpServer(rpg: RepositoryPlanningGraph | null): McpServer 
   server.tool(
     RPG_TOOLS.rpg_fetch.name,
     RPG_TOOLS.rpg_fetch.description,
-    FetchInputSchema.shape,
-    async (args) => wrapHandler(() => executeFetch(rpg, FetchInputSchema.parse(args)))
+    FetchInputBaseSchema.shape,
+    async (args: unknown) => wrapHandler(() => executeFetch(rpg, FetchInputSchema.parse(args)))
   )
 
   server.tool(
@@ -130,8 +131,8 @@ export async function main(): Promise<void> {
 
   let rpg: RepositoryPlanningGraph | null = null
 
-  if (args.length > 0) {
-    const rpgPath = args[0]
+  const rpgPath = args[0]
+  if (rpgPath) {
     try {
       console.error(`Loading RPG from: ${rpgPath}`)
       rpg = await loadRPG(rpgPath)

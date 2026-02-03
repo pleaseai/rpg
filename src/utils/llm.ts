@@ -71,7 +71,8 @@ export class LLMClient {
   async completeJSON<T>(prompt: string, systemPrompt?: string): Promise<T> {
     const response = await this.complete(prompt, systemPrompt)
     // Extract JSON from response (handle markdown code blocks)
-    const jsonMatch = response.content.match(/```(?:json)?\s*([\s\S]*?)```/) ||
+    const jsonMatch =
+      response.content.match(/```(?:json)?\s*([\s\S]*?)```/) ||
       response.content.match(/\{[\s\S]*\}/)
 
     if (!jsonMatch) {
@@ -88,8 +89,8 @@ export class LLMClient {
     })
 
     const response = await client.messages.create({
-      model: this.options.model!,
-      max_tokens: this.options.maxTokens!,
+      model: this.options.model ?? 'claude-sonnet-4-20250514',
+      max_tokens: this.options.maxTokens ?? 4096,
       temperature: this.options.temperature,
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
@@ -120,7 +121,7 @@ export class LLMClient {
     messages.push({ role: 'user', content: prompt })
 
     const response = await client.chat.completions.create({
-      model: this.options.model!,
+      model: this.options.model ?? 'gpt-4o',
       max_tokens: this.options.maxTokens,
       temperature: this.options.temperature,
       messages,

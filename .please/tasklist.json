@@ -1,0 +1,204 @@
+{
+  "feature": "Encoder Implementation",
+  "issue_number": 3,
+  "plan_path": ".please/plans/2026-02-04-encoder-implementation.md",
+  "spec": null,
+  "stage": 2,
+  "created_at": "2026-02-04T00:00:00.000Z",
+  "updated_at": "2026-02-04T00:00:00.000Z",
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "tree-sitter 초기화 및 TypeScript/Python 파서 구현",
+      "phase": 1,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/utils/ast.ts"]
+    },
+    {
+      "id": "T002",
+      "title": "엔티티 추출 로직 구현 (함수, 클래스, 메서드)",
+      "phase": 1,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/utils/ast.ts"]
+    },
+    {
+      "id": "T003",
+      "title": "Import/Export 분석 로직 구현",
+      "phase": 1,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T001"],
+      "files_affected": ["src/utils/ast.ts"]
+    },
+    {
+      "id": "T004",
+      "title": "AST 파서 유닛 테스트 작성",
+      "phase": 1,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T002", "T003"],
+      "files_affected": ["tests/ast.test.ts"]
+    },
+    {
+      "id": "T005",
+      "title": "discoverFiles() 구현 - glob 패턴 매칭",
+      "phase": 2,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/encoder/encoder.ts"]
+    },
+    {
+      "id": "T006",
+      "title": "File discovery 유닛 테스트",
+      "phase": 2,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T005"],
+      "files_affected": ["tests/encoder.test.ts"]
+    },
+    {
+      "id": "T007",
+      "title": "extractEntities() 구현 - AST 파싱",
+      "phase": 3,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/encoder/encoder.ts"]
+    },
+    {
+      "id": "T008",
+      "title": "LLM 시맨틱 설명 생성 모듈",
+      "phase": 3,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": [],
+      "files_affected": ["src/encoder/semantic.ts"]
+    },
+    {
+      "id": "T009",
+      "title": "시맨틱 캐싱 레이어",
+      "phase": 3,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T008"],
+      "files_affected": ["src/encoder/cache.ts"]
+    },
+    {
+      "id": "T010",
+      "title": "Semantic extraction 통합",
+      "phase": 3,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T007", "T008", "T009"],
+      "files_affected": ["src/encoder/encoder.ts"]
+    },
+    {
+      "id": "T011",
+      "title": "buildFunctionalHierarchy() 구현 - LLM 기반 그룹화",
+      "phase": 4,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T010"],
+      "files_affected": ["src/encoder/encoder.ts"]
+    },
+    {
+      "id": "T012",
+      "title": "High-level 노드 생성 로직",
+      "phase": 4,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T011"],
+      "files_affected": ["src/encoder/hierarchy.ts"]
+    },
+    {
+      "id": "T013",
+      "title": "injectDependencies() 구현 - import/call 분석",
+      "phase": 5,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T003", "T010"],
+      "files_affected": ["src/encoder/encoder.ts"]
+    },
+    {
+      "id": "T014",
+      "title": "Dependency edge 생성 로직",
+      "phase": 5,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T013"],
+      "files_affected": ["src/encoder/dependencies.ts"]
+    },
+    {
+      "id": "T015",
+      "title": "벡터 임베딩 생성 모듈",
+      "phase": 6,
+      "status": "pending",
+      "parallel": true,
+      "dependencies": [],
+      "files_affected": ["src/encoder/embedding.ts"]
+    },
+    {
+      "id": "T016",
+      "title": "LanceDB 통합 - 시맨틱 검색 지원",
+      "phase": 6,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T015"],
+      "files_affected": ["src/encoder/encoder.ts"]
+    },
+    {
+      "id": "T017",
+      "title": "Encoder 통합 테스트",
+      "phase": 7,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T011", "T013", "T016"],
+      "files_affected": ["tests/encoder.integration.test.ts"]
+    },
+    {
+      "id": "T018",
+      "title": "실제 레포지토리 인코딩 E2E 테스트",
+      "phase": 7,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T017"],
+      "files_affected": ["tests/encoder.e2e.test.ts"]
+    },
+    {
+      "id": "T019",
+      "title": "CLI encode 명령 업데이트",
+      "phase": 7,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T017"],
+      "files_affected": ["src/cli.ts"]
+    }
+  ],
+  "verification": {
+    "automated_tests": [
+      "AST 파서 유닛 테스트 통과 (tests/ast.test.ts)",
+      "Encoder 유닛 테스트 통과 (tests/encoder.test.ts)",
+      "통합 테스트 통과 (tests/encoder.integration.test.ts)",
+      "E2E 테스트 통과 (tests/encoder.e2e.test.ts)",
+      "TypeScript 타입 체크 통과 (`bun run typecheck`)",
+      "Lint 통과 (`bun run lint`)"
+    ],
+    "manual_tests": [
+      "현재 rpg 프로젝트 자체를 인코딩하여 RPG 생성 확인",
+      "생성된 RPG JSON 파일이 유효한 구조인지 확인",
+      "MCP 서버에서 인코딩된 RPG 사용 테스트"
+    ],
+    "acceptance_criteria": [
+      "discoverFiles(): 레포지토리 파일 순회 동작",
+      "AST 파싱: tree-sitter로 코드 구조 분석 동작",
+      "시맨틱 추출: LLM으로 기능 설명 생성 동작",
+      "의존성 주입: import/call 관계 추출 동작",
+      "벡터 검색: 시맨틱 유사도 검색 동작"
+    ]
+  }
+}

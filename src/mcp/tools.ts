@@ -19,19 +19,22 @@ export const SearchInputSchema = z.object({
 export type SearchInput = z.infer<typeof SearchInputSchema>
 
 /**
- * Input schema for rpg_fetch tool
+ * Base schema for rpg_fetch tool (used for MCP shape)
  */
-export const FetchInputSchema = z
-  .object({
-    codeEntities: z.array(z.string()).optional(),
-    featureEntities: z.array(z.string()).optional(),
-  })
-  .refine(
-    (data) => (data.codeEntities?.length ?? 0) > 0 || (data.featureEntities?.length ?? 0) > 0,
-    {
-      message: 'At least one of codeEntities or featureEntities must be provided',
-    }
-  )
+export const FetchInputBaseSchema = z.object({
+  codeEntities: z.array(z.string()).optional(),
+  featureEntities: z.array(z.string()).optional(),
+})
+
+/**
+ * Input schema for rpg_fetch tool with validation
+ */
+export const FetchInputSchema = FetchInputBaseSchema.refine(
+  (data) => (data.codeEntities?.length ?? 0) > 0 || (data.featureEntities?.length ?? 0) > 0,
+  {
+    message: 'At least one of codeEntities or featureEntities must be provided',
+  }
+)
 
 export type FetchInput = z.infer<typeof FetchInputSchema>
 
