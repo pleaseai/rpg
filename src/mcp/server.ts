@@ -1,0 +1,199 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { readFile } from 'node:fs/promises'
+import { RepositoryPlanningGraph } from '../graph'
+import { RPGError } from './errors'
+import {
+  RPG_TOOLS,
+  SearchInputSchema,
+  FetchInputSchema,
+  ExploreInputSchema,
+  EncodeInputSchema,
+  StatsInputSchema,
+  executeSearch,
+  executeFetch,
+  executeExplore,
+  executeEncode,
+  executeStats,
+} from './tools'
+
+/**
+ * Create and configure the MCP server for RPG tools
+ */
+export function createMcpServer(rpg: RepositoryPlanningGraph | null): McpServer {
+  const server = new McpServer({
+    name: 'rpg-mcp-server',
+    version: '0.1.0',
+  })
+
+  // Register rpg_search tool
+  server.tool(
+    RPG_TOOLS.rpg_search.name,
+    RPG_TOOLS.rpg_search.description,
+    SearchInputSchema.shape,
+    async (args) => {
+      try {
+        const input = SearchInputSchema.parse(args)
+        const result = await executeSearch(rpg, input)
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        }
+      } catch (error) {
+        return formatError(error)
+      }
+    }
+  )
+
+  // Register rpg_fetch tool
+  server.tool(
+    RPG_TOOLS.rpg_fetch.name,
+    RPG_TOOLS.rpg_fetch.description,
+    FetchInputSchema.shape,
+    async (args) => {
+      try {
+        const input = FetchInputSchema.parse(args)
+        const result = await executeFetch(rpg, input)
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        }
+      } catch (error) {
+        return formatError(error)
+      }
+    }
+  )
+
+  // Register rpg_explore tool
+  server.tool(
+    RPG_TOOLS.rpg_explore.name,
+    RPG_TOOLS.rpg_explore.description,
+    ExploreInputSchema.shape,
+    async (args) => {
+      try {
+        const input = ExploreInputSchema.parse(args)
+        const result = await executeExplore(rpg, input)
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        }
+      } catch (error) {
+        return formatError(error)
+      }
+    }
+  )
+
+  // Register rpg_encode tool
+  server.tool(
+    RPG_TOOLS.rpg_encode.name,
+    RPG_TOOLS.rpg_encode.description,
+    EncodeInputSchema.shape,
+    async (args) => {
+      try {
+        const input = EncodeInputSchema.parse(args)
+        const result = await executeEncode(input)
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        }
+      } catch (error) {
+        return formatError(error)
+      }
+    }
+  )
+
+  // Register rpg_stats tool
+  server.tool(
+    RPG_TOOLS.rpg_stats.name,
+    RPG_TOOLS.rpg_stats.description,
+    StatsInputSchema.shape,
+    async () => {
+      try {
+        const result = executeStats(rpg)
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        }
+      } catch (error) {
+        return formatError(error)
+      }
+    }
+  )
+
+  return server
+}
+
+/**
+ * Format error for MCP response
+ */
+function formatError(error: unknown): {
+  content: Array<{ type: 'text'; text: string }>
+  isError: true
+} {
+  if (error instanceof RPGError) {
+    return {
+      content: [
+        { type: 'text', text: JSON.stringify({ error: error.code, message: error.message }) },
+      ],
+      isError: true,
+    }
+  }
+  if (error instanceof Error) {
+    return {
+      content: [
+        { type: 'text', text: JSON.stringify({ error: 'UNKNOWN_ERROR', message: error.message }) },
+      ],
+      isError: true,
+    }
+  }
+  return {
+    content: [
+      { type: 'text', text: JSON.stringify({ error: 'UNKNOWN_ERROR', message: String(error) }) },
+    ],
+    isError: true,
+  }
+}
+
+/**
+ * Load RPG from file path
+ */
+export async function loadRPG(filePath: string): Promise<RepositoryPlanningGraph> {
+  const content = await readFile(filePath, 'utf-8')
+  return RepositoryPlanningGraph.fromJSON(content)
+}
+
+/**
+ * Main entry point for the MCP server
+ */
+export async function main(): Promise<void> {
+  const args = process.argv.slice(2)
+
+  let rpg: RepositoryPlanningGraph | null = null
+
+  if (args.length > 0) {
+    const rpgPath = args[0]
+    try {
+      console.error(`Loading RPG from: ${rpgPath}`)
+      rpg = await loadRPG(rpgPath)
+      console.error(`RPG loaded: ${rpg.getConfig().name}`)
+    } catch (error) {
+      console.error(`Failed to load RPG: ${error instanceof Error ? error.message : String(error)}`)
+      process.exit(1)
+    }
+  } else {
+    console.error('No RPG file path provided. Server will start without a pre-loaded RPG.')
+    console.error('Usage: bun run src/mcp/server.ts <rpg-file.json>')
+    console.error(
+      'Note: rpg_encode tool will still work, but other tools require an RPG to be loaded.'
+    )
+  }
+
+  const server = createMcpServer(rpg)
+  const transport = new StdioServerTransport()
+
+  await server.connect(transport)
+  console.error('RPG MCP server started')
+}
+
+// Run if executed directly
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error('Fatal error:', error)
+    process.exit(1)
+  })
+}
