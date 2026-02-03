@@ -129,3 +129,59 @@ describe('RPGEncoder.discoverFiles', () => {
     expect(result.filesProcessed).toBe(0)
   })
 })
+
+describe('RPGEncoder.extractEntities', () => {
+  test('extracts entities from TypeScript files', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/encoder.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Should find file entity + class + methods
+    expect(result.entitiesExtracted).toBeGreaterThan(1)
+  })
+
+  test('creates unique IDs for entities', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/utils/ast.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Check that all node IDs are unique
+    const nodeIds = result.rpg.getNodes().map((n) => n.id)
+    const uniqueIds = new Set(nodeIds)
+    expect(uniqueIds.size).toBe(nodeIds.length)
+  })
+
+  test('includes file-level entity', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/encoder.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Should have a file entity
+    const fileNodes = result.rpg.getNodes().filter((n) => n.metadata?.entityType === 'file')
+    expect(fileNodes.length).toBeGreaterThanOrEqual(1)
+  })
+
+  test('extracts function and class entities', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/encoder.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Should have class and function entities
+    const nodes = result.rpg.getNodes()
+    const classNodes = nodes.filter((n) => n.metadata?.entityType === 'class')
+    const functionNodes = nodes.filter(
+      (n) => n.metadata?.entityType === 'function' || n.metadata?.entityType === 'method'
+    )
+
+    expect(classNodes.length).toBeGreaterThanOrEqual(1) // RPGEncoder class
+    expect(functionNodes.length).toBeGreaterThanOrEqual(1)
+  })
+})

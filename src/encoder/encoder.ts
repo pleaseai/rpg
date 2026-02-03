@@ -1,7 +1,8 @@
 import { type RPGConfig, RepositoryPlanningGraph } from '../graph'
+import { ASTParser, type CodeEntity } from '../utils/ast'
 import path from 'node:path'
 import fs from 'node:fs'
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, stat, readFile } from 'node:fs/promises'
 
 /**
  * Options for encoding a repository
@@ -41,12 +42,29 @@ export interface EncodingResult {
  * 2. Structural Reorganization: Build functional hierarchy
  * 3. Artifact Grounding: Connect to physical code entities
  */
+/**
+ * Entity extracted from a file
+ */
+interface ExtractedEntity {
+  id: string
+  feature: { description: string; keywords?: string[] }
+  metadata: {
+    entityType: 'file' | 'class' | 'function' | 'method'
+    path: string
+    startLine?: number
+    endLine?: number
+  }
+  sourceCode?: string
+}
+
 export class RPGEncoder {
   private repoPath: string
   private options: EncoderOptions
+  private astParser: ASTParser
 
   constructor(repoPath: string, options?: Partial<Omit<EncoderOptions, 'repoPath'>>) {
     this.repoPath = repoPath
+    this.astParser = new ASTParser()
     this.options = {
       repoPath,
       includeSource: false,
@@ -258,16 +276,193 @@ export class RPGEncoder {
   /**
    * Extract entities (functions, classes) from a file
    */
-  private async extractEntities(_file: string): Promise<
-    Array<{
-      id: string
-      feature: { description: string; keywords?: string[] }
-      metadata: { entityType: 'file' | 'class' | 'function'; path: string }
-      sourceCode?: string
-    }>
-  > {
-    // TODO: Implement AST parsing and semantic extraction
-    return []
+  private async extractEntities(file: string): Promise<ExtractedEntity[]> {
+    const relativePath = path.relative(this.repoPath, file)
+    const entities: ExtractedEntity[] = []
+
+    // Parse the file
+    const parseResult = await this.astParser.parseFile(file)
+
+    // Add file-level entity
+    const fileId = this.generateEntityId(relativePath, 'file')
+    entities.push({
+      id: fileId,
+      feature: {
+        description: this.generateFileDescription(relativePath),
+        keywords: this.extractFileKeywords(relativePath),
+      },
+      metadata: {
+        entityType: 'file',
+        path: relativePath,
+      },
+    })
+
+    // Add code entities (functions, classes, methods)
+    for (const entity of parseResult.entities) {
+      const entityId = this.generateEntityId(
+        relativePath,
+        entity.type,
+        entity.name,
+        entity.startLine
+      )
+      const extractedEntity = this.convertCodeEntity(entity, relativePath, entityId, file)
+      if (extractedEntity) {
+        entities.push(extractedEntity)
+      }
+    }
+
+    return entities
+  }
+
+  /**
+   * Generate unique entity ID
+   */
+  private generateEntityId(
+    filePath: string,
+    entityType: string,
+    entityName?: string,
+    startLine?: number
+  ): string {
+    const parts = [filePath, entityType]
+    if (entityName) {
+      parts.push(entityName)
+    }
+    if (startLine !== undefined) {
+      parts.push(String(startLine))
+    }
+    return parts.join(':')
+  }
+
+  /**
+   * Generate file description from path
+   */
+  private generateFileDescription(filePath: string): string {
+    const fileName = path.basename(filePath, path.extname(filePath))
+    const dirName = path.dirname(filePath)
+
+    // Convert camelCase/PascalCase/snake_case to words
+    const words = fileName
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_-]/g, ' ')
+      .toLowerCase()
+
+    if (dirName && dirName !== '.') {
+      return `${words} in ${dirName}`
+    }
+    return words
+  }
+
+  /**
+   * Extract keywords from file path
+   */
+  private extractFileKeywords(filePath: string): string[] {
+    const keywords: string[] = []
+    const fileName = path.basename(filePath, path.extname(filePath))
+
+    // Extract words from filename
+    const words = fileName
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_-]/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .filter((w) => w.length > 2)
+
+    keywords.push(...words)
+
+    // Add directory names as keywords
+    const dirParts = path.dirname(filePath).split(path.sep).filter(Boolean)
+    keywords.push(...dirParts.filter((d) => d !== '.' && d !== '..'))
+
+    return [...new Set(keywords)]
+  }
+
+  /**
+   * Convert CodeEntity to ExtractedEntity
+   */
+  private convertCodeEntity(
+    entity: CodeEntity,
+    filePath: string,
+    entityId: string,
+    fullPath: string
+  ): ExtractedEntity | null {
+    const entityType = this.mapEntityType(entity.type)
+    if (!entityType) return null
+
+    return {
+      id: entityId,
+      feature: {
+        description: this.generateEntityDescription(entity),
+        keywords: this.extractEntityKeywords(entity),
+      },
+      metadata: {
+        entityType,
+        path: filePath,
+        startLine: entity.startLine,
+        endLine: entity.endLine,
+      },
+    }
+  }
+
+  /**
+   * Map AST entity type to RPG entity type
+   */
+  private mapEntityType(
+    type: CodeEntity['type']
+  ): ExtractedEntity['metadata']['entityType'] | null {
+    const typeMap: Record<string, ExtractedEntity['metadata']['entityType']> = {
+      function: 'function',
+      class: 'class',
+      method: 'method',
+    }
+    return typeMap[type] ?? null
+  }
+
+  /**
+   * Generate description for code entity
+   */
+  private generateEntityDescription(entity: CodeEntity): string {
+    const name = entity.name
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_-]/g, ' ')
+      .toLowerCase()
+
+    switch (entity.type) {
+      case 'function':
+        return `function that ${name}`
+      case 'class':
+        return `class representing ${name}`
+      case 'method':
+        return entity.parent ? `method ${name} of ${entity.parent}` : `method ${name}`
+      default:
+        return name
+    }
+  }
+
+  /**
+   * Extract keywords from code entity
+   */
+  private extractEntityKeywords(entity: CodeEntity): string[] {
+    const keywords: string[] = []
+
+    // Add name parts
+    const nameParts = entity.name
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_-]/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .filter((w) => w.length > 2)
+
+    keywords.push(...nameParts)
+
+    // Add type as keyword
+    keywords.push(entity.type)
+
+    // Add parent if exists
+    if (entity.parent) {
+      keywords.push(entity.parent.toLowerCase())
+    }
+
+    return [...new Set(keywords)]
   }
 
   /**
