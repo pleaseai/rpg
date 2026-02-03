@@ -185,3 +185,71 @@ describe('RPGEncoder.extractEntities', () => {
     expect(functionNodes.length).toBeGreaterThanOrEqual(1)
   })
 })
+
+describe('RPGEncoder.buildFunctionalHierarchy', () => {
+  test('creates high-level nodes for directories', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/**/*.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Should create a high-level node for src/encoder directory
+    const highLevelNodes = result.rpg.getHighLevelNodes()
+    expect(highLevelNodes.length).toBeGreaterThanOrEqual(1)
+
+    // Check for directory node
+    const encoderDir = highLevelNodes.find(
+      (n) => n.directoryPath === 'src/encoder' || n.metadata?.path === 'src/encoder'
+    )
+    expect(encoderDir).toBeDefined()
+  })
+
+  test('creates functional edges from directories to files', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/**/*.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Should have functional edges
+    const functionalEdges = result.rpg.getFunctionalEdges()
+    expect(functionalEdges.length).toBeGreaterThan(0)
+  })
+
+  test('creates functional edges from files to contained entities', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/encoder.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Find the file node
+    const fileNode = result.rpg
+      .getNodes()
+      .find(
+        (n) => n.metadata?.entityType === 'file' && n.metadata?.path === 'src/encoder/encoder.ts'
+      )
+    expect(fileNode).toBeDefined()
+
+    // Find edges from file to its contained entities (class, methods)
+    const edges = result.rpg.getFunctionalEdges()
+    const fileEdges = edges.filter((e) => e.source === fileNode?.id)
+    expect(fileEdges.length).toBeGreaterThan(0)
+  })
+
+  test('directory nodes have semantic features', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/**/*.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    const highLevelNodes = result.rpg.getHighLevelNodes()
+    for (const node of highLevelNodes) {
+      expect(node.feature).toBeDefined()
+      expect(node.feature.description).toBeDefined()
+      expect(typeof node.feature.description).toBe('string')
+    }
+  })
+})

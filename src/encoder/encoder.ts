@@ -450,9 +450,137 @@ export class RPGEncoder {
 
   /**
    * Build functional hierarchy from extracted entities
+   *
+   * Groups low-level nodes into high-level directory nodes and creates
+   * functional edges representing the parent-child hierarchy.
    */
-  private async buildFunctionalHierarchy(_rpg: RepositoryPlanningGraph): Promise<void> {
-    // TODO: Implement LLM-based functional grouping
+  private async buildFunctionalHierarchy(rpg: RepositoryPlanningGraph): Promise<void> {
+    const lowLevelNodes = rpg.getLowLevelNodes()
+    const directoryGroups = this.groupNodesByDirectory(lowLevelNodes)
+
+    // Create high-level directory nodes
+    const directoryNodeIds = await this.createDirectoryNodes(rpg, directoryGroups)
+
+    // Create edges: directory hierarchy, directory-to-file, file-to-entity
+    this.createDirectoryHierarchyEdges(rpg, directoryNodeIds)
+    this.createDirectoryToFileEdges(rpg, directoryGroups, directoryNodeIds)
+    this.createFileToEntityEdges(rpg, lowLevelNodes)
+  }
+
+  /**
+   * Create high-level nodes for each directory
+   */
+  private async createDirectoryNodes(
+    rpg: RepositoryPlanningGraph,
+    directoryGroups: Map<string, Array<{ id: string; metadata?: { path?: string } }>>
+  ): Promise<Map<string, string>> {
+    const directoryNodeIds = new Map<string, string>()
+
+    for (const dirPath of directoryGroups.keys()) {
+      if (dirPath === '.' || dirPath === '') continue
+
+      const dirId = `dir:${dirPath}`
+      const feature = await this.extractSemanticFeature({
+        type: 'module',
+        name: path.basename(dirPath),
+        filePath: dirPath,
+      })
+
+      rpg.addHighLevelNode({
+        id: dirId,
+        feature,
+        directoryPath: dirPath,
+        metadata: { entityType: 'module', path: dirPath },
+      })
+
+      directoryNodeIds.set(dirPath, dirId)
+    }
+
+    return directoryNodeIds
+  }
+
+  /**
+   * Create parent-child edges for directory hierarchy
+   */
+  private createDirectoryHierarchyEdges(
+    rpg: RepositoryPlanningGraph,
+    directoryNodeIds: Map<string, string>
+  ): void {
+    const sortedDirs = [...directoryNodeIds.keys()].sort(
+      (a, b) => a.split('/').length - b.split('/').length
+    )
+
+    for (const dirPath of sortedDirs) {
+      const parentDir = path.dirname(dirPath)
+      const sourceId = directoryNodeIds.get(parentDir)
+      const targetId = directoryNodeIds.get(dirPath)
+
+      if (sourceId && targetId) {
+        rpg.addFunctionalEdge({ source: sourceId, target: targetId })
+      }
+    }
+  }
+
+  /**
+   * Connect file nodes to their directory nodes
+   */
+  private createDirectoryToFileEdges(
+    rpg: RepositoryPlanningGraph,
+    directoryGroups: Map<string, Array<{ id: string; metadata?: { entityType?: string } }>>,
+    directoryNodeIds: Map<string, string>
+  ): void {
+    for (const [dirPath, nodes] of directoryGroups.entries()) {
+      const dirId = directoryNodeIds.get(dirPath)
+      if (!dirId) continue
+
+      for (const node of nodes) {
+        if (node.metadata?.entityType === 'file') {
+          rpg.addFunctionalEdge({ source: dirId, target: node.id })
+        }
+      }
+    }
+  }
+
+  /**
+   * Connect non-file entities to their parent file nodes
+   */
+  private createFileToEntityEdges(
+    rpg: RepositoryPlanningGraph,
+    lowLevelNodes: Array<{ id: string; metadata?: { entityType?: string; path?: string } }>
+  ): void {
+    for (const node of lowLevelNodes) {
+      if (node.metadata?.entityType !== 'file' && node.metadata?.path) {
+        const fileId = `${node.metadata.path}:file`
+        if (rpg.getNode(fileId)) {
+          rpg.addFunctionalEdge({ source: fileId, target: node.id })
+        }
+      }
+    }
+  }
+
+  /**
+   * Group low-level nodes by their directory path
+   */
+  private groupNodesByDirectory(
+    nodes: Array<{ id: string; metadata?: { path?: string; entityType?: string } }>
+  ): Map<string, typeof nodes> {
+    const groups = new Map<string, typeof nodes>()
+
+    for (const node of nodes) {
+      const nodePath = node.metadata?.path
+      if (!nodePath) continue
+
+      const dirPath = path.dirname(nodePath)
+
+      const group = groups.get(dirPath)
+      if (group) {
+        group.push(node)
+      } else {
+        groups.set(dirPath, [node])
+      }
+    }
+
+    return groups
   }
 
   /**
