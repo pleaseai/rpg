@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { SemanticFeature, EntityInput } from './semantic'
+import type { EntityInput, SemanticFeature } from './semantic'
 
 /**
  * Cache options

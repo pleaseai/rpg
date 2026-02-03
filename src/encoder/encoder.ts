@@ -1,8 +1,10 @@
+import fs from 'node:fs'
+import { readFile, readdir, stat } from 'node:fs/promises'
+import path from 'node:path'
 import { type RPGConfig, RepositoryPlanningGraph } from '../graph'
 import { ASTParser, type CodeEntity } from '../utils/ast'
-import path from 'node:path'
-import fs from 'node:fs'
-import { readdir, stat, readFile } from 'node:fs/promises'
+import { type CacheOptions, SemanticCache } from './cache'
+import { type EntityInput, SemanticExtractor, type SemanticOptions } from './semantic'
 
 /**
  * Options for encoding a repository
@@ -18,6 +20,10 @@ export interface EncoderOptions {
   exclude?: string[]
   /** Maximum depth for directory traversal */
   maxDepth?: number
+  /** Semantic extraction options */
+  semantic?: SemanticOptions
+  /** Cache options */
+  cache?: CacheOptions
 }
 
 /**
@@ -61,6 +67,8 @@ export class RPGEncoder {
   private repoPath: string
   private options: EncoderOptions
   private astParser: ASTParser
+  private semanticExtractor: SemanticExtractor
+  private cache: SemanticCache
 
   constructor(repoPath: string, options?: Partial<Omit<EncoderOptions, 'repoPath'>>) {
     this.repoPath = repoPath
@@ -73,6 +81,13 @@ export class RPGEncoder {
       maxDepth: 10,
       ...options,
     }
+
+    // Initialize semantic extractor and cache
+    this.semanticExtractor = new SemanticExtractor(this.options.semantic)
+    this.cache = new SemanticCache({
+      cacheDir: path.join(this.repoPath, '.please', 'cache'),
+      ...this.options.cache,
+    })
   }
 
   /**
@@ -108,6 +123,9 @@ export class RPGEncoder {
         })
       }
     }
+
+    // Save cache after processing all files
+    await this.cache.save()
 
     // Phase 2: Structural Reorganization
     await this.buildFunctionalHierarchy(rpg)
@@ -280,17 +298,27 @@ export class RPGEncoder {
     const relativePath = path.relative(this.repoPath, file)
     const entities: ExtractedEntity[] = []
 
+    // Read source code for semantic extraction
+    let sourceCode: string | undefined
+    try {
+      sourceCode = await readFile(file, 'utf-8')
+    } catch {
+      // Ignore read errors
+    }
+
     // Parse the file
     const parseResult = await this.astParser.parseFile(file)
 
-    // Add file-level entity
+    // Add file-level entity with semantic extraction
     const fileId = this.generateEntityId(relativePath, 'file')
+    const fileFeature = await this.extractSemanticFeature({
+      type: 'file',
+      name: path.basename(relativePath, path.extname(relativePath)),
+      filePath: relativePath,
+    })
     entities.push({
       id: fileId,
-      feature: {
-        description: this.generateFileDescription(relativePath),
-        keywords: this.extractFileKeywords(relativePath),
-      },
+      feature: fileFeature,
       metadata: {
         entityType: 'file',
         path: relativePath,
@@ -305,7 +333,12 @@ export class RPGEncoder {
         entity.name,
         entity.startLine
       )
-      const extractedEntity = this.convertCodeEntity(entity, relativePath, entityId, file)
+      const extractedEntity = await this.convertCodeEntity(
+        entity,
+        relativePath,
+        entityId,
+        sourceCode
+      )
       if (extractedEntity) {
         entities.push(extractedEntity)
       }
@@ -334,72 +367,70 @@ export class RPGEncoder {
   }
 
   /**
-   * Generate file description from path
-   */
-  private generateFileDescription(filePath: string): string {
-    const fileName = path.basename(filePath, path.extname(filePath))
-    const dirName = path.dirname(filePath)
-
-    // Convert camelCase/PascalCase/snake_case to words
-    const words = fileName
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[_-]/g, ' ')
-      .toLowerCase()
-
-    if (dirName && dirName !== '.') {
-      return `${words} in ${dirName}`
-    }
-    return words
-  }
-
-  /**
-   * Extract keywords from file path
-   */
-  private extractFileKeywords(filePath: string): string[] {
-    const keywords: string[] = []
-    const fileName = path.basename(filePath, path.extname(filePath))
-
-    // Extract words from filename
-    const words = fileName
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[_-]/g, ' ')
-      .toLowerCase()
-      .split(' ')
-      .filter((w) => w.length > 2)
-
-    keywords.push(...words)
-
-    // Add directory names as keywords
-    const dirParts = path.dirname(filePath).split(path.sep).filter(Boolean)
-    keywords.push(...dirParts.filter((d) => d !== '.' && d !== '..'))
-
-    return [...new Set(keywords)]
-  }
-
-  /**
    * Convert CodeEntity to ExtractedEntity
    */
-  private convertCodeEntity(
+  private async convertCodeEntity(
     entity: CodeEntity,
     filePath: string,
     entityId: string,
-    fullPath: string
-  ): ExtractedEntity | null {
+    fileSourceCode?: string
+  ): Promise<ExtractedEntity | null> {
     const entityType = this.mapEntityType(entity.type)
     if (!entityType) return null
 
+    // Extract entity source code from file
+    let entitySourceCode: string | undefined
+    if (fileSourceCode && entity.startLine !== undefined && entity.endLine !== undefined) {
+      const lines = fileSourceCode.split('\n')
+      entitySourceCode = lines.slice(entity.startLine - 1, entity.endLine).join('\n')
+    }
+
+    // Use semantic extractor with caching
+    const feature = await this.extractSemanticFeature({
+      type: entity.type,
+      name: entity.name,
+      filePath,
+      parent: entity.parent,
+      sourceCode: entitySourceCode,
+    })
+
     return {
       id: entityId,
-      feature: {
-        description: this.generateEntityDescription(entity),
-        keywords: this.extractEntityKeywords(entity),
-      },
+      feature,
       metadata: {
         entityType,
         path: filePath,
         startLine: entity.startLine,
         endLine: entity.endLine,
       },
+      sourceCode: entitySourceCode,
+    }
+  }
+
+  /**
+   * Extract semantic feature with caching
+   */
+  private async extractSemanticFeature(
+    input: EntityInput
+  ): Promise<{ description: string; keywords?: string[] }> {
+    // Check cache first
+    const cached = await this.cache.get(input)
+    if (cached) {
+      return {
+        description: cached.description,
+        keywords: cached.keywords,
+      }
+    }
+
+    // Extract using semantic extractor
+    const feature = await this.semanticExtractor.extract(input)
+
+    // Cache the result
+    await this.cache.set(input, feature)
+
+    return {
+      description: feature.description,
+      keywords: feature.keywords,
     }
   }
 
@@ -415,54 +446,6 @@ export class RPGEncoder {
       method: 'method',
     }
     return typeMap[type] ?? null
-  }
-
-  /**
-   * Generate description for code entity
-   */
-  private generateEntityDescription(entity: CodeEntity): string {
-    const name = entity.name
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[_-]/g, ' ')
-      .toLowerCase()
-
-    switch (entity.type) {
-      case 'function':
-        return `function that ${name}`
-      case 'class':
-        return `class representing ${name}`
-      case 'method':
-        return entity.parent ? `method ${name} of ${entity.parent}` : `method ${name}`
-      default:
-        return name
-    }
-  }
-
-  /**
-   * Extract keywords from code entity
-   */
-  private extractEntityKeywords(entity: CodeEntity): string[] {
-    const keywords: string[] = []
-
-    // Add name parts
-    const nameParts = entity.name
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[_-]/g, ' ')
-      .toLowerCase()
-      .split(' ')
-      .filter((w) => w.length > 2)
-
-    keywords.push(...nameParts)
-
-    // Add type as keyword
-    keywords.push(entity.type)
-
-    // Add parent if exists
-    if (entity.parent) {
-      keywords.push(entity.parent.toLowerCase())
-    }
-
-    return [...new Set(keywords)]
   }
 
   /**
