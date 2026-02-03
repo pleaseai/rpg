@@ -2181,20 +2181,6 @@
       "createdAt": 1770140937148,
       "hash": "ea118633a1e932d2"
     },
-    "src/utils/vector.ts:class:VectorStore": {
-      "feature": {
-        "description": "class representing vector store",
-        "keywords": [
-          "vector",
-          "store",
-          "class",
-          "src",
-          "utils"
-        ]
-      },
-      "createdAt": 1770140937148,
-      "hash": "65ef364bb3c49977"
-    },
     "src/utils/vector.ts:method:constructor": {
       "feature": {
         "description": "method to constructor in VectorStore",
@@ -2225,36 +2211,6 @@
       },
       "createdAt": 1770140937148,
       "hash": "5301a53d5342d362"
-    },
-    "src/utils/vector.ts:method:add": {
-      "feature": {
-        "description": "method to add in VectorStore",
-        "keywords": [
-          "add",
-          "method",
-          "vectorstore",
-          "src",
-          "utils",
-          "vector"
-        ]
-      },
-      "createdAt": 1770140937148,
-      "hash": "b6f7113b88522f2d"
-    },
-    "src/utils/vector.ts:method:search": {
-      "feature": {
-        "description": "method to search in VectorStore",
-        "keywords": [
-          "search",
-          "method",
-          "vectorstore",
-          "src",
-          "utils",
-          "vector"
-        ]
-      },
-      "createdAt": 1770140937148,
-      "hash": "2875adbe7ad3ab09"
     },
     "src/utils/vector.ts:method:delete": {
       "feature": {
@@ -15920,6 +15876,250 @@
       "createdAt": 1770142489726,
       "hash": "c764bd2ee792344b"
     },
+    "src/encoder/semantic-search.ts:file:semantic-search": {
+      "feature": {
+        "description": "semantic search module in encoder",
+        "keywords": [
+          "semantic",
+          "search",
+          "file",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "a35e43275d4f696c"
+    },
+    "src/encoder/semantic-search.ts:method:constructor": {
+      "feature": {
+        "description": "method to constructor in SemanticSearch",
+        "keywords": [
+          "constructor",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "84fb4e0a9318a651"
+    },
+    "src/encoder/semantic-search.ts:method:index": {
+      "feature": {
+        "description": "method to index in SemanticSearch",
+        "keywords": [
+          "index",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "c6374362e78eb9e7"
+    },
+    "src/encoder/semantic-search.ts:method:search": {
+      "feature": {
+        "description": "method to search in SemanticSearch",
+        "keywords": [
+          "search",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "2851704284d60d95"
+    },
+    "src/encoder/semantic-search.ts:method:searchByVector": {
+      "feature": {
+        "description": "method to search by vector in SemanticSearch",
+        "keywords": [
+          "search",
+          "vector",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "8136222271f4df5f"
+    },
+    "src/encoder/semantic-search.ts:method:delete": {
+      "feature": {
+        "description": "method to delete in SemanticSearch",
+        "keywords": [
+          "delete",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "c4d3530912abc6d5"
+    },
+    "src/encoder/semantic-search.ts:method:clear": {
+      "feature": {
+        "description": "method to clear in SemanticSearch",
+        "keywords": [
+          "clear",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625663,
+      "hash": "ba91e4a440707a96"
+    },
+    "src/encoder/semantic-search.ts:method:count": {
+      "feature": {
+        "description": "method to count in SemanticSearch",
+        "keywords": [
+          "count",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625664,
+      "hash": "af4aec03dae21910"
+    },
+    "src/encoder/semantic-search.ts:method:close": {
+      "feature": {
+        "description": "method to close in SemanticSearch",
+        "keywords": [
+          "close",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625664,
+      "hash": "69fcf1f208843fd9"
+    },
+    "src/encoder/semantic-search.ts:method:getEmbedding": {
+      "feature": {
+        "description": "method to get embedding in SemanticSearch",
+        "keywords": [
+          "get",
+          "embedding",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625664,
+      "hash": "088193c34ca4c362"
+    },
+    "src/encoder/semantic-search.ts:method:getVectorStore": {
+      "feature": {
+        "description": "method to get vector store in SemanticSearch",
+        "keywords": [
+          "get",
+          "vector",
+          "store",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142625664,
+      "hash": "9564c4c61fa8ec82"
+    },
+    "src/utils/vector.ts:class:VectorStore": {
+      "feature": {
+        "description": "class representing vector store",
+        "keywords": [
+          "vector",
+          "store",
+          "class",
+          "src",
+          "utils"
+        ]
+      },
+      "createdAt": 1770142625770,
+      "hash": "02fcaff045428b10"
+    },
+    "src/utils/vector.ts:method:add": {
+      "feature": {
+        "description": "method to add in VectorStore",
+        "keywords": [
+          "add",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770142625770,
+      "hash": "121e76cb29a22411"
+    },
+    "src/utils/vector.ts:method:search": {
+      "feature": {
+        "description": "method to search in VectorStore",
+        "keywords": [
+          "search",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770142625770,
+      "hash": "4f24b9f711031397"
+    },
+    "src/encoder/semantic-search.ts:class:SemanticSearch": {
+      "feature": {
+        "description": "class representing semantic search",
+        "keywords": [
+          "semantic",
+          "search",
+          "class",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142668256,
+      "hash": "0b8e314e73f87975"
+    },
+    "src/encoder/semantic-search.ts:method:indexBatch": {
+      "feature": {
+        "description": "method to index batch in SemanticSearch",
+        "keywords": [
+          "index",
+          "batch",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770142668256,
+      "hash": "8d9d940d4ff9b729"
+    },
     "vendor/context-please/packages/core/test/integration/incremental-reindex.integration.test.ts:function:progressCallback": {
       "feature": {
         "description": "function that progress callback",
@@ -15936,7 +16136,7 @@
           "incremental-reindex.integration.test"
         ]
       },
-      "createdAt": 1770142491141,
+      "createdAt": 1770142669599,
       "hash": "962a819d7cdb8a60"
     },
     "vendor/context-please/packages/core/test/integration/indexing-workflow.integration.test.ts:function:progressCallback": {
@@ -15955,7 +16155,7 @@
           "indexing-workflow.integration.test"
         ]
       },
-      "createdAt": 1770142491149,
+      "createdAt": 1770142669607,
       "hash": "a578faabf1063c13"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:initialize": {
@@ -15974,7 +16174,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "f37148be66f32939"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:ensureLoaded": {
@@ -15994,7 +16194,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "049973ab083c5d39"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:createCollection": {
@@ -16014,7 +16214,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "67b0dc54b935d2d2"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:createHybridCollection": {
@@ -16035,7 +16235,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "d2490434d420947d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:dropCollection": {
@@ -16055,7 +16255,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "3c644a6104cd00ce"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:hasCollection": {
@@ -16075,7 +16275,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "623769c8d9c897ba"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:listCollections": {
@@ -16095,7 +16295,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "c64522cc185f566d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:insert": {
@@ -16114,7 +16314,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "47a3058cac46fc6c"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:insertHybrid": {
@@ -16134,7 +16334,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "f7742ff760d3c19d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:search": {
@@ -16153,7 +16353,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "858f42019ffbadf3"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:hybridSearch": {
@@ -16173,7 +16373,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "3dbf5adb5cebcce7"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:delete": {
@@ -16192,7 +16392,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "7939148157b5900b"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:query": {
@@ -16211,7 +16411,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "9b4e5c2308b16dc0"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:checkCollectionLimit": {
@@ -16232,7 +16432,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770142491217,
+      "createdAt": 1770142669675,
       "hash": "456c5e8af174840a"
     },
     "src/encoder/embedding.ts:method:constructor": {
@@ -16247,7 +16447,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770142496861,
+      "createdAt": 1770142675393,
       "hash": "14ec615b0d28cc73"
     },
     "src/encoder/embedding.ts:method:embed": {
@@ -16262,7 +16462,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770142496861,
+      "createdAt": 1770142675393,
       "hash": "6131e89dfa274f10"
     },
     "src/encoder/embedding.ts:method:embedBatch": {
@@ -16278,7 +16478,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770142496861,
+      "createdAt": 1770142675393,
       "hash": "0fa5ad5553f3ca96"
     },
     "src/encoder/embedding.ts:method:getDimension": {
@@ -16294,7 +16494,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770142496861,
+      "createdAt": 1770142675393,
       "hash": "a885b2d1b91bb115"
     },
     "src/encoder/embedding.ts:method:getProvider": {
@@ -16310,7 +16510,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770142496861,
+      "createdAt": 1770142675393,
       "hash": "09d9b68181a25ce8"
     }
   }

@@ -1,0 +1,199 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { MockEmbedding } from '../../src/encoder/embedding'
+import { SemanticSearch } from '../../src/encoder/semantic-search'
+
+describe('SemanticSearch', () => {
+  let search: SemanticSearch
+  let testDbPath: string
+
+  beforeEach(() => {
+    testDbPath = join(tmpdir(), `rpg-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    const embedding = new MockEmbedding(64) // Small dimension for fast tests
+    search = new SemanticSearch({
+      dbPath: testDbPath,
+      tableName: 'test_nodes',
+      embedding,
+    })
+  })
+
+  afterEach(async () => {
+    await search.close()
+    // Clean up test database
+    try {
+      await rm(testDbPath, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+  })
+
+  describe('index', () => {
+    it('should index a single document', async () => {
+      await search.index({
+        id: 'node-1',
+        content: 'User authentication module',
+        metadata: { type: 'function' },
+      })
+
+      const count = await search.count()
+      expect(count).toBe(1)
+    })
+
+    it('should index multiple documents sequentially', async () => {
+      await search.index({ id: 'node-1', content: 'Login handler' })
+      await search.index({ id: 'node-2', content: 'Logout handler' })
+      await search.index({ id: 'node-3', content: 'Session management' })
+
+      const count = await search.count()
+      expect(count).toBe(3)
+    })
+  })
+
+  describe('indexBatch', () => {
+    it('should index multiple documents in batch', async () => {
+      await search.indexBatch([
+        { id: 'node-1', content: 'User authentication' },
+        { id: 'node-2', content: 'Password validation' },
+        { id: 'node-3', content: 'Token generation' },
+      ])
+
+      const count = await search.count()
+      expect(count).toBe(3)
+    })
+
+    it('should handle empty batch', async () => {
+      await search.indexBatch([])
+      const count = await search.count()
+      expect(count).toBe(0)
+    })
+
+    it('should preserve metadata in batch indexing', async () => {
+      await search.indexBatch([
+        { id: 'node-1', content: 'Authentication', metadata: { type: 'module' } },
+        { id: 'node-2', content: 'Validation', metadata: { type: 'function' } },
+      ])
+
+      // Search and check metadata is preserved
+      const results = await search.search('Authentication', 2)
+      const authResult = results.find((r) => r.id === 'node-1')
+      expect(authResult).toBeDefined()
+      expect(authResult?.metadata).toEqual({ type: 'module' })
+    })
+  })
+
+  describe('search', () => {
+    beforeEach(async () => {
+      await search.indexBatch([
+        { id: 'auth-1', content: 'User login and authentication handler' },
+        { id: 'auth-2', content: 'User logout and session termination' },
+        { id: 'db-1', content: 'Database connection pool manager' },
+        { id: 'db-2', content: 'SQL query executor and result mapper' },
+        { id: 'api-1', content: 'REST API endpoint handler' },
+      ])
+    })
+
+    it('should return results for semantic query', async () => {
+      const results = await search.search('user authentication', 3)
+
+      expect(results.length).toBeGreaterThan(0)
+      expect(results.length).toBeLessThanOrEqual(3)
+      // Each result should have required fields
+      for (const result of results) {
+        expect(result.id).toBeDefined()
+        expect(result.score).toBeDefined()
+        expect(result.content).toBeDefined()
+      }
+    })
+
+    it('should return results sorted by similarity', async () => {
+      const results = await search.search('database', 5)
+
+      // Scores should be in ascending order (lower distance = more similar)
+      for (let i = 1; i < results.length; i++) {
+        expect(results[i].score).toBeGreaterThanOrEqual(results[i - 1].score)
+      }
+    })
+
+    it('should respect topK parameter', async () => {
+      const results = await search.search('handler', 2)
+      expect(results.length).toBeLessThanOrEqual(2)
+    })
+  })
+
+  describe('searchByVector', () => {
+    it('should search using pre-computed vector', async () => {
+      await search.indexBatch([
+        { id: 'node-1', content: 'Test content' },
+        { id: 'node-2', content: 'Another test' },
+      ])
+
+      // Get embedding for search
+      const embedding = search.getEmbedding()
+      const queryVector = await embedding.embed('Test content')
+
+      const results = await search.searchByVector(queryVector.vector, 2)
+      expect(results.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('delete', () => {
+    it('should delete documents by ID', async () => {
+      await search.indexBatch([
+        { id: 'node-1', content: 'Content 1' },
+        { id: 'node-2', content: 'Content 2' },
+        { id: 'node-3', content: 'Content 3' },
+      ])
+
+      await search.delete(['node-1', 'node-3'])
+
+      const count = await search.count()
+      expect(count).toBe(1)
+    })
+  })
+
+  describe('clear', () => {
+    it('should clear all documents', async () => {
+      await search.indexBatch([
+        { id: 'node-1', content: 'Content 1' },
+        { id: 'node-2', content: 'Content 2' },
+      ])
+
+      await search.clear()
+
+      const count = await search.count()
+      expect(count).toBe(0)
+    })
+  })
+
+  describe('count', () => {
+    it('should return 0 for empty store', async () => {
+      const count = await search.count()
+      expect(count).toBe(0)
+    })
+
+    it('should return correct count after indexing', async () => {
+      await search.indexBatch([
+        { id: 'node-1', content: 'Content 1' },
+        { id: 'node-2', content: 'Content 2' },
+      ])
+
+      const count = await search.count()
+      expect(count).toBe(2)
+    })
+  })
+
+  describe('getters', () => {
+    it('should return embedding instance', () => {
+      const embedding = search.getEmbedding()
+      expect(embedding).toBeDefined()
+      expect(embedding.getProvider()).toBe('Mock')
+    })
+
+    it('should return vector store instance', () => {
+      const vectorStore = search.getVectorStore()
+      expect(vectorStore).toBeDefined()
+    })
+  })
+})

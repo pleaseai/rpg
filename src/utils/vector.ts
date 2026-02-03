@@ -115,7 +115,8 @@ export class VectorStore {
       id: doc.id,
       text: doc.text,
       vector: doc.vector,
-      metadata: doc.metadata ? JSON.stringify(doc.metadata) : undefined,
+      // Always serialize metadata to avoid LanceDB type inference issues with all-null columns
+      metadata: JSON.stringify(doc.metadata ?? {}),
     }))
 
     const tableNames = await this.db.tableNames()
@@ -137,12 +138,17 @@ export class VectorStore {
 
     const results = await table.search(queryVector).limit(topK).toArray()
 
-    return results.map((row) => ({
-      id: row.id as string,
-      score: row._distance as number,
-      text: row.text as string,
-      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined,
-    }))
+    return results.map((row) => {
+      const parsedMetadata = row.metadata ? JSON.parse(row.metadata as string) : {}
+      // Return undefined if metadata is empty object
+      const hasMetadata = Object.keys(parsedMetadata).length > 0
+      return {
+        id: row.id as string,
+        score: row._distance as number,
+        text: row.text as string,
+        metadata: hasMetadata ? parsedMetadata : undefined,
+      }
+    })
   }
 
   /**
