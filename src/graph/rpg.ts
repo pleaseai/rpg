@@ -14,7 +14,6 @@ import {
   type HighLevelNode,
   type LowLevelNode,
   type Node,
-  NodeType,
   type SemanticFeature,
   type StructuralMetadata,
   createHighLevelNode,
@@ -148,7 +147,7 @@ export class RepositoryPlanningGraph {
    * Get all nodes
    */
   getNodes(): Node[] {
-    return this.graph.mapNodes((id, attrs) => attrs as Node)
+    return this.graph.mapNodes((_id, attrs) => attrs as Node)
   }
 
   /**
@@ -215,7 +214,7 @@ export class RepositoryPlanningGraph {
    * Get all edges
    */
   getEdges(): Edge[] {
-    return this.graph.mapEdges((edge, attrs) => attrs as Edge)
+    return this.graph.mapEdges((_edge, attrs) => attrs as Edge)
   }
 
   /**
@@ -239,7 +238,7 @@ export class RepositoryPlanningGraph {
     if (!this.graph.hasNode(nodeId)) {
       return []
     }
-    const edges = this.graph.mapOutEdges(nodeId, (edge, attrs) => attrs as Edge)
+    const edges = this.graph.mapOutEdges(nodeId, (_edge, attrs) => attrs as Edge)
     if (edgeType) {
       return edges.filter((e) => e.type === edgeType)
     }
@@ -253,7 +252,7 @@ export class RepositoryPlanningGraph {
     if (!this.graph.hasNode(nodeId)) {
       return []
     }
-    const edges = this.graph.mapInEdges(nodeId, (edge, attrs) => attrs as Edge)
+    const edges = this.graph.mapInEdges(nodeId, (_edge, attrs) => attrs as Edge)
     if (edgeType) {
       return edges.filter((e) => e.type === edgeType)
     }

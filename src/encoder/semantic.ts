@@ -209,7 +209,7 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
   /**
    * Generate function description based on common patterns
    */
-  private generateFunctionDescription(name: string, input: EntityInput): string {
+  private generateFunctionDescription(name: string, _input: EntityInput): string {
     const lowerName = name.toLowerCase()
 
     // Common verb patterns
@@ -278,8 +278,8 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
    */
   private generateFileDescription(filePath: string): string {
     const parts = filePath.split('/')
-    const fileName = parts[parts.length - 1].replace(/\.[^.]+$/, '')
-    const dirName = parts.length > 1 ? parts[parts.length - 2] : ''
+    const fileName = (parts[parts.length - 1] ?? '').replace(/\.[^.]+$/, '')
+    const dirName = parts.length > 1 ? (parts[parts.length - 2] ?? '') : ''
 
     const humanName = this.humanizeName(fileName)
 

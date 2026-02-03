@@ -45,9 +45,14 @@ export interface ParseResult {
 }
 
 /**
+ * Supported language names
+ */
+type SupportedLanguage = 'typescript' | 'javascript' | 'python'
+
+/**
  * Node types that represent splittable code units per language
  */
-const ENTITY_NODE_TYPES: Record<string, Record<string, CodeEntity['type']>> = {
+const ENTITY_NODE_TYPES: Record<SupportedLanguage, Record<string, CodeEntity['type']>> = {
   typescript: {
     function_declaration: 'function',
     arrow_function: 'function',
@@ -71,7 +76,7 @@ const ENTITY_NODE_TYPES: Record<string, Record<string, CodeEntity['type']>> = {
 /**
  * Import node types per language
  */
-const IMPORT_NODE_TYPES: Record<string, string[]> = {
+const IMPORT_NODE_TYPES: Record<SupportedLanguage, string[]> = {
   typescript: ['import_statement'],
   javascript: ['import_statement'],
   python: ['import_statement', 'import_from_statement'],
@@ -86,7 +91,7 @@ interface LanguageConfig {
   importTypes: string[]
 }
 
-const LANGUAGE_CONFIGS: Record<string, LanguageConfig> = {
+const LANGUAGE_CONFIGS: Record<SupportedLanguage, LanguageConfig> = {
   typescript: {
     parser: TypeScript,
     entityTypes: ENTITY_NODE_TYPES.typescript,
@@ -120,6 +125,13 @@ export class ASTParser {
    * Check if a language is supported
    */
   isLanguageSupported(language: string): boolean {
+    return this.isSupportedLanguage(language)
+  }
+
+  /**
+   * Type guard to check if language is a supported language
+   */
+  private isSupportedLanguage(language: string): language is SupportedLanguage {
     return language in LANGUAGE_CONFIGS
   }
 
@@ -160,15 +172,17 @@ export class ASTParser {
     }
 
     // Check if language is supported
-    const config = LANGUAGE_CONFIGS[language]
-    if (!config) {
+    if (!this.isSupportedLanguage(language)) {
       result.errors.push(`Unsupported language: ${language}`)
       return result
     }
+    const config = LANGUAGE_CONFIGS[language]
 
     try {
       // Set language parser
-      this.parser.setLanguage(config.parser as Parser.Language)
+      this.parser.setLanguage(
+        config.parser as unknown as Parameters<typeof this.parser.setLanguage>[0]
+      )
 
       // Parse the source
       const tree = this.parser.parse(source)
@@ -214,8 +228,9 @@ export class ASTParser {
     const nodeType = node.type
 
     // Check if this is an entity node
-    if (nodeType in config.entityTypes) {
-      const entity = this.extractEntity(node, source, config.entityTypes[nodeType])
+    const entityType = config.entityTypes[nodeType]
+    if (entityType) {
+      const entity = this.extractEntity(node, source, entityType)
       if (entity) {
         result.entities.push(entity)
       }
@@ -279,7 +294,7 @@ export class ASTParser {
    */
   private extractEntityName(
     node: Parser.SyntaxNode,
-    entityType: CodeEntity['type']
+    _entityType: CodeEntity['type']
   ): string | null {
     // For arrow functions assigned to variables
     if (node.type === 'arrow_function') {
@@ -341,7 +356,7 @@ export class ASTParser {
   /**
    * Extract documentation comment preceding the node
    */
-  private extractDocumentation(node: Parser.SyntaxNode, source: string): string | null {
+  private extractDocumentation(node: Parser.SyntaxNode, _source: string): string | null {
     const prevSibling = node.previousSibling
     if (prevSibling?.type === 'comment') {
       return prevSibling.text
@@ -369,7 +384,7 @@ export class ASTParser {
    */
   private extractImport(
     node: Parser.SyntaxNode,
-    source: string,
+    _source: string,
     language: string
   ): { module: string; names: string[] } | null {
     if (language === 'python') {

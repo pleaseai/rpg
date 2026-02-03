@@ -252,6 +252,7 @@ export class RPGEncoder {
     }
 
     const patternSeg = patternSegs[patternIdx]
+    if (patternSeg === undefined) return false
 
     // Handle ** (globstar)
     if (patternSeg === '**') {
@@ -269,8 +270,9 @@ export class RPGEncoder {
       return false
     }
 
-    // Match single segment
-    if (this.matchSegment(pathSegs[pathIdx], patternSeg)) {
+    // Match single segment - patternSeg guaranteed to be string after undefined check above
+    const pathSeg = pathSegs[pathIdx]
+    if (pathSeg && this.matchSegment(pathSeg, patternSeg)) {
       return this.matchSegments(pathSegs, patternSegs, pathIdx + 1, patternIdx + 1)
     }
 

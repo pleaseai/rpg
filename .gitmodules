@@ -1,0 +1,3 @@
+[submodule "vendor/context-please"]
+	path = vendor/context-please
+	url = https://github.com/pleaseai/context-please

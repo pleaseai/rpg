@@ -46,6 +46,7 @@ interface VectorDocument {
   text: string
   vector: number[]
   metadata?: string // JSON serialized metadata
+  [key: string]: unknown // Allow indexing for LanceDB compatibility
 }
 
 /**

@@ -43,38 +43,36 @@ program
   .option('-f, --spec-file <file>', 'Specification file')
   .option('-o, --output <dir>', 'Output directory', './generated')
   .option('--no-tests', 'Skip test generation')
-  .action(
-    async (options: { spec?: string; specFile?: string; output: string; tests: boolean }) => {
-      let spec = options.spec
+  .action(async (options: { spec?: string; specFile?: string; output: string; tests: boolean }) => {
+    let spec = options.spec
 
-      if (options.specFile) {
-        const file = Bun.file(options.specFile)
-        spec = await file.text()
-      }
-
-      if (!spec) {
-        console.error('Error: Either --spec or --spec-file is required')
-        process.exit(1)
-      }
-
-      console.log(`Generating repository...`)
-      console.log(`Specification: ${spec.substring(0, 100)}...`)
-
-      const zerorepo = new ZeroRepo({
-        spec,
-        generateTests: options.tests,
-      })
-
-      const proposalGraph = await zerorepo.buildProposalGraph()
-      const rpg = await zerorepo.buildImplementationGraph(proposalGraph)
-      const result = await zerorepo.generateRepository(rpg, options.output)
-
-      console.log(`\nGeneration complete:`)
-      console.log(`  Files generated: ${result.filesGenerated}`)
-      console.log(`  Lines of code: ${result.linesOfCode}`)
-      console.log(`  Output: ${result.outputPath}`)
+    if (options.specFile) {
+      const file = Bun.file(options.specFile)
+      spec = await file.text()
     }
-  )
+
+    if (!spec) {
+      console.error('Error: Either --spec or --spec-file is required')
+      process.exit(1)
+    }
+
+    console.log(`Generating repository...`)
+    console.log(`Specification: ${spec.substring(0, 100)}...`)
+
+    const zerorepo = new ZeroRepo({
+      spec,
+      generateTests: options.tests,
+    })
+
+    const proposalGraph = await zerorepo.buildProposalGraph()
+    const rpg = await zerorepo.buildImplementationGraph(proposalGraph)
+    const result = await zerorepo.generateRepository(rpg, options.output)
+
+    console.log(`\nGeneration complete:`)
+    console.log(`  Files generated: ${result.filesGenerated}`)
+    console.log(`  Lines of code: ${result.linesOfCode}`)
+    console.log(`  Output: ${result.outputPath}`)
+  })
 
 // Search command
 program
@@ -84,30 +82,28 @@ program
   .option('-t, --term <term>', 'Search term')
   .option('-m, --mode <mode>', 'Search mode (features, snippets, auto)', 'auto')
   .option('-p, --pattern <pattern>', 'File pattern for snippet search')
-  .action(
-    async (options: { rpg: string; term?: string; mode: string; pattern?: string }) => {
-      const file = Bun.file(options.rpg)
-      const json = await file.text()
-      const rpg = RepositoryPlanningGraph.fromJSON(json)
+  .action(async (options: { rpg: string; term?: string; mode: string; pattern?: string }) => {
+    const file = Bun.file(options.rpg)
+    const json = await file.text()
+    const rpg = RepositoryPlanningGraph.fromJSON(json)
 
-      const search = new SearchNode(rpg)
-      const results = await search.query({
-        mode: options.mode as 'features' | 'snippets' | 'auto',
-        featureTerms: options.term ? [options.term] : undefined,
-        filePattern: options.pattern,
-      })
+    const search = new SearchNode(rpg)
+    const results = await search.query({
+      mode: options.mode as 'features' | 'snippets' | 'auto',
+      featureTerms: options.term ? [options.term] : undefined,
+      filePattern: options.pattern,
+    })
 
-      console.log(`\nSearch results (${results.totalMatches} matches):`)
-      for (const node of results.nodes) {
-        console.log(`\n  ID: ${node.id}`)
-        console.log(`  Type: ${node.type}`)
-        console.log(`  Feature: ${node.feature.description}`)
-        if (node.metadata?.path) {
-          console.log(`  Path: ${node.metadata.path}`)
-        }
+    console.log(`\nSearch results (${results.totalMatches} matches):`)
+    for (const node of results.nodes) {
+      console.log(`\n  ID: ${node.id}`)
+      console.log(`  Type: ${node.type}`)
+      console.log(`  Feature: ${node.feature.description}`)
+      if (node.metadata?.path) {
+        console.log(`  Path: ${node.metadata.path}`)
       }
     }
-  )
+  })
 
 // Fetch command
 program
