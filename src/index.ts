@@ -10,5 +10,8 @@ export * from './zerorepo'
 // Agentic tools
 export * from './tools'
 
+// MCP Server
+export * from './mcp'
+
 // Utilities
 export * from './utils'
