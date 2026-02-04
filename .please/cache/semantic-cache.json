@@ -475,22 +475,6 @@
       "createdAt": 1770140937061,
       "hash": "6da2ec86c1fcc6f3"
     },
-    "src/encoder/semantic.ts:method:detectProvider": {
-      "feature": {
-        "description": "method to detect provider in SemanticExtractor",
-        "keywords": [
-          "detect",
-          "provider",
-          "method",
-          "semanticextractor",
-          "src",
-          "encoder",
-          "semantic"
-        ]
-      },
-      "createdAt": 1770140937061,
-      "hash": "38e126752a98263c"
-    },
     "src/encoder/semantic.ts:method:extract": {
       "feature": {
         "description": "method to extract in SemanticExtractor",
@@ -1483,21 +1467,6 @@
       "createdAt": 1770140937107,
       "hash": "2b2f025fbc27d822"
     },
-    "src/mcp/tools.ts:function:executeSearch": {
-      "feature": {
-        "description": "execute search",
-        "keywords": [
-          "execute",
-          "search",
-          "function",
-          "src",
-          "mcp",
-          "tools"
-        ]
-      },
-      "createdAt": 1770140937108,
-      "hash": "cce0d499ebe3bd7d"
-    },
     "src/mcp/tools.ts:function:executeFetch": {
       "feature": {
         "description": "execute fetch",
@@ -1714,50 +1683,6 @@
       },
       "createdAt": 1770140937122,
       "hash": "6594d083d4ccec7b"
-    },
-    "src/tools/search.ts:class:SearchNode": {
-      "feature": {
-        "description": "class representing search node",
-        "keywords": [
-          "search",
-          "node",
-          "class",
-          "src",
-          "tools"
-        ]
-      },
-      "createdAt": 1770140937122,
-      "hash": "32bf5a04c8e61e31"
-    },
-    "src/tools/search.ts:method:constructor": {
-      "feature": {
-        "description": "method to constructor in SearchNode",
-        "keywords": [
-          "constructor",
-          "method",
-          "searchnode",
-          "src",
-          "tools",
-          "search"
-        ]
-      },
-      "createdAt": 1770140937122,
-      "hash": "58e2f69c3f60097f"
-    },
-    "src/tools/search.ts:method:query": {
-      "feature": {
-        "description": "method to query in SearchNode",
-        "keywords": [
-          "query",
-          "method",
-          "searchnode",
-          "src",
-          "tools",
-          "search"
-        ]
-      },
-      "createdAt": 1770140937122,
-      "hash": "ccd6136463cbcb94"
     },
     "src/utils/ast.ts:file:ast": {
       "feature": {
@@ -2031,36 +1956,6 @@
       "createdAt": 1770140937143,
       "hash": "a91f17068ce3b21d"
     },
-    "src/utils/llm.ts:method:constructor": {
-      "feature": {
-        "description": "method to constructor in LLMClient",
-        "keywords": [
-          "constructor",
-          "method",
-          "llmclient",
-          "src",
-          "utils",
-          "llm"
-        ]
-      },
-      "createdAt": 1770140937143,
-      "hash": "95ca34b30a934538"
-    },
-    "src/utils/llm.ts:method:complete": {
-      "feature": {
-        "description": "method to complete in LLMClient",
-        "keywords": [
-          "complete",
-          "method",
-          "llmclient",
-          "src",
-          "utils",
-          "llm"
-        ]
-      },
-      "createdAt": 1770140937143,
-      "hash": "76dfb7874290c9f8"
-    },
     "src/utils/llm.ts:method:completeJSON": {
       "feature": {
         "description": "method to complete json in LLMClient",
@@ -2165,21 +2060,6 @@
       },
       "createdAt": 1770140937148,
       "hash": "32e0a6abc1207074"
-    },
-    "src/utils/vector.ts:method:close": {
-      "feature": {
-        "description": "method to close in VectorStore",
-        "keywords": [
-          "close",
-          "method",
-          "vectorstore",
-          "src",
-          "utils",
-          "vector"
-        ]
-      },
-      "createdAt": 1770140937148,
-      "hash": "29e74c16fb9d4eb0"
     },
     "src/zerorepo/index.ts:file:index": {
       "feature": {
@@ -15352,20 +15232,6 @@
       "createdAt": 1770142190655,
       "hash": "bcbc18793d8b8f6e"
     },
-    "src/encoder/semantic.ts:class:SemanticExtractor": {
-      "feature": {
-        "description": "class representing semantic extractor",
-        "keywords": [
-          "semantic",
-          "extractor",
-          "class",
-          "src",
-          "encoder"
-        ]
-      },
-      "createdAt": 1770142190688,
-      "hash": "0d26950e2c2d8918"
-    },
     "src/encoder/semantic.ts:method:generateFunctionDescription": {
       "feature": {
         "description": "method to generate function description in SemanticExtractor",
@@ -15464,20 +15330,6 @@
       },
       "createdAt": 1770142190725,
       "hash": "7895d5b1ebc5fd43"
-    },
-    "src/mcp/server.ts:function:createMcpServer": {
-      "feature": {
-        "description": "create mcp server",
-        "keywords": [
-          "create",
-          "mcp",
-          "server",
-          "function",
-          "src"
-        ]
-      },
-      "createdAt": 1770142190735,
-      "hash": "46ee674800e859ee"
     },
     "src/mcp/server.ts:function:main": {
       "feature": {
@@ -15690,39 +15542,6 @@
       },
       "createdAt": 1770142433466,
       "hash": "f172b2f4a0bf2aa5"
-    },
-    "src/encoder/embedding.ts:method:getModel": {
-      "feature": {
-        "description": "method to get model in OpenAIEmbedding",
-        "keywords": [
-          "get",
-          "model",
-          "method",
-          "openaiembedding",
-          "src",
-          "encoder",
-          "embedding"
-        ]
-      },
-      "createdAt": 1770142433466,
-      "hash": "9746196c9c75ea19"
-    },
-    "src/encoder/embedding.ts:method:getSupportedModels": {
-      "feature": {
-        "description": "method to get supported models in OpenAIEmbedding",
-        "keywords": [
-          "get",
-          "supported",
-          "models",
-          "method",
-          "openaiembedding",
-          "src",
-          "encoder",
-          "embedding"
-        ]
-      },
-      "createdAt": 1770142433466,
-      "hash": "b6cd0fd432e4ad7a"
     },
     "src/encoder/embedding.ts:class:OpenAIEmbedding": {
       "feature": {
@@ -15939,35 +15758,6 @@
       "createdAt": 1770142625664,
       "hash": "9564c4c61fa8ec82"
     },
-    "src/utils/vector.ts:class:VectorStore": {
-      "feature": {
-        "description": "class representing vector store",
-        "keywords": [
-          "vector",
-          "store",
-          "class",
-          "src",
-          "utils"
-        ]
-      },
-      "createdAt": 1770142625770,
-      "hash": "02fcaff045428b10"
-    },
-    "src/utils/vector.ts:method:add": {
-      "feature": {
-        "description": "method to add in VectorStore",
-        "keywords": [
-          "add",
-          "method",
-          "vectorstore",
-          "src",
-          "utils",
-          "vector"
-        ]
-      },
-      "createdAt": 1770142625770,
-      "hash": "121e76cb29a22411"
-    },
     "src/utils/vector.ts:method:search": {
       "feature": {
         "description": "method to search in VectorStore",
@@ -15982,21 +15772,6 @@
       },
       "createdAt": 1770142625770,
       "hash": "4f24b9f711031397"
-    },
-    "src/encoder/semantic-search.ts:class:SemanticSearch": {
-      "feature": {
-        "description": "class representing semantic search",
-        "keywords": [
-          "semantic",
-          "search",
-          "class",
-          "src",
-          "encoder",
-          "semantic-search"
-        ]
-      },
-      "createdAt": 1770142668256,
-      "hash": "0b8e314e73f87975"
     },
     "src/encoder/semantic-search.ts:method:indexBatch": {
       "feature": {
@@ -16140,20 +15915,6 @@
       "createdAt": 1770143353786,
       "hash": "13e22b365414d7ef"
     },
-    "src/utils/llm.ts:class:LLMClient": {
-      "feature": {
-        "description": "class representing llmclient",
-        "keywords": [
-          "llmclient",
-          "class",
-          "src",
-          "utils",
-          "llm"
-        ]
-      },
-      "createdAt": 1770143353856,
-      "hash": "07e92375329529d7"
-    },
     "src/utils/llm.ts:method:completeAnthropic": {
       "feature": {
         "description": "method to complete anthropic in LLMClient",
@@ -16217,6 +15978,532 @@
       "createdAt": 1770143385881,
       "hash": "c4596fec11282b58"
     },
+    "src/encoder/embedding.ts:class:HuggingFaceEmbedding": {
+      "feature": {
+        "description": "class representing hugging face embedding",
+        "keywords": [
+          "hugging",
+          "face",
+          "embedding",
+          "class",
+          "src",
+          "encoder"
+        ]
+      },
+      "createdAt": 1770144034813,
+      "hash": "64f16f6217636180"
+    },
+    "src/encoder/embedding.ts:method:getTransformersModule": {
+      "feature": {
+        "description": "method to get transformers module in HuggingFaceEmbedding",
+        "keywords": [
+          "get",
+          "transformers",
+          "module",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034813,
+      "hash": "2e7d3086e15ba746"
+    },
+    "src/encoder/embedding.ts:method:ensureModel": {
+      "feature": {
+        "description": "method to ensure model in HuggingFaceEmbedding",
+        "keywords": [
+          "ensure",
+          "model",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "5ef38f33e2ad9145"
+    },
+    "src/encoder/embedding.ts:method:loadModel": {
+      "feature": {
+        "description": "method to load model in HuggingFaceEmbedding",
+        "keywords": [
+          "load",
+          "model",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "27501dbd5bfe1d4f"
+    },
+    "src/encoder/embedding.ts:method:applyQueryPrefix": {
+      "feature": {
+        "description": "method to apply query prefix in HuggingFaceEmbedding",
+        "keywords": [
+          "apply",
+          "query",
+          "prefix",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "19a4f4e8f6d8bafa"
+    },
+    "src/encoder/embedding.ts:method:detectDimension": {
+      "feature": {
+        "description": "method to detect dimension in HuggingFaceEmbedding",
+        "keywords": [
+          "detect",
+          "dimension",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "37cb452701f60556"
+    },
+    "src/encoder/embedding.ts:method:getDtype": {
+      "feature": {
+        "description": "method to get dtype in HuggingFaceEmbedding",
+        "keywords": [
+          "get",
+          "dtype",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "b6924611426df857"
+    },
+    "src/encoder/embedding.ts:method:getQueryPrefix": {
+      "feature": {
+        "description": "method to get query prefix in HuggingFaceEmbedding",
+        "keywords": [
+          "get",
+          "query",
+          "prefix",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "0e6eee6ed3101c34"
+    },
+    "src/encoder/embedding.ts:method:isModelLoaded": {
+      "feature": {
+        "description": "method to is model loaded in HuggingFaceEmbedding",
+        "keywords": [
+          "model",
+          "loaded",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "0afaf77a24929fa7"
+    },
+    "src/encoder/embedding.ts:method:preload": {
+      "feature": {
+        "description": "method to preload in HuggingFaceEmbedding",
+        "keywords": [
+          "preload",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770144034814,
+      "hash": "3cbaa54feac1831f"
+    },
+    "src/encoder/semantic.ts:class:SemanticExtractor": {
+      "feature": {
+        "description": "class representing semantic extractor",
+        "keywords": [
+          "semantic",
+          "extractor",
+          "class",
+          "src",
+          "encoder"
+        ]
+      },
+      "createdAt": 1770145231887,
+      "hash": "ab70fa92e3024c62"
+    },
+    "src/encoder/semantic.ts:method:detectProvider": {
+      "feature": {
+        "description": "method to detect provider in SemanticExtractor",
+        "keywords": [
+          "detect",
+          "provider",
+          "method",
+          "semanticextractor",
+          "src",
+          "encoder",
+          "semantic"
+        ]
+      },
+      "createdAt": 1770145231887,
+      "hash": "5bbc8bfb160bf9e4"
+    },
+    "src/utils/llm.ts:function:createProvider": {
+      "feature": {
+        "description": "create provider",
+        "keywords": [
+          "create",
+          "provider",
+          "function",
+          "src",
+          "utils",
+          "llm"
+        ]
+      },
+      "createdAt": 1770145232145,
+      "hash": "62a3241a84b347ff"
+    },
+    "src/utils/llm.ts:method:constructor": {
+      "feature": {
+        "description": "method to constructor in LLMClient",
+        "keywords": [
+          "constructor",
+          "method",
+          "llmclient",
+          "src",
+          "utils",
+          "llm"
+        ]
+      },
+      "createdAt": 1770145232145,
+      "hash": "f67910e49246b884"
+    },
+    "src/utils/llm.ts:method:getProvider": {
+      "feature": {
+        "description": "method to get provider in LLMClient",
+        "keywords": [
+          "get",
+          "provider",
+          "method",
+          "llmclient",
+          "src",
+          "utils",
+          "llm"
+        ]
+      },
+      "createdAt": 1770145232145,
+      "hash": "ad5e6e34c545cfaf"
+    },
+    "src/utils/llm.ts:method:getModel": {
+      "feature": {
+        "description": "method to get model in LLMClient",
+        "keywords": [
+          "get",
+          "model",
+          "method",
+          "llmclient",
+          "src",
+          "utils",
+          "llm"
+        ]
+      },
+      "createdAt": 1770145232145,
+      "hash": "e8fe9ff3802bdc66"
+    },
+    "src/encoder/semantic-search.ts:class:SemanticSearch": {
+      "feature": {
+        "description": "class representing semantic search",
+        "keywords": [
+          "semantic",
+          "search",
+          "class",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770147601085,
+      "hash": "f328b494614908c8"
+    },
+    "src/encoder/semantic-search.ts:method:searchHybrid": {
+      "feature": {
+        "description": "method to search hybrid in SemanticSearch",
+        "keywords": [
+          "search",
+          "hybrid",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770147601085,
+      "hash": "7097ecaa8a7c3470"
+    },
+    "src/encoder/semantic-search.ts:method:searchFts": {
+      "feature": {
+        "description": "method to search fts in SemanticSearch",
+        "keywords": [
+          "search",
+          "fts",
+          "method",
+          "semanticsearch",
+          "src",
+          "encoder",
+          "semantic-search"
+        ]
+      },
+      "createdAt": 1770147601086,
+      "hash": "668577edcfceb06e"
+    },
+    "src/mcp/server.ts:function:createMcpServer": {
+      "feature": {
+        "description": "create mcp server",
+        "keywords": [
+          "create",
+          "mcp",
+          "server",
+          "function",
+          "src"
+        ]
+      },
+      "createdAt": 1770147601242,
+      "hash": "c9536c2653e3ee39"
+    },
+    "src/mcp/tools.ts:function:executeSearch": {
+      "feature": {
+        "description": "execute search",
+        "keywords": [
+          "execute",
+          "search",
+          "function",
+          "src",
+          "mcp",
+          "tools"
+        ]
+      },
+      "createdAt": 1770147601251,
+      "hash": "8bbe55390b651821"
+    },
+    "src/tools/search.ts:class:SearchNode": {
+      "feature": {
+        "description": "class representing search node",
+        "keywords": [
+          "search",
+          "node",
+          "class",
+          "src",
+          "tools"
+        ]
+      },
+      "createdAt": 1770147601274,
+      "hash": "f6f6ac98f033dc14"
+    },
+    "src/tools/search.ts:method:constructor": {
+      "feature": {
+        "description": "method to constructor in SearchNode",
+        "keywords": [
+          "constructor",
+          "method",
+          "searchnode",
+          "src",
+          "tools",
+          "search"
+        ]
+      },
+      "createdAt": 1770147601274,
+      "hash": "59544eef6bc375cd"
+    },
+    "src/tools/search.ts:method:query": {
+      "feature": {
+        "description": "method to query in SearchNode",
+        "keywords": [
+          "query",
+          "method",
+          "searchnode",
+          "src",
+          "tools",
+          "search"
+        ]
+      },
+      "createdAt": 1770147601274,
+      "hash": "473408b652c19b36"
+    },
+    "src/tools/search.ts:method:searchFeatures": {
+      "feature": {
+        "description": "method to search features in SearchNode",
+        "keywords": [
+          "search",
+          "features",
+          "method",
+          "searchnode",
+          "src",
+          "tools"
+        ]
+      },
+      "createdAt": 1770147601274,
+      "hash": "700b2a7941e769ac"
+    },
+    "src/utils/llm.ts:class:LLMClient": {
+      "feature": {
+        "description": "class representing llmclient",
+        "keywords": [
+          "llmclient",
+          "class",
+          "src",
+          "utils",
+          "llm"
+        ]
+      },
+      "createdAt": 1770147601294,
+      "hash": "a82867a3db57ec86"
+    },
+    "src/utils/llm.ts:method:complete": {
+      "feature": {
+        "description": "method to complete in LLMClient",
+        "keywords": [
+          "complete",
+          "method",
+          "llmclient",
+          "src",
+          "utils",
+          "llm"
+        ]
+      },
+      "createdAt": 1770147601294,
+      "hash": "fb29aff6bb95e215"
+    },
+    "src/utils/vector.ts:class:VectorStore": {
+      "feature": {
+        "description": "class representing vector store",
+        "keywords": [
+          "vector",
+          "store",
+          "class",
+          "src",
+          "utils"
+        ]
+      },
+      "createdAt": 1770147601302,
+      "hash": "845cabf2d05f11e4"
+    },
+    "src/utils/vector.ts:method:add": {
+      "feature": {
+        "description": "method to add in VectorStore",
+        "keywords": [
+          "add",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770147601302,
+      "hash": "b38adbca4f4d442b"
+    },
+    "src/utils/vector.ts:method:createFtsIndex": {
+      "feature": {
+        "description": "method to create fts index in VectorStore",
+        "keywords": [
+          "create",
+          "fts",
+          "index",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770147601303,
+      "hash": "5515c230c47bfccc"
+    },
+    "src/utils/vector.ts:method:searchFts": {
+      "feature": {
+        "description": "method to search fts in VectorStore",
+        "keywords": [
+          "search",
+          "fts",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770147601303,
+      "hash": "522e7f3363357ec9"
+    },
+    "src/utils/vector.ts:method:searchHybrid": {
+      "feature": {
+        "description": "method to search hybrid in VectorStore",
+        "keywords": [
+          "search",
+          "hybrid",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770147601303,
+      "hash": "81d394ecb39f6ab7"
+    },
+    "src/utils/vector.ts:method:rrfRerank": {
+      "feature": {
+        "description": "method to rrf rerank in VectorStore",
+        "keywords": [
+          "rrf",
+          "rerank",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770147601303,
+      "hash": "f47d70dd81645084"
+    },
+    "src/utils/vector.ts:method:close": {
+      "feature": {
+        "description": "method to close in VectorStore",
+        "keywords": [
+          "close",
+          "method",
+          "vectorstore",
+          "src",
+          "utils",
+          "vector"
+        ]
+      },
+      "createdAt": 1770147601303,
+      "hash": "0c4c2c1b9db88a2b"
+    },
     "vendor/context-please/packages/core/test/integration/incremental-reindex.integration.test.ts:function:progressCallback": {
       "feature": {
         "description": "function that progress callback",
@@ -16233,7 +16520,7 @@
           "incremental-reindex.integration.test"
         ]
       },
-      "createdAt": 1770143387333,
+      "createdAt": 1770180639796,
       "hash": "962a819d7cdb8a60"
     },
     "vendor/context-please/packages/core/test/integration/indexing-workflow.integration.test.ts:function:progressCallback": {
@@ -16252,7 +16539,7 @@
           "indexing-workflow.integration.test"
         ]
       },
-      "createdAt": 1770143387354,
+      "createdAt": 1770180639804,
       "hash": "a578faabf1063c13"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:initialize": {
@@ -16271,7 +16558,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "f37148be66f32939"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:ensureLoaded": {
@@ -16291,7 +16578,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "049973ab083c5d39"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:createCollection": {
@@ -16311,7 +16598,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "67b0dc54b935d2d2"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:createHybridCollection": {
@@ -16332,7 +16619,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "d2490434d420947d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:dropCollection": {
@@ -16352,7 +16639,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "3c644a6104cd00ce"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:hasCollection": {
@@ -16372,7 +16659,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "623769c8d9c897ba"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:listCollections": {
@@ -16392,7 +16679,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "c64522cc185f566d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:insert": {
@@ -16411,7 +16698,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "47a3058cac46fc6c"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:insertHybrid": {
@@ -16431,7 +16718,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "f7742ff760d3c19d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:search": {
@@ -16450,7 +16737,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "858f42019ffbadf3"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:hybridSearch": {
@@ -16470,7 +16757,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "3dbf5adb5cebcce7"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:delete": {
@@ -16489,7 +16776,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639861,
       "hash": "7939148157b5900b"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:query": {
@@ -16508,7 +16795,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639862,
       "hash": "9b4e5c2308b16dc0"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:checkCollectionLimit": {
@@ -16529,86 +16816,119 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770143387405,
+      "createdAt": 1770180639862,
       "hash": "456c5e8af174840a"
     },
     "src/encoder/embedding.ts:method:constructor": {
       "feature": {
-        "description": "method to constructor in MockEmbedding",
+        "description": "method to constructor in HuggingFaceEmbedding",
         "keywords": [
           "constructor",
           "method",
-          "mockembedding",
+          "huggingfaceembedding",
           "src",
           "encoder",
           "embedding"
         ]
       },
-      "createdAt": 1770143393212,
-      "hash": "14ec615b0d28cc73"
+      "createdAt": 1770180648093,
+      "hash": "684e634d350a4a89"
+    },
+    "src/encoder/embedding.ts:method:getSupportedModels": {
+      "feature": {
+        "description": "method to get supported models in HuggingFaceEmbedding",
+        "keywords": [
+          "get",
+          "supported",
+          "models",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770180648093,
+      "hash": "3451369579450e86"
     },
     "src/encoder/embedding.ts:method:embed": {
       "feature": {
-        "description": "method to embed in MockEmbedding",
+        "description": "method to embed in HuggingFaceEmbedding",
         "keywords": [
           "embed",
           "method",
-          "mockembedding",
+          "huggingfaceembedding",
           "src",
           "encoder",
           "embedding"
         ]
       },
-      "createdAt": 1770143393212,
-      "hash": "6131e89dfa274f10"
+      "createdAt": 1770180648093,
+      "hash": "a0c0f3f1ef8ce9d0"
     },
     "src/encoder/embedding.ts:method:embedBatch": {
       "feature": {
-        "description": "method to embed batch in MockEmbedding",
+        "description": "method to embed batch in HuggingFaceEmbedding",
         "keywords": [
           "embed",
           "batch",
           "method",
-          "mockembedding",
+          "huggingfaceembedding",
           "src",
           "encoder",
           "embedding"
         ]
       },
-      "createdAt": 1770143393212,
-      "hash": "0fa5ad5553f3ca96"
+      "createdAt": 1770180648093,
+      "hash": "7e7d2eebca9db551"
     },
     "src/encoder/embedding.ts:method:getDimension": {
       "feature": {
-        "description": "method to get dimension in MockEmbedding",
+        "description": "method to get dimension in HuggingFaceEmbedding",
         "keywords": [
           "get",
           "dimension",
           "method",
-          "mockembedding",
+          "huggingfaceembedding",
           "src",
           "encoder",
           "embedding"
         ]
       },
-      "createdAt": 1770143393212,
-      "hash": "a885b2d1b91bb115"
+      "createdAt": 1770180648093,
+      "hash": "4aa609e1d30e0d1c"
     },
     "src/encoder/embedding.ts:method:getProvider": {
       "feature": {
-        "description": "method to get provider in MockEmbedding",
+        "description": "method to get provider in HuggingFaceEmbedding",
         "keywords": [
           "get",
           "provider",
           "method",
-          "mockembedding",
+          "huggingfaceembedding",
           "src",
           "encoder",
           "embedding"
         ]
       },
-      "createdAt": 1770143393212,
-      "hash": "09d9b68181a25ce8"
+      "createdAt": 1770180648093,
+      "hash": "bd4aa0bcb59d59da"
+    },
+    "src/encoder/embedding.ts:method:getModel": {
+      "feature": {
+        "description": "method to get model in HuggingFaceEmbedding",
+        "keywords": [
+          "get",
+          "model",
+          "method",
+          "huggingfaceembedding",
+          "src",
+          "encoder",
+          "embedding"
+        ]
+      },
+      "createdAt": 1770180648093,
+      "hash": "f1daf1347d9371c3"
     }
   }
 }
