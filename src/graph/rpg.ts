@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import type { ContextStore } from '../store/context-store'
+import { attrsToEdge, attrsToNode, edgeToAttrs, nodeToAttrs, nodeToSearchFields } from './adapters'
 import {
   type DependencyEdge,
   type Edge,
@@ -20,7 +22,7 @@ import {
   isHighLevelNode,
   isLowLevelNode,
 } from './node'
-import type { GraphStats, GraphStore } from './store'
+import type { GraphStore, GraphStats } from './store'
 
 /**
  * Repository Planning Graph configuration
@@ -57,45 +59,65 @@ export type SerializedRPG = z.infer<typeof SerializedRPGSchema>
  * - Nodes: High-level (architectural) and Low-level (implementation)
  * - Edges: Functional (hierarchy) and Dependency (imports/calls)
  *
- * Delegates all storage to a GraphStore backend.
+ * Delegates storage to a ContextStore (graph + text + vector).
+ * Also supports legacy GraphStore for backward compatibility.
  */
 export class RepositoryPlanningGraph {
-  private store: GraphStore
+  private context: ContextStore | null = null
+  private legacyStore: GraphStore | null = null
   private config: RPGConfig
 
-  constructor(config: RPGConfig, store: GraphStore) {
+  constructor(config: RPGConfig, storeOrContext: GraphStore | ContextStore) {
     this.config = config
-    this.store = store
+    if (isContextStore(storeOrContext)) {
+      this.context = storeOrContext
+    } else {
+      this.legacyStore = storeOrContext
+    }
   }
 
   /**
-   * Factory: create an RPG with an optional store (defaults to in-memory SQLiteStore)
+   * Factory: create an RPG with an optional store/context.
+   * Defaults to legacy SQLiteStore (better-sqlite3) for backward compatibility.
+   * Pass a ContextStore explicitly to use the new decomposed store layer.
    */
-  static async create(config: RPGConfig, store?: GraphStore): Promise<RepositoryPlanningGraph> {
-    let actualStore = store
-    if (!actualStore) {
-      const { SQLiteStore } = await import('./sqlite-store')
-      actualStore = new SQLiteStore()
-      await actualStore.open('memory')
+  static async create(
+    config: RPGConfig,
+    storeOrContext?: GraphStore | ContextStore
+  ): Promise<RepositoryPlanningGraph> {
+    if (storeOrContext) {
+      return new RepositoryPlanningGraph(config, storeOrContext)
     }
-    return new RepositoryPlanningGraph(config, actualStore)
+    // Default: use legacy SQLiteStore for backward compatibility
+    const { SQLiteStore } = await import('./sqlite-store')
+    const store = new SQLiteStore()
+    await store.open('memory')
+    return new RepositoryPlanningGraph(config, store)
+  }
+
+  // ==================== Internal Accessors ====================
+
+  private get isNewStore(): boolean {
+    return this.context !== null
   }
 
   // ==================== Node Operations ====================
 
-  /**
-   * Add a node to the graph
-   */
   async addNode(node: Node): Promise<void> {
-    if (await this.store.hasNode(node.id)) {
-      throw new Error(`Node with id "${node.id}" already exists`)
+    if (this.isNewStore) {
+      if (await this.context!.graph.hasNode(node.id)) {
+        throw new Error(`Node with id "${node.id}" already exists`)
+      }
+      await this.context!.graph.addNode(node.id, nodeToAttrs(node))
+      await this.context!.text.index(node.id, nodeToSearchFields(node))
+    } else {
+      if (await this.legacyStore!.hasNode(node.id)) {
+        throw new Error(`Node with id "${node.id}" already exists`)
+      }
+      await this.legacyStore!.addNode(node)
     }
-    await this.store.addNode(node)
   }
 
-  /**
-   * Add a high-level node
-   */
   async addHighLevelNode(params: {
     id: string
     feature: SemanticFeature
@@ -107,9 +129,6 @@ export class RepositoryPlanningGraph {
     return node
   }
 
-  /**
-   * Add a low-level node
-   */
   async addLowLevelNode(params: {
     id: string
     feature: SemanticFeature
@@ -121,82 +140,104 @@ export class RepositoryPlanningGraph {
     return node
   }
 
-  /**
-   * Get a node by ID
-   */
   async getNode(id: string): Promise<Node | undefined> {
-    const node = await this.store.getNode(id)
+    if (this.isNewStore) {
+      const attrs = await this.context!.graph.getNode(id)
+      return attrs ? attrsToNode(id, attrs) : undefined
+    }
+    const node = await this.legacyStore!.getNode(id)
     return node ?? undefined
   }
 
-  /**
-   * Update a node's attributes
-   */
   async updateNode(id: string, updates: Partial<Node>): Promise<void> {
-    if (!(await this.store.hasNode(id))) {
-      throw new Error(`Node with id "${id}" not found`)
+    if (this.isNewStore) {
+      if (!(await this.context!.graph.hasNode(id))) {
+        throw new Error(`Node with id "${id}" not found`)
+      }
+      // Merge updates into existing attrs
+      const existing = await this.context!.graph.getNode(id)
+      if (!existing) return
+      const mergedNode = { ...attrsToNode(id, existing), ...updates } as Node
+      await this.context!.graph.updateNode(id, nodeToAttrs(mergedNode))
+      await this.context!.text.index(id, nodeToSearchFields(mergedNode))
+    } else {
+      if (!(await this.legacyStore!.hasNode(id))) {
+        throw new Error(`Node with id "${id}" not found`)
+      }
+      await this.legacyStore!.updateNode(id, updates)
     }
-    await this.store.updateNode(id, updates)
   }
 
-  /**
-   * Remove a node and its associated edges
-   */
   async removeNode(id: string): Promise<void> {
-    if (!(await this.store.hasNode(id))) {
-      throw new Error(`Node with id "${id}" not found`)
+    if (this.isNewStore) {
+      if (!(await this.context!.graph.hasNode(id))) {
+        throw new Error(`Node with id "${id}" not found`)
+      }
+      await this.context!.graph.removeNode(id)
+      await this.context!.text.remove(id)
+    } else {
+      if (!(await this.legacyStore!.hasNode(id))) {
+        throw new Error(`Node with id "${id}" not found`)
+      }
+      await this.legacyStore!.removeNode(id)
     }
-    await this.store.removeNode(id)
   }
 
-  /**
-   * Check if a node exists
-   */
   async hasNode(id: string): Promise<boolean> {
-    return this.store.hasNode(id)
+    if (this.isNewStore) {
+      return this.context!.graph.hasNode(id)
+    }
+    return this.legacyStore!.hasNode(id)
   }
 
-  /**
-   * Get all nodes
-   */
   async getNodes(): Promise<Node[]> {
-    return this.store.getNodes()
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getNodes()
+      return results.map((r) => attrsToNode(r.id, r.attrs))
+    }
+    return this.legacyStore!.getNodes()
   }
 
-  /**
-   * Get all high-level nodes
-   */
   async getHighLevelNodes(): Promise<HighLevelNode[]> {
-    const nodes = await this.store.getNodes({ type: 'high_level' })
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getNodes({ type: 'high_level' })
+      return results.map((r) => attrsToNode(r.id, r.attrs)).filter(isHighLevelNode)
+    }
+    const nodes = await this.legacyStore!.getNodes({ type: 'high_level' })
     return nodes.filter(isHighLevelNode)
   }
 
-  /**
-   * Get all low-level nodes
-   */
   async getLowLevelNodes(): Promise<LowLevelNode[]> {
-    const nodes = await this.store.getNodes({ type: 'low_level' })
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getNodes({ type: 'low_level' })
+      return results.map((r) => attrsToNode(r.id, r.attrs)).filter(isLowLevelNode)
+    }
+    const nodes = await this.legacyStore!.getNodes({ type: 'low_level' })
     return nodes.filter(isLowLevelNode)
   }
 
   // ==================== Edge Operations ====================
 
-  /**
-   * Add an edge to the graph
-   */
   async addEdge(edge: Edge): Promise<void> {
-    if (!(await this.store.hasNode(edge.source))) {
-      throw new Error(`Source node "${edge.source}" not found`)
+    if (this.isNewStore) {
+      if (!(await this.context!.graph.hasNode(edge.source))) {
+        throw new Error(`Source node "${edge.source}" not found`)
+      }
+      if (!(await this.context!.graph.hasNode(edge.target))) {
+        throw new Error(`Target node "${edge.target}" not found`)
+      }
+      await this.context!.graph.addEdge(edge.source, edge.target, edgeToAttrs(edge))
+    } else {
+      if (!(await this.legacyStore!.hasNode(edge.source))) {
+        throw new Error(`Source node "${edge.source}" not found`)
+      }
+      if (!(await this.legacyStore!.hasNode(edge.target))) {
+        throw new Error(`Target node "${edge.target}" not found`)
+      }
+      await this.legacyStore!.addEdge(edge)
     }
-    if (!(await this.store.hasNode(edge.target))) {
-      throw new Error(`Target node "${edge.target}" not found`)
-    }
-    await this.store.addEdge(edge)
   }
 
-  /**
-   * Add a functional edge (parent-child hierarchy)
-   */
   async addFunctionalEdge(params: {
     source: string
     target: string
@@ -208,9 +249,6 @@ export class RepositoryPlanningGraph {
     return edge
   }
 
-  /**
-   * Add a dependency edge (import/call)
-   */
   async addDependencyEdge(params: {
     source: string
     target: string
@@ -223,153 +261,322 @@ export class RepositoryPlanningGraph {
     return edge
   }
 
-  /**
-   * Get all edges
-   */
   async getEdges(): Promise<Edge[]> {
-    return this.store.getEdges()
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getEdges()
+      return results.map((r) => attrsToEdge(r.source, r.target, r.attrs))
+    }
+    return this.legacyStore!.getEdges()
   }
 
-  /**
-   * Get functional edges only
-   */
   async getFunctionalEdges(): Promise<FunctionalEdge[]> {
-    const edges = await this.store.getEdges({ type: EdgeType.Functional })
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getEdges({ type: 'functional' })
+      return results.map((r) => attrsToEdge(r.source, r.target, r.attrs)).filter(isFunctionalEdge)
+    }
+    const edges = await this.legacyStore!.getEdges({ type: EdgeType.Functional })
     return edges.filter(isFunctionalEdge)
   }
 
-  /**
-   * Get dependency edges only
-   */
   async getDependencyEdges(): Promise<DependencyEdge[]> {
-    const edges = await this.store.getEdges({ type: EdgeType.Dependency })
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getEdges({ type: 'dependency' })
+      return results.map((r) => attrsToEdge(r.source, r.target, r.attrs)).filter(isDependencyEdge)
+    }
+    const edges = await this.legacyStore!.getEdges({ type: EdgeType.Dependency })
     return edges.filter(isDependencyEdge)
   }
 
-  /**
-   * Get outgoing edges from a node
-   */
   async getOutEdges(nodeId: string, edgeType?: EdgeType): Promise<Edge[]> {
-    return this.store.getOutEdges(nodeId, edgeType)
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getEdges({ source: nodeId, type: edgeType })
+      return results.map((r) => attrsToEdge(r.source, r.target, r.attrs))
+    }
+    return this.legacyStore!.getOutEdges(nodeId, edgeType)
   }
 
-  /**
-   * Get incoming edges to a node
-   */
   async getInEdges(nodeId: string, edgeType?: EdgeType): Promise<Edge[]> {
-    return this.store.getInEdges(nodeId, edgeType)
+    if (this.isNewStore) {
+      const results = await this.context!.graph.getEdges({ target: nodeId, type: edgeType })
+      return results.map((r) => attrsToEdge(r.source, r.target, r.attrs))
+    }
+    return this.legacyStore!.getInEdges(nodeId, edgeType)
   }
 
-  /**
-   * Get children of a node (via functional edges)
-   */
   async getChildren(nodeId: string): Promise<Node[]> {
-    return this.store.getChildren(nodeId)
+    if (this.isNewStore) {
+      // Get functional edges from this node, then fetch target nodes
+      const edges = await this.context!.graph.getEdges({ source: nodeId, type: 'functional' })
+      // Sort by sibling_order
+      edges.sort(
+        (a, b) =>
+          ((a.attrs.sibling_order as number) ?? 0) - ((b.attrs.sibling_order as number) ?? 0)
+      )
+      const children: Node[] = []
+      for (const edge of edges) {
+        const attrs = await this.context!.graph.getNode(edge.target)
+        if (attrs) children.push(attrsToNode(edge.target, attrs))
+      }
+      return children
+    }
+    return this.legacyStore!.getChildren(nodeId)
   }
 
-  /**
-   * Get parent of a node (via functional edges)
-   */
   async getParent(nodeId: string): Promise<Node | undefined> {
-    const parent = await this.store.getParent(nodeId)
+    if (this.isNewStore) {
+      const edges = await this.context!.graph.getEdges({ target: nodeId, type: 'functional' })
+      const firstEdge = edges[0]
+      if (!firstEdge) return undefined
+      const attrs = await this.context!.graph.getNode(firstEdge.source)
+      return attrs ? attrsToNode(firstEdge.source, attrs) : undefined
+    }
+    const parent = await this.legacyStore!.getParent(nodeId)
     return parent ?? undefined
   }
 
-  /**
-   * Get dependencies of a node (via dependency edges)
-   */
   async getDependencies(nodeId: string): Promise<Node[]> {
-    return this.store.getDependencies(nodeId)
+    if (this.isNewStore) {
+      const edges = await this.context!.graph.getEdges({ source: nodeId, type: 'dependency' })
+      const nodes: Node[] = []
+      for (const edge of edges) {
+        const attrs = await this.context!.graph.getNode(edge.target)
+        if (attrs) nodes.push(attrsToNode(edge.target, attrs))
+      }
+      return nodes
+    }
+    return this.legacyStore!.getDependencies(nodeId)
   }
 
-  /**
-   * Get dependents of a node (nodes that depend on this node)
-   */
   async getDependents(nodeId: string): Promise<Node[]> {
-    return this.store.getDependents(nodeId)
+    if (this.isNewStore) {
+      const edges = await this.context!.graph.getEdges({ target: nodeId, type: 'dependency' })
+      const nodes: Node[] = []
+      for (const edge of edges) {
+        const attrs = await this.context!.graph.getNode(edge.source)
+        if (attrs) nodes.push(attrsToNode(edge.source, attrs))
+      }
+      return nodes
+    }
+    return this.legacyStore!.getDependents(nodeId)
   }
 
   // ==================== Graph Operations ====================
 
-  /**
-   * Get topological order of nodes (respecting dependencies)
-   */
   async getTopologicalOrder(): Promise<Node[]> {
-    return this.store.getTopologicalOrder()
+    if (this.isNewStore) {
+      // Kahn's algorithm at RPG layer
+      const allNodes = await this.context!.graph.getNodes()
+      const depEdges = await this.context!.graph.getEdges({ type: 'dependency' })
+
+      const inDegree = new Map<string, number>()
+      const adjList = new Map<string, string[]>()
+
+      for (const { id } of allNodes) {
+        inDegree.set(id, 0)
+        adjList.set(id, [])
+      }
+
+      for (const edge of depEdges) {
+        inDegree.set(edge.target, (inDegree.get(edge.target) ?? 0) + 1)
+        adjList.get(edge.source)?.push(edge.target)
+      }
+
+      const queue: string[] = []
+      for (const [id, deg] of inDegree) {
+        if (deg === 0) queue.push(id)
+      }
+
+      const nodeMap = new Map(allNodes.map((r) => [r.id, attrsToNode(r.id, r.attrs)]))
+      const ordered: Node[] = []
+
+      while (queue.length > 0) {
+        const nodeId = queue.shift()!
+        const node = nodeMap.get(nodeId)
+        if (node) ordered.push(node)
+
+        for (const neighbor of adjList.get(nodeId) ?? []) {
+          const newDeg = (inDegree.get(neighbor) ?? 1) - 1
+          inDegree.set(neighbor, newDeg)
+          if (newDeg === 0) queue.push(neighbor)
+        }
+      }
+
+      return ordered
+    }
+    return this.legacyStore!.getTopologicalOrder()
   }
 
-  /**
-   * Find nodes by semantic feature search
-   */
-  async searchByFeature(query: string): Promise<Node[]> {
-    const hits = await this.store.searchByFeature(query)
+  async searchByFeature(query: string, scopes?: string[]): Promise<Node[]> {
+    if (this.isNewStore) {
+      if (scopes && scopes.length > 0) {
+        // Collect subtree IDs via BFS on functional edges
+        const subtreeIds = new Set<string>()
+        const bfsQueue = [...scopes]
+        while (bfsQueue.length > 0) {
+          const current = bfsQueue.shift()!
+          if (subtreeIds.has(current)) continue
+          subtreeIds.add(current)
+          const childEdges = await this.context!.graph.getEdges({
+            source: current,
+            type: 'functional',
+          })
+          for (const e of childEdges) {
+            if (!subtreeIds.has(e.target)) bfsQueue.push(e.target)
+          }
+        }
+
+        // Text search then filter by subtree
+        const hits = await this.context!.text.search(query, {
+          fields: ['feature_desc', 'feature_keywords'],
+        })
+        const filteredHits = hits.filter((h) => subtreeIds.has(h.id))
+        const nodes: Node[] = []
+        for (const hit of filteredHits) {
+          const attrs = await this.context!.graph.getNode(hit.id)
+          if (attrs) nodes.push(attrsToNode(hit.id, attrs))
+        }
+        return nodes
+      }
+
+      const hits = await this.context!.text.search(query, {
+        fields: ['feature_desc', 'feature_keywords'],
+      })
+      const nodes: Node[] = []
+      for (const hit of hits) {
+        const attrs = await this.context!.graph.getNode(hit.id)
+        if (attrs) nodes.push(attrsToNode(hit.id, attrs))
+      }
+      return nodes
+    }
+    const hits = await this.legacyStore!.searchByFeature(query, scopes)
     return hits.map((h) => h.node)
   }
 
-  /**
-   * Find nodes by file path pattern
-   */
   async searchByPath(pattern: string): Promise<Node[]> {
-    return this.store.searchByPath(pattern)
+    if (this.isNewStore) {
+      // Path search uses glob/regex matching, not FTS
+      const allNodes = await this.context!.graph.getNodes()
+      // Convert pattern: preserve existing .* regex, escape special chars,
+      // then convert SQL LIKE % and glob * to .*
+      const placeholder = '<<DOTSTAR>>'
+      const regexStr = pattern
+        .replace(/\.\*/g, placeholder) // preserve existing .* patterns
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/%/g, '.*') // SQL LIKE % → regex .*
+        .replace(/\*/g, '.*') // glob * → regex .*
+        .replaceAll(placeholder, '.*') // restore preserved .* patterns
+      const regex = new RegExp(regexStr)
+      return allNodes
+        .filter((r) => {
+          const path = r.attrs.path as string | undefined
+          return path && regex.test(path)
+        })
+        .map((r) => attrsToNode(r.id, r.attrs))
+    }
+    return this.legacyStore!.searchByPath(pattern)
   }
 
   // ==================== Serialization ====================
 
-  /**
-   * Serialize the graph for persistence
-   */
   async serialize(): Promise<SerializedRPG> {
-    return this.store.exportJSON(this.config)
+    if (this.isNewStore) {
+      const nodes = await this.getNodes()
+      const edges = await this.getEdges()
+      return {
+        version: '1.0.0',
+        config: this.config,
+        nodes,
+        edges,
+      }
+    }
+    return this.legacyStore!.exportJSON(this.config)
   }
 
-  /**
-   * Export to JSON string
-   */
   async toJSON(): Promise<string> {
     const data = await this.serialize()
     return JSON.stringify(data, null, 2)
   }
 
-  /**
-   * Create an RPG from serialized data
-   */
   static async deserialize(
     data: SerializedRPG,
-    store?: GraphStore
+    storeOrContext?: GraphStore | ContextStore
   ): Promise<RepositoryPlanningGraph> {
     const parsed = SerializedRPGSchema.parse(data)
-    const rpg = await RepositoryPlanningGraph.create(parsed.config, store)
-    await rpg.store.importJSON(parsed)
+    const rpg = await RepositoryPlanningGraph.create(parsed.config, storeOrContext)
+
+    // Import nodes and edges
+    for (const nodeData of parsed.nodes) {
+      const node = nodeData as Node
+      await rpg.addNode(node)
+    }
+    for (const edgeData of parsed.edges) {
+      const edge = edgeData as Edge
+      await rpg.addEdge(edge)
+    }
+
     return rpg
   }
 
-  /**
-   * Create an RPG from JSON string
-   */
-  static async fromJSON(json: string, store?: GraphStore): Promise<RepositoryPlanningGraph> {
-    return RepositoryPlanningGraph.deserialize(JSON.parse(json), store)
+  static async fromJSON(
+    json: string,
+    storeOrContext?: GraphStore | ContextStore
+  ): Promise<RepositoryPlanningGraph> {
+    return RepositoryPlanningGraph.deserialize(JSON.parse(json), storeOrContext)
   }
 
   // ==================== Statistics ====================
 
-  /**
-   * Get graph statistics
-   */
   async getStats(): Promise<GraphStats> {
-    return this.store.getStats()
+    if (this.isNewStore) {
+      const allNodes = await this.context!.graph.getNodes()
+      const allEdges = await this.context!.graph.getEdges()
+
+      let highLevelCount = 0
+      let lowLevelCount = 0
+      for (const { attrs } of allNodes) {
+        if (attrs.type === 'high_level') highLevelCount++
+        else if (attrs.type === 'low_level') lowLevelCount++
+      }
+
+      let functionalCount = 0
+      let dependencyCount = 0
+      for (const { attrs } of allEdges) {
+        if (attrs.type === 'functional') functionalCount++
+        else if (attrs.type === 'dependency') dependencyCount++
+      }
+
+      return {
+        nodeCount: allNodes.length,
+        edgeCount: allEdges.length,
+        highLevelNodeCount: highLevelCount,
+        lowLevelNodeCount: lowLevelCount,
+        functionalEdgeCount: functionalCount,
+        dependencyEdgeCount: dependencyCount,
+      }
+    }
+    return this.legacyStore!.getStats()
   }
 
-  /**
-   * Get the repository configuration
-   */
   getConfig(): RPGConfig {
     return { ...this.config }
   }
 
-  /**
-   * Close the store and release resources
-   */
   async close(): Promise<void> {
-    await this.store.close()
+    if (this.context) {
+      await this.context.close()
+    } else if (this.legacyStore) {
+      await this.legacyStore.close()
+    }
   }
+}
+
+/** Type guard: distinguish ContextStore from legacy GraphStore */
+function isContextStore(obj: unknown): obj is ContextStore {
+  return (
+    obj !== null &&
+    typeof obj === 'object' &&
+    'graph' in (obj as Record<string, unknown>) &&
+    'text' in (obj as Record<string, unknown>) &&
+    'vector' in (obj as Record<string, unknown>)
+  )
 }

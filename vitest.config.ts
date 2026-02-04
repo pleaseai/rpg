@@ -15,7 +15,7 @@ export default defineConfig({
     testTimeout: 10000,
     server: {
       deps: {
-        external: [/^bun:/],
+        external: [],
       },
     },
   },

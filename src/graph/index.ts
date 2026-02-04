@@ -56,6 +56,20 @@ export type {
   GraphStats,
 } from './store'
 
-// Store implementations - import directly to avoid loading engine dependencies:
-//   import { SQLiteStore } from './graph/sqlite-store'   // requires bun:sqlite
+// Adapters: RPG domain types ↔ generic store attrs
+export {
+  nodeToAttrs,
+  attrsToNode,
+  nodeToSearchFields,
+  edgeToAttrs,
+  attrsToEdge,
+} from './adapters'
+
+// Legacy store implementations - import directly to avoid loading engine dependencies:
+//   import { SQLiteStore } from './graph/sqlite-store'   // requires better-sqlite3
 //   import { SurrealStore } from './graph/surreal-store'  // requires surrealdb + @surrealdb/node
+//
+// New store implementations - import from src/store/:
+//   import { SQLiteGraphStore, SQLiteTextSearchStore } from '../store/sqlite'
+//   import { SurrealGraphStore, SurrealTextSearchStore } from '../store/surreal'
+//   import { LanceDBVectorStore } from '../store/lancedb'

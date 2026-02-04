@@ -64,7 +64,7 @@ export interface GraphStats {
  * GraphStore - Abstract storage interface for the Repository Planning Graph
  *
  * Provides a unified API for graph CRUD, traversal, search, and persistence.
- * Implementations: SQLiteStore (bun:sqlite), SurrealStore (surrealdb).
+ * Implementations: SQLiteStore (better-sqlite3), SurrealStore (surrealdb).
  */
 export interface GraphStore {
   // ==================== Lifecycle ====================

@@ -15697,67 +15697,6 @@
       "createdAt": 1770203812592,
       "hash": "07abdfba05ec06d1"
     },
-    "src/graph/rpg.ts:class:RepositoryPlanningGraph": {
-      "feature": {
-        "description": "class representing repository planning graph",
-        "keywords": [
-          "repository",
-          "planning",
-          "graph",
-          "class",
-          "src",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "8e4c649895b2830b"
-    },
-    "src/graph/rpg.ts:method:constructor": {
-      "feature": {
-        "description": "method to constructor in RepositoryPlanningGraph",
-        "keywords": [
-          "constructor",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "1d6286ff14d849b3"
-    },
-    "src/graph/rpg.ts:method:create": {
-      "feature": {
-        "description": "method to create in RepositoryPlanningGraph",
-        "keywords": [
-          "create",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "7795a2d2c2410007"
-    },
-    "src/graph/rpg.ts:method:addNode": {
-      "feature": {
-        "description": "method to add node in RepositoryPlanningGraph",
-        "keywords": [
-          "add",
-          "node",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "7e7a6edeaea0ede8"
-    },
     "src/graph/rpg.ts:method:addHighLevelNode": {
       "feature": {
         "description": "method to add high level node in RepositoryPlanningGraph",
@@ -15794,138 +15733,6 @@
       "createdAt": 1770203812734,
       "hash": "2b73ed9559d1e2f6"
     },
-    "src/graph/rpg.ts:method:getNode": {
-      "feature": {
-        "description": "method to get node in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "node",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "966a1e55ff9fcbf8"
-    },
-    "src/graph/rpg.ts:method:updateNode": {
-      "feature": {
-        "description": "method to update node in RepositoryPlanningGraph",
-        "keywords": [
-          "update",
-          "node",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "1b61fa2fef6e9c23"
-    },
-    "src/graph/rpg.ts:method:removeNode": {
-      "feature": {
-        "description": "method to remove node in RepositoryPlanningGraph",
-        "keywords": [
-          "remove",
-          "node",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "e121bd541ca552cd"
-    },
-    "src/graph/rpg.ts:method:hasNode": {
-      "feature": {
-        "description": "method to has node in RepositoryPlanningGraph",
-        "keywords": [
-          "has",
-          "node",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "f11f9070b2870f30"
-    },
-    "src/graph/rpg.ts:method:getNodes": {
-      "feature": {
-        "description": "method to get nodes in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "nodes",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "0e32f919ed688079"
-    },
-    "src/graph/rpg.ts:method:getHighLevelNodes": {
-      "feature": {
-        "description": "method to get high level nodes in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "high",
-          "level",
-          "nodes",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "9f950da18bf1f7d6"
-    },
-    "src/graph/rpg.ts:method:getLowLevelNodes": {
-      "feature": {
-        "description": "method to get low level nodes in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "low",
-          "level",
-          "nodes",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "dcd320e897cb4823"
-    },
-    "src/graph/rpg.ts:method:addEdge": {
-      "feature": {
-        "description": "method to add edge in RepositoryPlanningGraph",
-        "keywords": [
-          "add",
-          "edge",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "5ca8feb1e55af612"
-    },
     "src/graph/rpg.ts:method:addFunctionalEdge": {
       "feature": {
         "description": "method to add functional edge in RepositoryPlanningGraph",
@@ -15960,217 +15767,6 @@
       "createdAt": 1770203812734,
       "hash": "a688e5e881d58ae8"
     },
-    "src/graph/rpg.ts:method:getEdges": {
-      "feature": {
-        "description": "method to get edges in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "edges",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "85b9eb72752a45fc"
-    },
-    "src/graph/rpg.ts:method:getFunctionalEdges": {
-      "feature": {
-        "description": "method to get functional edges in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "functional",
-          "edges",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "44c586980d0a82c6"
-    },
-    "src/graph/rpg.ts:method:getDependencyEdges": {
-      "feature": {
-        "description": "method to get dependency edges in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "dependency",
-          "edges",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "6bd3c72185279bd3"
-    },
-    "src/graph/rpg.ts:method:getOutEdges": {
-      "feature": {
-        "description": "method to get out edges in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "out",
-          "edges",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "cb0d983f63fb097d"
-    },
-    "src/graph/rpg.ts:method:getInEdges": {
-      "feature": {
-        "description": "method to get in edges in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "edges",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "cd9e6cca879302c5"
-    },
-    "src/graph/rpg.ts:method:getChildren": {
-      "feature": {
-        "description": "method to get children in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "children",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "c36341355be52217"
-    },
-    "src/graph/rpg.ts:method:getParent": {
-      "feature": {
-        "description": "method to get parent in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "parent",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812734,
-      "hash": "99db2407ae7d4ff5"
-    },
-    "src/graph/rpg.ts:method:getDependencies": {
-      "feature": {
-        "description": "method to get dependencies in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "dependencies",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "adbefd1bb86013c2"
-    },
-    "src/graph/rpg.ts:method:getDependents": {
-      "feature": {
-        "description": "method to get dependents in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "dependents",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "a91c40a352dd428b"
-    },
-    "src/graph/rpg.ts:method:getTopologicalOrder": {
-      "feature": {
-        "description": "method to get topological order in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "topological",
-          "order",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "b593660913365555"
-    },
-    "src/graph/rpg.ts:method:searchByFeature": {
-      "feature": {
-        "description": "method to search by feature in RepositoryPlanningGraph",
-        "keywords": [
-          "search",
-          "feature",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "b776500f5a74799d"
-    },
-    "src/graph/rpg.ts:method:searchByPath": {
-      "feature": {
-        "description": "method to search by path in RepositoryPlanningGraph",
-        "keywords": [
-          "search",
-          "path",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "6313b48c9670c3e1"
-    },
-    "src/graph/rpg.ts:method:serialize": {
-      "feature": {
-        "description": "method to serialize in RepositoryPlanningGraph",
-        "keywords": [
-          "serialize",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "42171b2cc537b630"
-    },
     "src/graph/rpg.ts:method:toJSON": {
       "feature": {
         "description": "method to to json in RepositoryPlanningGraph",
@@ -16185,68 +15781,6 @@
       },
       "createdAt": 1770203812735,
       "hash": "31b73338d3149423"
-    },
-    "src/graph/rpg.ts:method:deserialize": {
-      "feature": {
-        "description": "method to deserialize in RepositoryPlanningGraph",
-        "keywords": [
-          "deserialize",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "16588d304bd8662d"
-    },
-    "src/graph/rpg.ts:method:fromJSON": {
-      "feature": {
-        "description": "method to from json in RepositoryPlanningGraph",
-        "keywords": [
-          "from",
-          "json",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "55927c787642156b"
-    },
-    "src/graph/rpg.ts:method:getStats": {
-      "feature": {
-        "description": "method to get stats in RepositoryPlanningGraph",
-        "keywords": [
-          "get",
-          "stats",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "c171234dac005875"
-    },
-    "src/graph/rpg.ts:method:close": {
-      "feature": {
-        "description": "method to close in RepositoryPlanningGraph",
-        "keywords": [
-          "close",
-          "method",
-          "repositoryplanninggraph",
-          "src",
-          "graph",
-          "rpg"
-        ]
-      },
-      "createdAt": 1770203812735,
-      "hash": "b8b7c598f23cd662"
     },
     "src/graph/sqlite-store.ts:file:sqlite-store": {
       "feature": {
@@ -17500,6 +17034,1930 @@
       "createdAt": 1770204238323,
       "hash": "95278976b8ad17b9"
     },
+    "src/graph/adapters.ts:file:adapters": {
+      "feature": {
+        "description": "adapters module in graph",
+        "keywords": [
+          "adapters",
+          "file",
+          "src",
+          "graph"
+        ]
+      },
+      "createdAt": 1770208180489,
+      "hash": "5c59cc589246d9ba"
+    },
+    "src/graph/adapters.ts:function:nodeToAttrs": {
+      "feature": {
+        "description": "function that node to attrs",
+        "keywords": [
+          "node",
+          "attrs",
+          "function",
+          "src",
+          "graph",
+          "adapters"
+        ]
+      },
+      "createdAt": 1770208180489,
+      "hash": "b45e25dbc56513d3"
+    },
+    "src/graph/adapters.ts:function:attrsToNode": {
+      "feature": {
+        "description": "function that attrs to node",
+        "keywords": [
+          "attrs",
+          "node",
+          "function",
+          "src",
+          "graph",
+          "adapters"
+        ]
+      },
+      "createdAt": 1770208180489,
+      "hash": "e3855e52e945dc43"
+    },
+    "src/graph/adapters.ts:function:nodeToSearchFields": {
+      "feature": {
+        "description": "function that node to search fields",
+        "keywords": [
+          "node",
+          "search",
+          "fields",
+          "function",
+          "src",
+          "graph",
+          "adapters"
+        ]
+      },
+      "createdAt": 1770208180489,
+      "hash": "4885e6ff3992da85"
+    },
+    "src/graph/adapters.ts:function:edgeToAttrs": {
+      "feature": {
+        "description": "function that edge to attrs",
+        "keywords": [
+          "edge",
+          "attrs",
+          "function",
+          "src",
+          "graph",
+          "adapters"
+        ]
+      },
+      "createdAt": 1770208180489,
+      "hash": "ed5e923b11014946"
+    },
+    "src/graph/adapters.ts:function:attrsToEdge": {
+      "feature": {
+        "description": "function that attrs to edge",
+        "keywords": [
+          "attrs",
+          "edge",
+          "function",
+          "src",
+          "graph",
+          "adapters"
+        ]
+      },
+      "createdAt": 1770208180489,
+      "hash": "d4da038de603d4d8"
+    },
+    "src/graph/rpg.ts:method:constructor": {
+      "feature": {
+        "description": "method to constructor in RepositoryPlanningGraph",
+        "keywords": [
+          "constructor",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "9424b7aaeb2c7b24"
+    },
+    "src/graph/rpg.ts:method:isNewStore": {
+      "feature": {
+        "description": "method to is new store in RepositoryPlanningGraph",
+        "keywords": [
+          "new",
+          "store",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "2f5ef3e19c3edc3e"
+    },
+    "src/graph/rpg.ts:method:addNode": {
+      "feature": {
+        "description": "method to add node in RepositoryPlanningGraph",
+        "keywords": [
+          "add",
+          "node",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "1e0227d28f668f80"
+    },
+    "src/graph/rpg.ts:method:getNode": {
+      "feature": {
+        "description": "method to get node in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "node",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "89578630f5911676"
+    },
+    "src/graph/rpg.ts:method:updateNode": {
+      "feature": {
+        "description": "method to update node in RepositoryPlanningGraph",
+        "keywords": [
+          "update",
+          "node",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "997679e879e717cc"
+    },
+    "src/graph/rpg.ts:method:removeNode": {
+      "feature": {
+        "description": "method to remove node in RepositoryPlanningGraph",
+        "keywords": [
+          "remove",
+          "node",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "e372e2e995c0d6e6"
+    },
+    "src/graph/rpg.ts:method:hasNode": {
+      "feature": {
+        "description": "method to has node in RepositoryPlanningGraph",
+        "keywords": [
+          "has",
+          "node",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "60980d18d0391b36"
+    },
+    "src/graph/rpg.ts:method:getNodes": {
+      "feature": {
+        "description": "method to get nodes in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "nodes",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "80f4adc2c811f001"
+    },
+    "src/graph/rpg.ts:method:getHighLevelNodes": {
+      "feature": {
+        "description": "method to get high level nodes in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "high",
+          "level",
+          "nodes",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "8c0af1143c338ee4"
+    },
+    "src/graph/rpg.ts:method:getLowLevelNodes": {
+      "feature": {
+        "description": "method to get low level nodes in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "low",
+          "level",
+          "nodes",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "ed774ff7ea617b6b"
+    },
+    "src/graph/rpg.ts:method:addEdge": {
+      "feature": {
+        "description": "method to add edge in RepositoryPlanningGraph",
+        "keywords": [
+          "add",
+          "edge",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "817a4861e8e04bad"
+    },
+    "src/graph/rpg.ts:method:getEdges": {
+      "feature": {
+        "description": "method to get edges in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "edges",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180634,
+      "hash": "777ca1e2a3059f83"
+    },
+    "src/graph/rpg.ts:method:getFunctionalEdges": {
+      "feature": {
+        "description": "method to get functional edges in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "functional",
+          "edges",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "c0312b57f4f3cead"
+    },
+    "src/graph/rpg.ts:method:getDependencyEdges": {
+      "feature": {
+        "description": "method to get dependency edges in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "dependency",
+          "edges",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "b6862b62a944d531"
+    },
+    "src/graph/rpg.ts:method:getOutEdges": {
+      "feature": {
+        "description": "method to get out edges in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "out",
+          "edges",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "36d37e468043f51d"
+    },
+    "src/graph/rpg.ts:method:getInEdges": {
+      "feature": {
+        "description": "method to get in edges in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "edges",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "076713f1dc361a7b"
+    },
+    "src/graph/rpg.ts:method:getChildren": {
+      "feature": {
+        "description": "method to get children in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "children",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "48acbfbc75e20798"
+    },
+    "src/graph/rpg.ts:method:getParent": {
+      "feature": {
+        "description": "method to get parent in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "parent",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "3c9f687716b57cb4"
+    },
+    "src/graph/rpg.ts:method:getDependencies": {
+      "feature": {
+        "description": "method to get dependencies in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "dependencies",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "30e0b51404b210dc"
+    },
+    "src/graph/rpg.ts:method:getDependents": {
+      "feature": {
+        "description": "method to get dependents in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "dependents",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "fc30c580af8d7945"
+    },
+    "src/graph/rpg.ts:method:getTopologicalOrder": {
+      "feature": {
+        "description": "method to get topological order in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "topological",
+          "order",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "aa87c13cf24e441a"
+    },
+    "src/graph/rpg.ts:method:searchByFeature": {
+      "feature": {
+        "description": "method to search by feature in RepositoryPlanningGraph",
+        "keywords": [
+          "search",
+          "feature",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "ae3c90f07a89a0b0"
+    },
+    "src/graph/rpg.ts:method:serialize": {
+      "feature": {
+        "description": "method to serialize in RepositoryPlanningGraph",
+        "keywords": [
+          "serialize",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "21637a37f244097a"
+    },
+    "src/graph/rpg.ts:method:deserialize": {
+      "feature": {
+        "description": "method to deserialize in RepositoryPlanningGraph",
+        "keywords": [
+          "deserialize",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "0e4649122feca057"
+    },
+    "src/graph/rpg.ts:method:fromJSON": {
+      "feature": {
+        "description": "method to from json in RepositoryPlanningGraph",
+        "keywords": [
+          "from",
+          "json",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "dc3aa7f225cde844"
+    },
+    "src/graph/rpg.ts:method:getStats": {
+      "feature": {
+        "description": "method to get stats in RepositoryPlanningGraph",
+        "keywords": [
+          "get",
+          "stats",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "e71e84fe5629e90d"
+    },
+    "src/graph/rpg.ts:method:close": {
+      "feature": {
+        "description": "method to close in RepositoryPlanningGraph",
+        "keywords": [
+          "close",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "4bbe7d24aa37cd2a"
+    },
+    "src/graph/rpg.ts:function:isContextStore": {
+      "feature": {
+        "description": "check if context store",
+        "keywords": [
+          "context",
+          "store",
+          "function",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770208180635,
+      "hash": "ab4cd8d9c8c5338b"
+    },
+    "src/store/context-store.ts:file:context-store": {
+      "feature": {
+        "description": "context store module in store",
+        "keywords": [
+          "context",
+          "store",
+          "file",
+          "src",
+          "context-store"
+        ]
+      },
+      "createdAt": 1770208181006,
+      "hash": "95f22cfa8006f71c"
+    },
+    "src/store/default-context-store.ts:file:default-context-store": {
+      "feature": {
+        "description": "default context store module in store",
+        "keywords": [
+          "default",
+          "context",
+          "store",
+          "file",
+          "src",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181008,
+      "hash": "13605252f4978417"
+    },
+    "src/store/default-context-store.ts:class:DefaultContextStore": {
+      "feature": {
+        "description": "class representing default context store",
+        "keywords": [
+          "default",
+          "context",
+          "store",
+          "class",
+          "src",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181008,
+      "hash": "83cf4c8cfaeeb9dc"
+    },
+    "src/store/default-context-store.ts:method:graph": {
+      "feature": {
+        "description": "method to graph in DefaultContextStore",
+        "keywords": [
+          "graph",
+          "method",
+          "defaultcontextstore",
+          "src",
+          "store",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181008,
+      "hash": "b4c12a47b218aad6"
+    },
+    "src/store/default-context-store.ts:method:text": {
+      "feature": {
+        "description": "method to text in DefaultContextStore",
+        "keywords": [
+          "text",
+          "method",
+          "defaultcontextstore",
+          "src",
+          "store",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181009,
+      "hash": "c2d5c147809bbd33"
+    },
+    "src/store/default-context-store.ts:method:vector": {
+      "feature": {
+        "description": "method to vector in DefaultContextStore",
+        "keywords": [
+          "vector",
+          "method",
+          "defaultcontextstore",
+          "src",
+          "store",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181009,
+      "hash": "bf0a8ae478b6205c"
+    },
+    "src/store/default-context-store.ts:method:open": {
+      "feature": {
+        "description": "method to open in DefaultContextStore",
+        "keywords": [
+          "open",
+          "method",
+          "defaultcontextstore",
+          "src",
+          "store",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181009,
+      "hash": "5a50d492e1fae954"
+    },
+    "src/store/default-context-store.ts:method:close": {
+      "feature": {
+        "description": "method to close in DefaultContextStore",
+        "keywords": [
+          "close",
+          "method",
+          "defaultcontextstore",
+          "src",
+          "store",
+          "default-context-store"
+        ]
+      },
+      "createdAt": 1770208181009,
+      "hash": "6272800ad7e88c58"
+    },
+    "src/store/graph-store.ts:file:graph-store": {
+      "feature": {
+        "description": "graph store module in store",
+        "keywords": [
+          "graph",
+          "store",
+          "file",
+          "src",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181015,
+      "hash": "be56bc18ef2ec9ff"
+    },
+    "src/store/index.ts:file:index": {
+      "feature": {
+        "description": "index module in store",
+        "keywords": [
+          "index",
+          "file",
+          "src",
+          "store"
+        ]
+      },
+      "createdAt": 1770208181017,
+      "hash": "8bfcdd04a412528f"
+    },
+    "src/store/lancedb/index.ts:file:index": {
+      "feature": {
+        "description": "index module in lancedb",
+        "keywords": [
+          "index",
+          "file",
+          "src",
+          "store",
+          "lancedb"
+        ]
+      },
+      "createdAt": 1770208181018,
+      "hash": "cdbe2eb3918afa3e"
+    },
+    "src/store/lancedb/vector-store.ts:file:vector-store": {
+      "feature": {
+        "description": "vector store module in lancedb",
+        "keywords": [
+          "vector",
+          "store",
+          "file",
+          "src",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "4416cf03ea9f17f6"
+    },
+    "src/store/lancedb/vector-store.ts:class:LanceDBVectorStore": {
+      "feature": {
+        "description": "class representing lance dbvector store",
+        "keywords": [
+          "lance",
+          "dbvector",
+          "store",
+          "class",
+          "src",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "f6b05e99f45c33f1"
+    },
+    "src/store/lancedb/vector-store.ts:method:open": {
+      "feature": {
+        "description": "method to open in LanceDBVectorStore",
+        "keywords": [
+          "open",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "0c4cb619182db2ec"
+    },
+    "src/store/lancedb/vector-store.ts:method:close": {
+      "feature": {
+        "description": "method to close in LanceDBVectorStore",
+        "keywords": [
+          "close",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "cf4a46bdea711c0d"
+    },
+    "src/store/lancedb/vector-store.ts:method:upsert": {
+      "feature": {
+        "description": "method to upsert in LanceDBVectorStore",
+        "keywords": [
+          "upsert",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "0db242acfc2a2dc1"
+    },
+    "src/store/lancedb/vector-store.ts:method:remove": {
+      "feature": {
+        "description": "method to remove in LanceDBVectorStore",
+        "keywords": [
+          "remove",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "2ed13bb5220e6648"
+    },
+    "src/store/lancedb/vector-store.ts:method:search": {
+      "feature": {
+        "description": "method to search in LanceDBVectorStore",
+        "keywords": [
+          "search",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "0a4676350a41d2d4"
+    },
+    "src/store/lancedb/vector-store.ts:method:upsertBatch": {
+      "feature": {
+        "description": "method to upsert batch in LanceDBVectorStore",
+        "keywords": [
+          "upsert",
+          "batch",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "ef1a498e82adaf26"
+    },
+    "src/store/lancedb/vector-store.ts:method:count": {
+      "feature": {
+        "description": "method to count in LanceDBVectorStore",
+        "keywords": [
+          "count",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "0fa973c2d9c0fe2b"
+    },
+    "src/store/lancedb/vector-store.ts:method:ensureDb": {
+      "feature": {
+        "description": "method to ensure db in LanceDBVectorStore",
+        "keywords": [
+          "ensure",
+          "method",
+          "lancedbvectorstore",
+          "src",
+          "store",
+          "lancedb",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181027,
+      "hash": "ff00c07e57628763"
+    },
+    "src/store/sqlite/graph-store.ts:file:graph-store": {
+      "feature": {
+        "description": "graph store module in sqlite",
+        "keywords": [
+          "graph",
+          "store",
+          "file",
+          "src",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181039,
+      "hash": "37ed012874178c02"
+    },
+    "src/store/sqlite/graph-store.ts:class:SQLiteGraphStore": {
+      "feature": {
+        "description": "class representing sqlite graph store",
+        "keywords": [
+          "sqlite",
+          "graph",
+          "store",
+          "class",
+          "src",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181039,
+      "hash": "1378c8733862b535"
+    },
+    "src/store/sqlite/graph-store.ts:method:open": {
+      "feature": {
+        "description": "method to open in SQLiteGraphStore",
+        "keywords": [
+          "open",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181039,
+      "hash": "aa1e3834568902d9"
+    },
+    "src/store/sqlite/graph-store.ts:method:close": {
+      "feature": {
+        "description": "method to close in SQLiteGraphStore",
+        "keywords": [
+          "close",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181039,
+      "hash": "6b496b7e7bf5fdc9"
+    },
+    "src/store/sqlite/graph-store.ts:method:addNode": {
+      "feature": {
+        "description": "method to add node in SQLiteGraphStore",
+        "keywords": [
+          "add",
+          "node",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181119,
+      "hash": "a0a795931216a03a"
+    },
+    "src/store/sqlite/graph-store.ts:method:getNode": {
+      "feature": {
+        "description": "method to get node in SQLiteGraphStore",
+        "keywords": [
+          "get",
+          "node",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181121,
+      "hash": "eab10345a3c26033"
+    },
+    "src/store/sqlite/graph-store.ts:method:hasNode": {
+      "feature": {
+        "description": "method to has node in SQLiteGraphStore",
+        "keywords": [
+          "has",
+          "node",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181122,
+      "hash": "0076808018d405ab"
+    },
+    "src/store/sqlite/graph-store.ts:method:updateNode": {
+      "feature": {
+        "description": "method to update node in SQLiteGraphStore",
+        "keywords": [
+          "update",
+          "node",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "336c4db3a7752d8a"
+    },
+    "src/store/sqlite/graph-store.ts:method:removeNode": {
+      "feature": {
+        "description": "method to remove node in SQLiteGraphStore",
+        "keywords": [
+          "remove",
+          "node",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "4343dc6fc48febd6"
+    },
+    "src/store/sqlite/graph-store.ts:method:getNodes": {
+      "feature": {
+        "description": "method to get nodes in SQLiteGraphStore",
+        "keywords": [
+          "get",
+          "nodes",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "d92a93dffb856af8"
+    },
+    "src/store/sqlite/graph-store.ts:method:addEdge": {
+      "feature": {
+        "description": "method to add edge in SQLiteGraphStore",
+        "keywords": [
+          "add",
+          "edge",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "a46b4229c60b6940"
+    },
+    "src/store/sqlite/graph-store.ts:method:removeEdge": {
+      "feature": {
+        "description": "method to remove edge in SQLiteGraphStore",
+        "keywords": [
+          "remove",
+          "edge",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "aef9886964cc9ba8"
+    },
+    "src/store/sqlite/graph-store.ts:method:getEdges": {
+      "feature": {
+        "description": "method to get edges in SQLiteGraphStore",
+        "keywords": [
+          "get",
+          "edges",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "6ae4434fadbaddab"
+    },
+    "src/store/sqlite/graph-store.ts:method:getNeighbors": {
+      "feature": {
+        "description": "method to get neighbors in SQLiteGraphStore",
+        "keywords": [
+          "get",
+          "neighbors",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181123,
+      "hash": "a796f74cf6a0666e"
+    },
+    "src/store/sqlite/graph-store.ts:method:traverse": {
+      "feature": {
+        "description": "method to traverse in SQLiteGraphStore",
+        "keywords": [
+          "traverse",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181124,
+      "hash": "dd8b7c66b88779ec"
+    },
+    "src/store/sqlite/graph-store.ts:method:subgraph": {
+      "feature": {
+        "description": "method to subgraph in SQLiteGraphStore",
+        "keywords": [
+          "subgraph",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181124,
+      "hash": "c90bab7169b890ff"
+    },
+    "src/store/sqlite/graph-store.ts:method:export": {
+      "feature": {
+        "description": "method to export in SQLiteGraphStore",
+        "keywords": [
+          "export",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181124,
+      "hash": "96bd3684b8ff9912"
+    },
+    "src/store/sqlite/graph-store.ts:method:import": {
+      "feature": {
+        "description": "method to import in SQLiteGraphStore",
+        "keywords": [
+          "import",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181125,
+      "hash": "e8bfb9b983c92320"
+    },
+    "src/store/sqlite/graph-store.ts:method:getDatabase": {
+      "feature": {
+        "description": "method to get database in SQLiteGraphStore",
+        "keywords": [
+          "get",
+          "database",
+          "method",
+          "sqlitegraphstore",
+          "src",
+          "store",
+          "sqlite",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181125,
+      "hash": "1a8e8b2fd38b172e"
+    },
+    "src/store/sqlite/index.ts:file:index": {
+      "feature": {
+        "description": "index module in sqlite",
+        "keywords": [
+          "index",
+          "file",
+          "src",
+          "store",
+          "sqlite"
+        ]
+      },
+      "createdAt": 1770208181143,
+      "hash": "158e7b5a942b34de"
+    },
+    "src/store/sqlite/text-search-store.ts:file:text-search-store": {
+      "feature": {
+        "description": "text search store module in sqlite",
+        "keywords": [
+          "text",
+          "search",
+          "store",
+          "file",
+          "src",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "c800fd9a7c3e1d72"
+    },
+    "src/store/sqlite/text-search-store.ts:class:SQLiteTextSearchStore": {
+      "feature": {
+        "description": "class representing sqlite text search store",
+        "keywords": [
+          "sqlite",
+          "text",
+          "search",
+          "store",
+          "class",
+          "src",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "b38c4c09196a293b"
+    },
+    "src/store/sqlite/text-search-store.ts:method:constructor": {
+      "feature": {
+        "description": "method to constructor in SQLiteTextSearchStore",
+        "keywords": [
+          "constructor",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "6f5804437be64512"
+    },
+    "src/store/sqlite/text-search-store.ts:method:open": {
+      "feature": {
+        "description": "method to open in SQLiteTextSearchStore",
+        "keywords": [
+          "open",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "26d846108f3d2f0c"
+    },
+    "src/store/sqlite/text-search-store.ts:method:close": {
+      "feature": {
+        "description": "method to close in SQLiteTextSearchStore",
+        "keywords": [
+          "close",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "f31c495e6cc07fdb"
+    },
+    "src/store/sqlite/text-search-store.ts:method:index": {
+      "feature": {
+        "description": "method to index in SQLiteTextSearchStore",
+        "keywords": [
+          "index",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "91069ad50f8fcd0c"
+    },
+    "src/store/sqlite/text-search-store.ts:method:remove": {
+      "feature": {
+        "description": "method to remove in SQLiteTextSearchStore",
+        "keywords": [
+          "remove",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "1f29f04e9bb89c2d"
+    },
+    "src/store/sqlite/text-search-store.ts:method:search": {
+      "feature": {
+        "description": "method to search in SQLiteTextSearchStore",
+        "keywords": [
+          "search",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "8ec4ef2eeefcb28b"
+    },
+    "src/store/sqlite/text-search-store.ts:method:indexBatch": {
+      "feature": {
+        "description": "method to index batch in SQLiteTextSearchStore",
+        "keywords": [
+          "index",
+          "batch",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "8c20be89b4bae1f1"
+    },
+    "src/store/sqlite/text-search-store.ts:method:toFtsQuery": {
+      "feature": {
+        "description": "method to to fts query in SQLiteTextSearchStore",
+        "keywords": [
+          "fts",
+          "query",
+          "method",
+          "sqlitetextsearchstore",
+          "src",
+          "store",
+          "sqlite",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181163,
+      "hash": "a25d0514dc6a657f"
+    },
+    "src/store/surreal/graph-store.ts:file:graph-store": {
+      "feature": {
+        "description": "graph store module in surreal",
+        "keywords": [
+          "graph",
+          "store",
+          "file",
+          "src",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181206,
+      "hash": "d8578b933efcddf5"
+    },
+    "src/store/surreal/graph-store.ts:class:SurrealGraphStore": {
+      "feature": {
+        "description": "class representing surreal graph store",
+        "keywords": [
+          "surreal",
+          "graph",
+          "store",
+          "class",
+          "src",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181206,
+      "hash": "2f74210c679857b6"
+    },
+    "src/store/surreal/graph-store.ts:method:open": {
+      "feature": {
+        "description": "method to open in SurrealGraphStore",
+        "keywords": [
+          "open",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181206,
+      "hash": "cd294dd9640a8812"
+    },
+    "src/store/surreal/graph-store.ts:method:close": {
+      "feature": {
+        "description": "method to close in SurrealGraphStore",
+        "keywords": [
+          "close",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181206,
+      "hash": "093634eec1716425"
+    },
+    "src/store/surreal/graph-store.ts:method:addNode": {
+      "feature": {
+        "description": "method to add node in SurrealGraphStore",
+        "keywords": [
+          "add",
+          "node",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "20503a5b20dd0095"
+    },
+    "src/store/surreal/graph-store.ts:method:getNode": {
+      "feature": {
+        "description": "method to get node in SurrealGraphStore",
+        "keywords": [
+          "get",
+          "node",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "42aa1bf62833f3cd"
+    },
+    "src/store/surreal/graph-store.ts:method:hasNode": {
+      "feature": {
+        "description": "method to has node in SurrealGraphStore",
+        "keywords": [
+          "has",
+          "node",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "c3e51339537844b8"
+    },
+    "src/store/surreal/graph-store.ts:method:updateNode": {
+      "feature": {
+        "description": "method to update node in SurrealGraphStore",
+        "keywords": [
+          "update",
+          "node",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "9c8fbfbea164c95e"
+    },
+    "src/store/surreal/graph-store.ts:method:removeNode": {
+      "feature": {
+        "description": "method to remove node in SurrealGraphStore",
+        "keywords": [
+          "remove",
+          "node",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "c4f59864b3d600d1"
+    },
+    "src/store/surreal/graph-store.ts:method:getNodes": {
+      "feature": {
+        "description": "method to get nodes in SurrealGraphStore",
+        "keywords": [
+          "get",
+          "nodes",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "58b52ce741a7be27"
+    },
+    "src/store/surreal/graph-store.ts:method:addEdge": {
+      "feature": {
+        "description": "method to add edge in SurrealGraphStore",
+        "keywords": [
+          "add",
+          "edge",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "7e12f1f1bdc9d9c0"
+    },
+    "src/store/surreal/graph-store.ts:method:removeEdge": {
+      "feature": {
+        "description": "method to remove edge in SurrealGraphStore",
+        "keywords": [
+          "remove",
+          "edge",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "d22eb362b8d36add"
+    },
+    "src/store/surreal/graph-store.ts:method:getEdges": {
+      "feature": {
+        "description": "method to get edges in SurrealGraphStore",
+        "keywords": [
+          "get",
+          "edges",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "5da6a5fe00cd4e22"
+    },
+    "src/store/surreal/graph-store.ts:method:getNeighbors": {
+      "feature": {
+        "description": "method to get neighbors in SurrealGraphStore",
+        "keywords": [
+          "get",
+          "neighbors",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "c5c25681516e0e89"
+    },
+    "src/store/surreal/graph-store.ts:method:traverse": {
+      "feature": {
+        "description": "method to traverse in SurrealGraphStore",
+        "keywords": [
+          "traverse",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "b28b480d31b27609"
+    },
+    "src/store/surreal/graph-store.ts:method:subgraph": {
+      "feature": {
+        "description": "method to subgraph in SurrealGraphStore",
+        "keywords": [
+          "subgraph",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181207,
+      "hash": "bfba9cb6aa1a3887"
+    },
+    "src/store/surreal/graph-store.ts:method:export": {
+      "feature": {
+        "description": "method to export in SurrealGraphStore",
+        "keywords": [
+          "export",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181208,
+      "hash": "bd0c23f36d70893f"
+    },
+    "src/store/surreal/graph-store.ts:method:import": {
+      "feature": {
+        "description": "method to import in SurrealGraphStore",
+        "keywords": [
+          "import",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181208,
+      "hash": "65bea4641f03a3e2"
+    },
+    "src/store/surreal/graph-store.ts:method:extractId": {
+      "feature": {
+        "description": "method to extract id in SurrealGraphStore",
+        "keywords": [
+          "extract",
+          "method",
+          "surrealgraphstore",
+          "src",
+          "store",
+          "surreal",
+          "graph-store"
+        ]
+      },
+      "createdAt": 1770208181208,
+      "hash": "601196a475770e6a"
+    },
+    "src/store/surreal/index.ts:file:index": {
+      "feature": {
+        "description": "index module in surreal",
+        "keywords": [
+          "index",
+          "file",
+          "src",
+          "store",
+          "surreal"
+        ]
+      },
+      "createdAt": 1770208181347,
+      "hash": "5a7952341cddbdf8"
+    },
+    "src/store/surreal/text-search-store.ts:file:text-search-store": {
+      "feature": {
+        "description": "text search store module in surreal",
+        "keywords": [
+          "text",
+          "search",
+          "store",
+          "file",
+          "src",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181352,
+      "hash": "ac3a93bde8203ae2"
+    },
+    "src/store/surreal/text-search-store.ts:class:SurrealTextSearchStore": {
+      "feature": {
+        "description": "class representing surreal text search store",
+        "keywords": [
+          "surreal",
+          "text",
+          "search",
+          "store",
+          "class",
+          "src",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "a06e6f107bcb15ff"
+    },
+    "src/store/surreal/text-search-store.ts:method:constructor": {
+      "feature": {
+        "description": "method to constructor in SurrealTextSearchStore",
+        "keywords": [
+          "constructor",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "9fde27330c23f8b8"
+    },
+    "src/store/surreal/text-search-store.ts:method:open": {
+      "feature": {
+        "description": "method to open in SurrealTextSearchStore",
+        "keywords": [
+          "open",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "4a7e992df1cef286"
+    },
+    "src/store/surreal/text-search-store.ts:method:close": {
+      "feature": {
+        "description": "method to close in SurrealTextSearchStore",
+        "keywords": [
+          "close",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "7d2c4e68e748f489"
+    },
+    "src/store/surreal/text-search-store.ts:method:index": {
+      "feature": {
+        "description": "method to index in SurrealTextSearchStore",
+        "keywords": [
+          "index",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "91618a8cf7cdf894"
+    },
+    "src/store/surreal/text-search-store.ts:method:remove": {
+      "feature": {
+        "description": "method to remove in SurrealTextSearchStore",
+        "keywords": [
+          "remove",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "2ab95259caed6f69"
+    },
+    "src/store/surreal/text-search-store.ts:method:search": {
+      "feature": {
+        "description": "method to search in SurrealTextSearchStore",
+        "keywords": [
+          "search",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "b8b34a13b3ef7c84"
+    },
+    "src/store/surreal/text-search-store.ts:method:indexBatch": {
+      "feature": {
+        "description": "method to index batch in SurrealTextSearchStore",
+        "keywords": [
+          "index",
+          "batch",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "3a573eba8e38efb0"
+    },
+    "src/store/surreal/text-search-store.ts:method:extractId": {
+      "feature": {
+        "description": "method to extract id in SurrealTextSearchStore",
+        "keywords": [
+          "extract",
+          "method",
+          "surrealtextsearchstore",
+          "src",
+          "store",
+          "surreal",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181353,
+      "hash": "a044e3f53f3b8b56"
+    },
+    "src/store/text-search-store.ts:file:text-search-store": {
+      "feature": {
+        "description": "text search store module in store",
+        "keywords": [
+          "text",
+          "search",
+          "store",
+          "file",
+          "src",
+          "text-search-store"
+        ]
+      },
+      "createdAt": 1770208181356,
+      "hash": "6ce5601b632a1f5e"
+    },
+    "src/store/types.ts:file:types": {
+      "feature": {
+        "description": "types module in store",
+        "keywords": [
+          "types",
+          "file",
+          "src",
+          "store"
+        ]
+      },
+      "createdAt": 1770208181358,
+      "hash": "6b65e51a0218d3d3"
+    },
+    "src/store/vector-store.ts:file:vector-store": {
+      "feature": {
+        "description": "vector store module in store",
+        "keywords": [
+          "vector",
+          "store",
+          "file",
+          "src",
+          "vector-store"
+        ]
+      },
+      "createdAt": 1770208181360,
+      "hash": "69a3303ed416ebb1"
+    },
+    "src/graph/rpg.ts:method:create": {
+      "feature": {
+        "description": "method to create in RepositoryPlanningGraph",
+        "keywords": [
+          "create",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770209658285,
+      "hash": "f1163a5cfe0969c2"
+    },
+    "src/graph/rpg.ts:method:searchByPath": {
+      "feature": {
+        "description": "method to search by path in RepositoryPlanningGraph",
+        "keywords": [
+          "search",
+          "path",
+          "method",
+          "repositoryplanninggraph",
+          "src",
+          "graph",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770209658286,
+      "hash": "8c3cc17ccb55ef80"
+    },
+    "src/graph/rpg.ts:class:RepositoryPlanningGraph": {
+      "feature": {
+        "description": "class representing repository planning graph",
+        "keywords": [
+          "repository",
+          "planning",
+          "graph",
+          "class",
+          "src",
+          "rpg"
+        ]
+      },
+      "createdAt": 1770209897300,
+      "hash": "3c779f322caabca1"
+    },
     "vendor/context-please/packages/core/test/integration/incremental-reindex.integration.test.ts:function:progressCallback": {
       "feature": {
         "description": "function that progress callback",
@@ -17516,7 +18974,7 @@
           "incremental-reindex.integration.test"
         ]
       },
-      "createdAt": 1770204241282,
+      "createdAt": 1770209904407,
       "hash": "962a819d7cdb8a60"
     },
     "vendor/context-please/packages/core/test/integration/indexing-workflow.integration.test.ts:function:progressCallback": {
@@ -17535,7 +18993,7 @@
           "indexing-workflow.integration.test"
         ]
       },
-      "createdAt": 1770204241290,
+      "createdAt": 1770209904418,
       "hash": "a578faabf1063c13"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:initialize": {
@@ -17554,7 +19012,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241363,
+      "createdAt": 1770209904523,
       "hash": "f37148be66f32939"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:ensureLoaded": {
@@ -17574,7 +19032,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "049973ab083c5d39"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:createCollection": {
@@ -17594,7 +19052,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "67b0dc54b935d2d2"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:createHybridCollection": {
@@ -17615,7 +19073,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "d2490434d420947d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:dropCollection": {
@@ -17635,7 +19093,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "3c644a6104cd00ce"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:hasCollection": {
@@ -17655,7 +19113,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "623769c8d9c897ba"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:listCollections": {
@@ -17675,7 +19133,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "c64522cc185f566d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:insert": {
@@ -17694,7 +19152,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "47a3058cac46fc6c"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:insertHybrid": {
@@ -17714,7 +19172,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "f7742ff760d3c19d"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:search": {
@@ -17733,7 +19191,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "858f42019ffbadf3"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:hybridSearch": {
@@ -17753,7 +19211,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "3dbf5adb5cebcce7"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:delete": {
@@ -17772,7 +19230,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "7939148157b5900b"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:query": {
@@ -17791,7 +19249,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "9b4e5c2308b16dc0"
     },
     "vendor/context-please/packages/core/test/vectordb/base-vector-database.test.ts:method:checkCollectionLimit": {
@@ -17812,7 +19270,7 @@
           "base-vector-database.test"
         ]
       },
-      "createdAt": 1770204241364,
+      "createdAt": 1770209904523,
       "hash": "456c5e8af174840a"
     },
     "src/encoder/embedding.ts:method:constructor": {
@@ -17827,7 +19285,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249967,
+      "createdAt": 1770209921668,
       "hash": "684e634d350a4a89"
     },
     "src/encoder/embedding.ts:method:getSupportedModels": {
@@ -17844,7 +19302,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249967,
+      "createdAt": 1770209921668,
       "hash": "3451369579450e86"
     },
     "src/encoder/embedding.ts:method:embed": {
@@ -17859,7 +19317,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249967,
+      "createdAt": 1770209921668,
       "hash": "a0c0f3f1ef8ce9d0"
     },
     "src/encoder/embedding.ts:method:embedBatch": {
@@ -17875,7 +19333,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249967,
+      "createdAt": 1770209921668,
       "hash": "7e7d2eebca9db551"
     },
     "src/encoder/embedding.ts:method:getDimension": {
@@ -17891,7 +19349,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249968,
+      "createdAt": 1770209921668,
       "hash": "4aa609e1d30e0d1c"
     },
     "src/encoder/embedding.ts:method:getProvider": {
@@ -17907,7 +19365,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249968,
+      "createdAt": 1770209921668,
       "hash": "bd4aa0bcb59d59da"
     },
     "src/encoder/embedding.ts:method:getModel": {
@@ -17923,7 +19381,7 @@
           "embedding"
         ]
       },
-      "createdAt": 1770204249968,
+      "createdAt": 1770209921668,
       "hash": "f1daf1347d9371c3"
     }
   }
