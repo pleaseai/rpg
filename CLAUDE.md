@@ -96,10 +96,10 @@ The `GraphStore` interface (`src/graph/store.ts`) defines the storage API for RP
 
 | Store | Module | Engine | Search |
 |-------|--------|--------|--------|
-| `SQLiteStore` | `src/graph/sqlite-store.ts` | `bun:sqlite` (WAL mode) | FTS5 full-text search |
+| `SQLiteStore` | `src/graph/sqlite-store.ts` | `better-sqlite3` (WAL mode) | FTS5 full-text search |
 | `SurrealStore` | `src/graph/surreal-store.ts` | `surrealdb` + `@surrealdb/node` embedded | BM25 search |
 
-**Import pattern** — store implementations are NOT re-exported from `src/graph/index.ts` to avoid transitive `bun:sqlite` loading:
+**Import pattern** — store implementations are NOT re-exported from `src/graph/index.ts` to avoid transitive native module loading:
 ```typescript
 // Correct: import directly
 import { SQLiteStore } from './graph/sqlite-store'
@@ -183,12 +183,12 @@ Or with the installed package:
 - **Vitest over Bun Test**: Jest compatibility for planned MCP server development
 - **LanceDB over ChromaDB**: No external server required, Bun-native, disk-based persistence
 - **Paper-based implementation**: Original implementation based on research papers, not forked from Microsoft code
-- **Dual GraphStore backends**: SQLiteStore (zero-dep, bun:sqlite) and SurrealStore (native graph relations) for evaluation
+- **Dual GraphStore backends**: SQLiteStore (better-sqlite3) and SurrealStore (native graph relations) for evaluation
 
 ## Known Gotchas
 
-### bun:sqlite and vitest
-Tests that import `bun:sqlite` (directly or transitively) require `bun --bun vitest run`. The vitest config has `server.deps.external: [/^bun:/]` but Node.js still cannot resolve `bun:` protocol modules.
+### better-sqlite3 native bindings
+If `better-sqlite3` native bindings are compiled for a different Node.js version, run `npm rebuild better-sqlite3` to recompile them.
 
 ### SurrealDB embedded engine limitations
 - **No transactions**: `mem://` and `surrealkv://` engines do not support `beginTransaction()`. Use sequential operations instead.
