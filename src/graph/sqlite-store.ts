@@ -185,6 +185,10 @@ export class SQLiteStore implements GraphStore {
         sets.push('line_end = ?')
         values.push(updates.metadata.endLine)
       }
+      if (updates.metadata.extra !== undefined) {
+        sets.push('extra = ?')
+        values.push(JSON.stringify(updates.metadata.extra))
+      }
     }
 
     if (sets.length === 0)
