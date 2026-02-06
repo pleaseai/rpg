@@ -13,6 +13,7 @@ import { ASTParser } from '../utils/ast'
 import { LLMClient } from '../utils/llm'
 import { SemanticCache } from './cache'
 import { RPGEvolver } from './evolution/evolve'
+import { ArtifactGrounder } from './grounding'
 import { DomainDiscovery, HierarchyBuilder } from './reorganization'
 import { SemanticExtractor } from './semantic'
 
@@ -180,7 +181,11 @@ export class RPGEncoder {
     // Phase 2: Structural Reorganization
     await this.buildFunctionalHierarchy(rpg)
 
-    // Phase 3: Artifact Grounding
+    // Phase 3a: Artifact Grounding — metadata propagation
+    const grounder = new ArtifactGrounder(rpg)
+    await grounder.ground()
+
+    // Phase 3b: Artifact Grounding — dependency injection
     await this.injectDependencies(rpg)
 
     return {
