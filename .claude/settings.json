@@ -1,6 +1,10 @@
 {
   "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": true
+    "claude-md-management@claude-plugins-official": true,
+    "dev-tools@passionfactory": true,
+    "context@passionfactory": true,
+    "review@passionfactory": true,
+    "please@passionfactory": true
   },
   "hooks": {
     "PermissionRequest": [
