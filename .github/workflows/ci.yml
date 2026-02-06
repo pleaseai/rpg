@@ -37,6 +37,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: pleaseai/rpg
           files: coverage/coverage-final.json
+          flags: unit
           fail_ci_if_error: false
 
   integration-test:
@@ -48,4 +49,11 @@ jobs:
           submodules: true
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run test:integration
+      - run: bun run test:integration -- --coverage
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: pleaseai/rpg
+          files: coverage/coverage-final.json
+          flags: integration
+          fail_ci_if_error: false
