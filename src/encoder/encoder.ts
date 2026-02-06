@@ -577,7 +577,7 @@ export class RPGEncoder {
 
       // Extract top-level directory as group label
       const segments = filePath.split('/')
-      const groupLabel = (segments.length > 1 ? segments[0] : '.') ?? '.'
+      const groupLabel = segments.length > 1 ? segments[0]! : '.'
 
       let group = groups.get(groupLabel)
       if (!group) {

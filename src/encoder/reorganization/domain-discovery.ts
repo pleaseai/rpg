@@ -61,6 +61,8 @@ export class DomainDiscovery {
 
       // Normalize to PascalCase if not already
       const normalized = this.toPascalCase(area.trim())
+      if (normalized.length === 0)
+        continue
       if (!seen.has(normalized)) {
         seen.add(normalized)
         result.push(normalized)
@@ -84,7 +86,8 @@ export class DomainDiscovery {
     // "data_processing" -> "DataProcessing", "dataProcessing" -> "DataProcessing"
     return str
       .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase → separate words
-      .split(/[\s_-]+/)
+      .split(/[^a-z0-9]+/i)
+      .filter(word => word.length > 0)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('')
   }

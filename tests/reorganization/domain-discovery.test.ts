@@ -159,6 +159,18 @@ describe('domainDiscovery', () => {
     )
   })
 
+  it('sanitizes non-alphanumeric characters in area names', async () => {
+    const mockClient = createMockLLMClient(
+      '<solution>\n["Data/Processing", "user.name", "___"]\n</solution>',
+    )
+
+    const discovery = new DomainDiscovery(mockClient as any)
+    const result = await discovery.discover(sampleFileGroups)
+
+    // "Data/Processing" → "DataProcessing", "user.name" → "UserName", "___" → empty → filtered
+    expect(result.functionalAreas).toEqual(['DataProcessing', 'UserName'])
+  })
+
   it('filters out empty strings from areas', async () => {
     const mockClient = createMockLLMClient(
       '<solution>\n["Authentication", "", "  ", "DataAccess"]\n</solution>',

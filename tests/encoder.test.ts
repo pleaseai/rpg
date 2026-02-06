@@ -286,13 +286,13 @@ describe('RPGEncoder.buildFunctionalHierarchy', () => {
     finally {
       if (savedGoogle !== undefined)
         process.env.GOOGLE_API_KEY = savedGoogle
-      else process.env.GOOGLE_API_KEY = ''
+      else Reflect.deleteProperty(process.env, 'GOOGLE_API_KEY')
       if (savedAnthropic !== undefined)
         process.env.ANTHROPIC_API_KEY = savedAnthropic
-      else process.env.ANTHROPIC_API_KEY = ''
+      else Reflect.deleteProperty(process.env, 'ANTHROPIC_API_KEY')
       if (savedOpenAI !== undefined)
         process.env.OPENAI_API_KEY = savedOpenAI
-      else process.env.OPENAI_API_KEY = ''
+      else Reflect.deleteProperty(process.env, 'OPENAI_API_KEY')
     }
   })
 })
