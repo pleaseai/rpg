@@ -506,48 +506,37 @@ export class SQLiteStore implements GraphStore {
   }
 
   async searchByPath(pattern: string): Promise<Node[]> {
-    // Convert glob/regex patterns to SQL LIKE:
-    //   ".*" → "%"  (regex any)
-    //   "*"  → "%"  (glob any)
     const likePattern = pattern.replace(/\.\*/g, '%').replace(/\*/g, '%')
-    // Use SQL LIKE as a pre-filter for both primary path and extra JSON.
-    // The extra LIKE is a coarse substring filter that may have false positives,
-    // so we verify extra.paths matches precisely in application code below.
+
+    // SQL LIKE pre-filters both primary path and extra JSON (coarse substring match).
+    // Precise regex verification below eliminates false positives from the extra LIKE.
     const rows = this.db
       .prepare('SELECT * FROM nodes WHERE path LIKE ? OR extra LIKE ?')
       .all(likePattern, `%${likePattern}%`) as NodeRow[]
 
-    // Build regex for precise matching
     const regexStr = likePattern.replace(/%/g, '.*').replace(/_/g, '.')
     const regex = new RegExp(`^${regexStr}$`)
 
     const seen = new Set<string>()
-    const unique: NodeRow[] = []
-    for (const row of rows) {
+    return rows.filter((row) => {
       if (seen.has(row.id))
-        continue
-      // Check primary path
-      if (row.path && regex.test(row.path)) {
-        seen.add(row.id)
-        unique.push(row)
-        continue
-      }
-      // Check extra.paths precisely (eliminates LIKE false positives)
+        return false
+      seen.add(row.id)
+
+      if (row.path && regex.test(row.path))
+        return true
+
       if (row.extra) {
         try {
-          const extra = JSON.parse(row.extra)
-          const paths = extra?.paths as string[] | undefined
-          if (paths?.some((p: string) => regex.test(p))) {
-            seen.add(row.id)
-            unique.push(row)
-          }
+          const paths = (JSON.parse(row.extra) as { paths?: string[] }).paths
+          return paths?.some(p => regex.test(p)) ?? false
         }
         catch {
-          // Ignore malformed JSON
+          return false
         }
       }
-    }
-    return unique.map(r => this.rowToNode(r))
+      return false
+    }).map(r => this.rowToNode(r))
   }
 
   // ==================== Ordering ====================
