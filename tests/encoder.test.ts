@@ -289,6 +289,78 @@ describe('RPGEncoder.buildFunctionalHierarchy', () => {
   })
 })
 
+describe('RPGEncoder Phase 1 file→function edges', () => {
+  it('creates file→function edges during Phase 1 entity extraction', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/encoder.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Find the file node
+    const fileNode = (await result.rpg.getNodes()).find(
+      n => n.metadata?.entityType === 'file' && n.metadata?.path === 'src/encoder/encoder.ts',
+    )
+    expect(fileNode).toBeDefined()
+
+    // Find non-file entities for this file
+    const childNodes = (await result.rpg.getNodes()).filter(
+      n => n.metadata?.entityType !== 'file' && n.metadata?.path === 'src/encoder/encoder.ts',
+    )
+    expect(childNodes.length).toBeGreaterThan(0)
+
+    // Verify file→child edges exist
+    const functionalEdges = await result.rpg.getFunctionalEdges()
+    const fileToChildEdges = functionalEdges.filter(e => e.source === fileNode?.id)
+    expect(fileToChildEdges.length).toBe(childNodes.length)
+  })
+
+  it('file→child edge count matches child entity count', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/semantic.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    const fileNode = (await result.rpg.getNodes()).find(
+      n => n.metadata?.entityType === 'file' && n.metadata?.path === 'src/encoder/semantic.ts',
+    )
+    expect(fileNode).toBeDefined()
+
+    const childNodes = (await result.rpg.getNodes()).filter(
+      n => n.metadata?.entityType !== 'file' && n.metadata?.path === 'src/encoder/semantic.ts',
+    )
+
+    const functionalEdges = await result.rpg.getFunctionalEdges()
+    const fileEdges = functionalEdges.filter(e => e.source === fileNode?.id)
+    expect(fileEdges.length).toBe(childNodes.length)
+  })
+
+  it('buildFunctionalHierarchy creates only directory→file edges, not file→entity', async () => {
+    const encoder = new RPGEncoder(PROJECT_ROOT, {
+      include: ['src/encoder/encoder.ts'],
+      exclude: [],
+    })
+    const result = await encoder.encode()
+
+    // Get directory nodes
+    const highLevelNodes = await result.rpg.getHighLevelNodes()
+    const dirNodeIds = new Set(highLevelNodes.map(n => n.id))
+
+    // All directory-sourced edges should target files (not functions/methods)
+    const functionalEdges = await result.rpg.getFunctionalEdges()
+    const dirEdges = functionalEdges.filter(e => dirNodeIds.has(e.source))
+
+    for (const edge of dirEdges) {
+      const targetNode = await result.rpg.getNode(edge.target)
+      // Directory edges should point to file nodes or other directories
+      if (targetNode?.metadata?.entityType) {
+        expect(targetNode.metadata.entityType).toBe('file')
+      }
+    }
+  })
+})
+
 describe('RPGEncoder.injectDependencies', () => {
   it('creates dependency edges for imports', async () => {
     const encoder = new RPGEncoder(PROJECT_ROOT, {

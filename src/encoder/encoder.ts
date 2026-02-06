@@ -2,7 +2,7 @@ import type { RPGConfig } from '../graph'
 import type { CodeEntity } from '../utils/ast'
 import type { CacheOptions } from './cache'
 import type { EvolutionResult } from './evolution/types'
-import type { EntityInput, SemanticOptions } from './semantic'
+import type { EntityInput, SemanticFeature, SemanticOptions } from './semantic'
 import fs from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
@@ -69,6 +69,11 @@ interface ExtractedEntity {
   sourceCode?: string
 }
 
+interface ExtractionResult {
+  entities: ExtractedEntity[]
+  fileToChildEdges: Array<{ source: string, target: string }>
+}
+
 export class RPGEncoder {
   private repoPath: string
   private options: EncoderOptions
@@ -112,14 +117,15 @@ export class RPGEncoder {
 
     const rpg = await RepositoryPlanningGraph.create(config)
 
-    // Phase 1: Semantic Lifting
+    // Phase 1: Semantic Lifting (including file→child functional edges)
     const files = await this.discoverFiles()
     let entitiesExtracted = 0
 
     for (const file of files) {
-      const entities = await this.extractEntities(file)
+      const { entities, fileToChildEdges } = await this.extractEntities(file)
       entitiesExtracted += entities.length
 
+      // Add nodes
       for (const entity of entities) {
         await rpg.addLowLevelNode({
           id: entity.id,
@@ -127,6 +133,11 @@ export class RPGEncoder {
           metadata: entity.metadata,
           sourceCode: this.options.includeSource ? entity.sourceCode : undefined,
         })
+      }
+
+      // Add file→child functional edges (Phase 1, per paper §3.1)
+      for (const edge of fileToChildEdges) {
+        await rpg.addFunctionalEdge(edge)
       }
     }
 
@@ -307,7 +318,7 @@ export class RPGEncoder {
   /**
    * Extract entities (functions, classes) from a file
    */
-  private async extractEntities(file: string): Promise<ExtractedEntity[]> {
+  private async extractEntities(file: string): Promise<ExtractionResult> {
     const relativePath = path.relative(this.repoPath, file)
     const entities: ExtractedEntity[] = []
 
@@ -323,23 +334,8 @@ export class RPGEncoder {
     // Parse the file
     const parseResult = await this.astParser.parseFile(file)
 
-    // Add file-level entity with semantic extraction
-    const fileId = this.generateEntityId(relativePath, 'file')
-    const fileFeature = await this.extractSemanticFeature({
-      type: 'file',
-      name: path.basename(relativePath, path.extname(relativePath)),
-      filePath: relativePath,
-    })
-    entities.push({
-      id: fileId,
-      feature: fileFeature,
-      metadata: {
-        entityType: 'file',
-        path: relativePath,
-      },
-    })
-
-    // Add code entities (functions, classes, methods)
+    // Step 1: Extract child entities first (functions, classes, methods)
+    const childEntities: ExtractedEntity[] = []
     for (const entity of parseResult.entities) {
       const entityId = this.generateEntityId(
         relativePath,
@@ -354,11 +350,57 @@ export class RPGEncoder {
         sourceCode,
       )
       if (extractedEntity) {
-        entities.push(extractedEntity)
+        childEntities.push(extractedEntity)
       }
     }
 
-    return entities
+    // Step 2: Collect direct children's features for file-level aggregation
+    // Only include top-level entities (functions/classes, not methods nested inside classes)
+    const directChildFeatures: SemanticFeature[] = childEntities
+      .filter(e => e.metadata.entityType !== 'method')
+      .map(e => ({
+        description: e.feature.description,
+        keywords: e.feature.keywords ?? [],
+      }))
+
+    // Step 3: Aggregate into file-level feature
+    const fileId = this.generateEntityId(relativePath, 'file')
+    const fileName = path.basename(relativePath, path.extname(relativePath))
+    const fileFeature
+      = directChildFeatures.length > 0
+        ? await this.semanticExtractor.aggregateFileFeatures(
+            directChildFeatures,
+            fileName,
+            relativePath,
+          )
+        : await this.extractSemanticFeature({
+            type: 'file',
+            name: fileName,
+            filePath: relativePath,
+          })
+
+    entities.push({
+      id: fileId,
+      feature: {
+        description: fileFeature.description,
+        keywords: fileFeature.keywords,
+      },
+      metadata: {
+        entityType: 'file',
+        path: relativePath,
+      },
+    })
+
+    // Step 4: Add child entities
+    entities.push(...childEntities)
+
+    // Step 5: Generate file→child edges for Phase 1
+    const fileToChildEdges = childEntities.map(child => ({
+      source: fileId,
+      target: child.id,
+    }))
+
+    return { entities, fileToChildEdges }
   }
 
   /**
@@ -476,10 +518,10 @@ export class RPGEncoder {
     // Create high-level directory nodes
     const directoryNodeIds = await this.createDirectoryNodes(rpg, directoryGroups)
 
-    // Create edges: directory hierarchy, directory-to-file, file-to-entity
+    // Create edges: directory hierarchy and directory-to-file only
+    // (file→entity edges are now created in Phase 1 during entity extraction)
     await this.createDirectoryHierarchyEdges(rpg, directoryNodeIds)
     await this.createDirectoryToFileEdges(rpg, directoryGroups, directoryNodeIds)
-    await this.createFileToEntityEdges(rpg, lowLevelNodes)
   }
 
   /**
@@ -553,23 +595,6 @@ export class RPGEncoder {
       for (const node of nodes) {
         if (node.metadata?.entityType === 'file') {
           await rpg.addFunctionalEdge({ source: dirId, target: node.id })
-        }
-      }
-    }
-  }
-
-  /**
-   * Connect non-file entities to their parent file nodes
-   */
-  private async createFileToEntityEdges(
-    rpg: RepositoryPlanningGraph,
-    lowLevelNodes: Array<{ id: string, metadata?: { entityType?: string, path?: string } }>,
-  ): Promise<void> {
-    for (const node of lowLevelNodes) {
-      if (node.metadata?.entityType !== 'file' && node.metadata?.path) {
-        const fileId = `${node.metadata.path}:file`
-        if (await rpg.getNode(fileId)) {
-          await rpg.addFunctionalEdge({ source: fileId, target: node.id })
         }
       }
     }

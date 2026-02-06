@@ -29,7 +29,7 @@ describe('semanticExtractor', () => {
 
       const feature = await extractor.extract(input)
 
-      expect(feature.description).toContain('class')
+      expect(feature.description).toContain('define')
       expect(feature.keywords).toContain('class')
       expect(feature.keywords).toContain('user')
     })
@@ -69,7 +69,7 @@ describe('semanticExtractor', () => {
         { name: 'isValid', expected: 'check' },
         { name: 'hasPermission', expected: 'check' },
         { name: 'createUser', expected: 'create' },
-        { name: 'handleError', expected: 'handle' },
+        { name: 'handleError', expected: 'dispatch' },
         { name: 'parseJSON', expected: 'parse' },
         { name: 'formatDate', expected: 'format' },
       ]
@@ -128,7 +128,156 @@ describe('semanticExtractor', () => {
       expect(features).toHaveLength(3)
       expect(features[0].description).toBeDefined()
       expect(features[1].description).toBeDefined()
-      expect(features[2].description).toContain('class')
+      expect(features[2].description).toContain('define')
+    })
+  })
+
+  describe('feature naming validation', () => {
+    it('passes valid names through unchanged', () => {
+      const result = extractor.validateFeatureName('validate user input')
+      expect(result.description).toBe('validate user input')
+      expect(result.subFeatures).toBeUndefined()
+    })
+
+    it('normalizes to lowercase', () => {
+      const result = extractor.validateFeatureName('Validate User Input')
+      expect(result.description).toBe('validate user input')
+    })
+
+    it('detects and replaces vague verbs', () => {
+      const result = extractor.validateFeatureName('handle user authentication')
+      expect(result.description).toBe('dispatch user authentication')
+    })
+
+    it('replaces process with transform', () => {
+      const result = extractor.validateFeatureName('process incoming data')
+      expect(result.description).toBe('transform incoming data')
+    })
+
+    it('truncates descriptions longer than 8 words', () => {
+      const result = extractor.validateFeatureName(
+        'validate and transform user input data from external api source',
+      )
+      // "and" splits, then first part is "validate", second part is "transform user input data from external api source"
+      // First part: "validate" (1 word), second part: "transform user..." (8 words)
+      // Split only happens if before has >=2 words, so no split here — truncation applies
+      expect(result.description.split(/\s+/).length).toBeLessThanOrEqual(8)
+    })
+
+    it('keeps short descriptions as-is', () => {
+      const result = extractor.validateFeatureName('load config')
+      expect(result.description).toBe('load config')
+    })
+
+    it('removes trailing punctuation', () => {
+      const result = extractor.validateFeatureName('validate user input.')
+      expect(result.description).toBe('validate user input')
+    })
+
+    it('removes semicolons and commas', () => {
+      const result = extractor.validateFeatureName('send http request;')
+      expect(result.description).toBe('send http request')
+    })
+
+    it('splits "and" into description + subFeatures', () => {
+      const result = extractor.validateFeatureName('initialize config and register globally')
+      expect(result.description).toBe('initialize config')
+      expect(result.subFeatures).toEqual(['register globally'])
+    })
+
+    it('does not split "and" when first part is too short', () => {
+      const result = extractor.validateFeatureName('load and save data')
+      // "load" is only 1 word (< 2), so no split
+      expect(result.subFeatures).toBeUndefined()
+      expect(result.description).toContain('load')
+    })
+
+    it('strips implementation detail keywords', () => {
+      const result = extractor.validateFeatureName('iterate array to find user')
+      // "iterate" and "array" are stripped
+      expect(result.description).not.toContain('iterate')
+      expect(result.description).not.toContain('array')
+      expect(result.description).toContain('find')
+      expect(result.description).toContain('user')
+    })
+  })
+
+  describe('file-level aggregation', () => {
+    it('aggregates multiple child features into summary', async () => {
+      const childFeatures = [
+        { description: 'validate user input', keywords: ['validate', 'user'] },
+        { description: 'validate email format', keywords: ['validate', 'email'] },
+      ]
+
+      const result = await extractor.aggregateFileFeatures(
+        childFeatures,
+        'validation',
+        'src/validation.ts',
+      )
+
+      expect(result.description).toBeDefined()
+      expect(result.description.length).toBeGreaterThan(0)
+      expect(result.keywords).toBeDefined()
+      expect(result.keywords.length).toBeGreaterThan(0)
+    })
+
+    it('uses heuristic aggregation with most common verb', async () => {
+      const childFeatures = [
+        { description: 'create user account', keywords: ['create', 'user'] },
+        { description: 'create admin role', keywords: ['create', 'admin'] },
+        { description: 'delete user account', keywords: ['delete', 'user'] },
+      ]
+
+      const result = await extractor.aggregateFileFeatures(
+        childFeatures,
+        'accounts',
+        'src/accounts.ts',
+      )
+
+      // "create" is the most common verb (2 out of 3)
+      expect(result.description).toContain('create')
+      expect(result.description).toContain('accounts')
+    })
+
+    it('merges and deduplicates keywords', async () => {
+      const childFeatures = [
+        { description: 'load config', keywords: ['load', 'config'] },
+        { description: 'save config', keywords: ['save', 'config'] },
+      ]
+
+      const result = await extractor.aggregateFileFeatures(childFeatures, 'config', 'src/config.ts')
+
+      expect(result.keywords).toContain('config')
+      expect(result.keywords).toContain('load')
+      expect(result.keywords).toContain('save')
+      // No duplicates
+      const unique = new Set(result.keywords)
+      expect(unique.size).toBe(result.keywords.length)
+    })
+
+    it('falls back to file name for empty child features', async () => {
+      const result = await extractor.aggregateFileFeatures([], 'utils', 'src/utils.ts')
+
+      expect(result.description).toContain('utils')
+      expect(result.keywords).toContain('utils')
+    })
+
+    it('includes child descriptions as subFeatures for multi-entity files', async () => {
+      const childFeatures = [
+        { description: 'parse json input', keywords: ['parse'] },
+        { description: 'format output data', keywords: ['format'] },
+      ]
+
+      const result = await extractor.aggregateFileFeatures(
+        childFeatures,
+        'transformer',
+        'src/transformer.ts',
+      )
+
+      // Heuristic mode should include child descriptions as sub-features
+      if (result.subFeatures) {
+        expect(result.subFeatures.length).toBeGreaterThan(0)
+      }
     })
   })
 

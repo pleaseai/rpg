@@ -125,19 +125,174 @@ export class SemanticExtractor {
   }
 
   /**
+   * Aggregate child entity features into a file-level summary.
+   *
+   * Synthesizes function/class-level features into a coherent file-level description.
+   * Only considers direct children (functions/classes at file level), not nested methods.
+   */
+  async aggregateFileFeatures(
+    childFeatures: SemanticFeature[],
+    fileName: string,
+    filePath: string,
+  ): Promise<SemanticFeature> {
+    // Empty children: fall back to file name
+    if (childFeatures.length === 0) {
+      const humanName = this.humanizeName(fileName)
+      return {
+        description: `define ${humanName} module`,
+        keywords: [fileName.toLowerCase()],
+      }
+    }
+
+    // Try LLM aggregation if available
+    if (this.llmClient) {
+      try {
+        return await this.aggregateWithLLM(childFeatures, fileName, filePath)
+      }
+      catch {
+        // Fall back to heuristic
+      }
+    }
+
+    // Heuristic aggregation
+    return this.aggregateWithHeuristic(childFeatures, fileName)
+  }
+
+  /**
+   * Aggregate file features using LLM
+   */
+  private async aggregateWithLLM(
+    childFeatures: SemanticFeature[],
+    fileName: string,
+    filePath: string,
+  ): Promise<SemanticFeature> {
+    const featureList = childFeatures
+      .map(
+        f =>
+          `- ${f.description}${f.subFeatures?.length ? ` (also: ${f.subFeatures.join(', ')})` : ''}`,
+      )
+      .join('\n')
+
+    const prompt = `Synthesize a file-level semantic summary for "${fileName}" (${filePath}).
+
+The file contains the following entities and their features:
+${featureList}
+
+Provide a single cohesive description that captures what this file does as a whole.
+Use verb + object format. Keep it concise (3-8 words).
+
+Respond with valid JSON:
+{
+  "description": "file-level summary in verb + object format",
+  "keywords": ["relevant", "keywords"]
+}`
+
+    const systemPrompt = `You are a senior software analyst. Synthesize file-level summaries from child entity features.
+Follow the same naming rules: verb + object format, lowercase, no implementation details, 3-8 words.`
+
+    const response = await this.llmClient?.completeJSON<SemanticFeature>(prompt, systemPrompt)
+    if (!response) {
+      return this.aggregateWithHeuristic(childFeatures, fileName)
+    }
+
+    // Validate the response
+    const validated = this.validateFeatureName(response.description)
+    return {
+      description: validated.description,
+      subFeatures: validated.subFeatures,
+      keywords: response.keywords ?? this.mergeKeywords(childFeatures, fileName),
+    }
+  }
+
+  /**
+   * Aggregate file features using heuristics
+   */
+  private aggregateWithHeuristic(
+    childFeatures: SemanticFeature[],
+    fileName: string,
+  ): SemanticFeature {
+    // Collect all descriptions as sub-features, use a synthesized summary as primary
+    const descriptions = childFeatures.map(f => f.description)
+
+    // Find the most common verb to use as the primary action
+    const verbs = descriptions
+      .map(d => d.split(/\s+/)[0])
+      .filter((v): v is string => v !== undefined)
+
+    const verbCounts = new Map<string, number>()
+    for (const verb of verbs) {
+      verbCounts.set(verb, (verbCounts.get(verb) ?? 0) + 1)
+    }
+
+    // Use the most frequent verb, or "provide" as default
+    const primaryVerb = [...verbCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'provide'
+
+    const humanName = this.humanizeName(fileName)
+    const description = `${primaryVerb} ${humanName} functionality`
+
+    // Merge keywords from all children
+    const keywords = this.mergeKeywords(childFeatures, fileName)
+
+    return {
+      description,
+      subFeatures: descriptions.length > 1 ? descriptions : undefined,
+      keywords,
+    }
+  }
+
+  /**
+   * Merge and deduplicate keywords from child features
+   */
+  private mergeKeywords(childFeatures: SemanticFeature[], fileName: string): string[] {
+    const keywordSet = new Set<string>()
+    keywordSet.add(fileName.toLowerCase())
+
+    for (const feature of childFeatures) {
+      for (const kw of feature.keywords) {
+        keywordSet.add(kw.toLowerCase())
+      }
+    }
+
+    return [...keywordSet]
+  }
+
+  /**
    * Extract semantic features using LLM
    */
   private async extractWithLLM(input: EntityInput): Promise<SemanticFeature> {
     const prompt = this.buildPrompt(input)
-    const systemPrompt = `You are a code analysis assistant. Extract semantic features from code entities.
+    const systemPrompt = `You are a senior software analyst.
+Your goal is to analyze the given code entity and return its key semantic features -- what it does, not how it's implemented.
+
+## Feature Extraction Principles
+1. Focus on the purpose and behavior of the function -- what role it serves in the system.
+2. Do NOT describe implementation details, variable names, or internal logic such as loops, conditionals, or data structures.
+3. If a function performs multiple responsibilities, break them down into separate features.
+4. Use the function's name, signature, and code to infer its intent.
+5. Only analyze the entity in the current input -- do not guess or invent other entities.
+6. Do not omit any function, including utility or helper functions.
+
+## Feature Naming Rules
+1. Use verb + object format (e.g., "load config", "validate token").
+2. Use lowercase English only.
+3. Describe purpose not implementation (focus on what, not how).
+4. Each feature must express one single responsibility.
+5. If a method has multiple responsibilities, split into multiple atomic features.
+6. Keep features short and atomic (prefer 3-8 words; no full sentences; no punctuation).
+7. Avoid vague verbs ("handle", "process", "deal with"); prefer precise verbs ("load", "validate", "convert", "update", "serialize", "compute", "check", "transform").
+8. Avoid implementation details (no loops, conditionals, data structures, control flow).
+9. Avoid libraries/frameworks/formats (say "serialize data", not "pickle object" / "save to json").
+10. Prefer domain/system semantics over low-level actions ("manage session" > "update dict").
+11. Avoid chaining actions (don't write "initialize config and register globally"; split into separate features).
+
 Always respond with valid JSON in this exact format:
 {
-  "description": "verb + object format description (e.g., 'handle user authentication')",
-  "subFeatures": ["optional", "sub-features"],
+  "description": "primary verb + object feature (e.g., 'validate user credentials')",
+  "subFeatures": ["additional atomic feature 1", "additional atomic feature 2"],
   "keywords": ["relevant", "search", "keywords"]
 }
-Focus on WHAT the code does, not HOW it does it.
-Use verb + object format for descriptions (e.g., "validate user input", "fetch data from API").`
+
+If the entity has only one responsibility, leave subFeatures as an empty array.`
 
     const response = await this.llmClient?.completeJSON<SemanticFeature>(prompt, systemPrompt)
     if (!response) {
@@ -186,8 +341,11 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
     const description = this.generateDescription(input)
     const keywords = this.extractKeywords(input)
 
+    // Apply feature naming validation to heuristic output
+    const validated = this.validateFeatureName(description)
     return {
-      description,
+      description: validated.description,
+      subFeatures: validated.subFeatures,
       keywords,
     }
   }
@@ -202,9 +360,9 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
       case 'function':
         return this.generateFunctionDescription(name, input)
       case 'class':
-        return `class representing ${name}`
+        return `define ${name}`
       case 'method':
-        return input.parent ? `method to ${name} in ${input.parent}` : `method to ${name}`
+        return this.generateFunctionDescription(name, input)
       case 'file':
         return this.generateFileDescription(input.filePath)
       default:
@@ -238,8 +396,8 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
       ['save', 'save'],
       ['fetch', 'fetch'],
       ['send', 'send'],
-      ['handle', 'handle'],
-      ['process', 'process'],
+      ['handle', 'dispatch'],
+      ['process', 'transform'],
       ['transform', 'transform'],
       ['convert', 'convert'],
       ['extract', 'extract'],
@@ -263,7 +421,7 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
       ['stop', 'stop'],
       ['run', 'run'],
       ['execute', 'execute'],
-      ['on', 'handle'],
+      ['on', 'dispatch'],
     ]
 
     for (const [prefix, verb] of verbPatterns) {
@@ -275,8 +433,8 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
       }
     }
 
-    // Default: assume function does what its name says
-    return `function that ${name}`
+    // Default: use verb + object format with the name
+    return `provide ${name} operation`
   }
 
   /**
@@ -290,9 +448,9 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
     const humanName = this.humanizeName(fileName)
 
     if (dirName && dirName !== '.') {
-      return `${humanName} module in ${dirName}`
+      return `define ${humanName} for ${dirName}`
     }
-    return `${humanName} module`
+    return `define ${humanName} module`
   }
 
   /**
@@ -348,12 +506,128 @@ Use verb + object format for descriptions (e.g., "validate user input", "fetch d
   }
 
   /**
+   * Vague verbs that should be replaced with more specific alternatives
+   */
+  private static readonly VAGUE_VERBS = new Set([
+    'handle',
+    'process',
+    'deal with',
+    'do',
+    'manage',
+    'run',
+    'execute',
+    'perform',
+  ])
+
+  /**
+   * Preferred replacements for vague verbs (used as suggestions)
+   */
+  private static readonly VAGUE_VERB_REPLACEMENTS: Record<string, string> = {
+    'handle': 'dispatch',
+    'process': 'transform',
+    'deal with': 'resolve',
+    'do': 'execute',
+    'manage': 'coordinate',
+    'run': 'execute',
+    'perform': 'execute',
+  }
+
+  /**
+   * Implementation detail keywords to strip from feature names
+   */
+  private static readonly IMPLEMENTATION_KEYWORDS = new Set([
+    'loop',
+    'iterate',
+    'if',
+    'else',
+    'array',
+    'dict',
+    'hash',
+    'stack',
+    'queue',
+    'for',
+    'while',
+    'switch',
+    'case',
+    'try',
+    'catch',
+    'throw',
+    'return',
+    'break',
+    'continue',
+  ])
+
+  /**
+   * Validate and normalize a feature name according to paper's naming rules.
+   *
+   * Rules enforced:
+   * 1. Lowercase only
+   * 2. Word count: 3-8 words (truncate if >8)
+   * 3. Vague verb detection/replacement
+   * 4. Implementation detail removal
+   * 5. No trailing punctuation
+   * 6. Single responsibility check ("and" splits into subFeatures)
+   */
+  validateFeatureName(description: string): { description: string, subFeatures?: string[] } {
+    let desc = description.toLowerCase().trim()
+
+    // Rule 5: Remove trailing punctuation
+    desc = desc.replace(/[.,;:!?]+$/, '').trim()
+
+    // Rule 4: Strip implementation detail keywords
+    const words = desc.split(/\s+/)
+    const filteredWords = words.filter(w => !SemanticExtractor.IMPLEMENTATION_KEYWORDS.has(w))
+    desc = filteredWords.join(' ')
+
+    // Rule 6: Single responsibility check — split on "and" connecting two actions
+    let subFeatures: string[] | undefined
+    const andIndex = desc.indexOf(' and ')
+    if (andIndex !== -1) {
+      const before = desc.substring(0, andIndex).trim()
+      const after = desc.substring(andIndex + 5).trim()
+      // Only split if both parts look like verb phrases (have at least 2 words or 1 word that's a verb)
+      if (before.split(/\s+/).length >= 2 && after.split(/\s+/).length >= 1) {
+        desc = before
+        subFeatures = [after]
+      }
+    }
+
+    // Rule 3: Replace vague verbs
+    const descWords = desc.split(/\s+/)
+    if (descWords.length > 0 && SemanticExtractor.VAGUE_VERBS.has(descWords[0]!)) {
+      const replacement = SemanticExtractor.VAGUE_VERB_REPLACEMENTS[descWords[0]!]
+      if (replacement) {
+        descWords[0] = replacement
+        desc = descWords.join(' ')
+      }
+    }
+
+    // Rule 2: Word count check (3-8 words; truncate if >8, keep as-is if <3)
+    const finalWords = desc.split(/\s+/).filter(w => w.length > 0)
+    if (finalWords.length > 8) {
+      desc = finalWords.slice(0, 8).join(' ')
+    }
+    else {
+      desc = finalWords.join(' ')
+    }
+
+    return subFeatures ? { description: desc, subFeatures } : { description: desc }
+  }
+
+  /**
    * Validate and normalize LLM response
    */
   private validateFeature(feature: SemanticFeature, input: EntityInput): SemanticFeature {
     // Ensure required fields exist
     if (!feature.description || typeof feature.description !== 'string') {
       feature.description = this.generateDescription(input)
+    }
+
+    // Apply feature naming validation
+    const validated = this.validateFeatureName(feature.description)
+    feature.description = validated.description
+    if (validated.subFeatures) {
+      feature.subFeatures = [...(feature.subFeatures ?? []), ...validated.subFeatures]
     }
 
     if (!Array.isArray(feature.keywords)) {
