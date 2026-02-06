@@ -511,10 +511,20 @@ export class SQLiteStore implements GraphStore {
     //   "*"  → "%"  (glob any)
     //   "."  → "_"  (single char, only when standalone regex dot)
     const likePattern = pattern.replace(/\.\*/g, '%').replace(/\*/g, '%')
+    // Also match metadata.extra.paths for multi-directory grounded nodes
     const rows = this.db
-      .prepare('SELECT * FROM nodes WHERE path LIKE ?')
-      .all(likePattern) as NodeRow[]
-    return rows.map(r => this.rowToNode(r))
+      .prepare('SELECT * FROM nodes WHERE path LIKE ? OR extra LIKE ?')
+      .all(likePattern, `%${likePattern}%`) as NodeRow[]
+    // Deduplicate by id in case both conditions match
+    const seen = new Set<string>()
+    const unique: NodeRow[] = []
+    for (const row of rows) {
+      if (!seen.has(row.id)) {
+        seen.add(row.id)
+        unique.push(row)
+      }
+    }
+    return unique.map(r => this.rowToNode(r))
   }
 
   // ==================== Ordering ====================

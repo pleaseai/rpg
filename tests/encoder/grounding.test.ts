@@ -231,4 +231,59 @@ describe('ArtifactGrounder', () => {
     const node = await rpg.getNode('domain:Encoder')
     expect(node?.metadata?.entityType).toBe('module')
   })
+
+  it('should make HighLevelNodes findable via searchByPath using primary path', async () => {
+    const rpg = await createTestRPG()
+
+    await rpg.addHighLevelNode({
+      id: 'domain:Graph',
+      feature: { description: 'graph module' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'src/graph/node.ts:file',
+      feature: { description: 'graph nodes' },
+      metadata: { entityType: 'file', path: 'src/graph/node.ts' },
+    })
+    await rpg.addFunctionalEdge({ source: 'domain:Graph', target: 'src/graph/node.ts:file' })
+
+    const grounder = new ArtifactGrounder(rpg)
+    await grounder.ground()
+
+    // searchByPath should now find the grounded HighLevelNode
+    const results = await rpg.searchByPath('src/graph*')
+    const ids = results.map(n => n.id)
+    expect(ids).toContain('domain:Graph')
+    expect(ids).toContain('src/graph/node.ts:file')
+  })
+
+  it('should make HighLevelNodes findable via searchByPath using extra.paths', async () => {
+    const rpg = await createTestRPG()
+
+    await rpg.addHighLevelNode({
+      id: 'domain:CrossCutting',
+      feature: { description: 'cross-cutting concern' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'src/utils/helper.ts:file',
+      feature: { description: 'utility helpers' },
+      metadata: { entityType: 'file', path: 'src/utils/helper.ts' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'tests/utils/helper.test.ts:file',
+      feature: { description: 'helper tests' },
+      metadata: { entityType: 'file', path: 'tests/utils/helper.test.ts' },
+    })
+    await rpg.addFunctionalEdge({ source: 'domain:CrossCutting', target: 'src/utils/helper.ts:file' })
+    await rpg.addFunctionalEdge({ source: 'domain:CrossCutting', target: 'tests/utils/helper.test.ts:file' })
+
+    const grounder = new ArtifactGrounder(rpg)
+    await grounder.ground()
+
+    // Primary path is the first alphabetically (src/utils or tests/utils)
+    // searchByPath for tests/utils should find the node via extra.paths
+    const results = await rpg.searchByPath('tests/utils*')
+    const ids = results.map(n => n.id)
+    expect(ids).toContain('domain:CrossCutting')
+    expect(ids).toContain('tests/utils/helper.test.ts:file')
+  })
 })

@@ -484,7 +484,15 @@ export class RepositoryPlanningGraph {
       return allNodes
         .filter((r) => {
           const path = r.attrs.path as string | undefined
-          return path && regex.test(path)
+          if (path && regex.test(path))
+            return true
+          // Also check metadata.extra.paths for multi-directory nodes
+          const extra = r.attrs.extra as Record<string, unknown> | undefined
+          const extraPaths = extra?.paths as string[] | undefined
+          if (extraPaths) {
+            return extraPaths.some(p => regex.test(p))
+          }
+          return false
         })
         .map(r => attrsToNode(r.id, r.attrs))
     }
