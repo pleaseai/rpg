@@ -182,8 +182,16 @@ export class RPGEncoder {
     await this.buildFunctionalHierarchy(rpg)
 
     // Phase 3a: Artifact Grounding — metadata propagation
-    const grounder = new ArtifactGrounder(rpg)
-    await grounder.ground()
+    try {
+      const grounder = new ArtifactGrounder(rpg)
+      await grounder.ground()
+    }
+    catch (error) {
+      console.warn(
+        `[RPGEncoder] Artifact grounding failed, continuing without path metadata: `
+        + `${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
 
     // Phase 3b: Artifact Grounding — dependency injection
     await this.injectDependencies(rpg)

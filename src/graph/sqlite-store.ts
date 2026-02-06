@@ -509,19 +509,42 @@ export class SQLiteStore implements GraphStore {
     // Convert glob/regex patterns to SQL LIKE:
     //   ".*" → "%"  (regex any)
     //   "*"  → "%"  (glob any)
-    //   "."  → "_"  (single char, only when standalone regex dot)
     const likePattern = pattern.replace(/\.\*/g, '%').replace(/\*/g, '%')
-    // Also match metadata.extra.paths for multi-directory grounded nodes
+    // Use SQL LIKE as a pre-filter for both primary path and extra JSON.
+    // The extra LIKE is a coarse substring filter that may have false positives,
+    // so we verify extra.paths matches precisely in application code below.
     const rows = this.db
       .prepare('SELECT * FROM nodes WHERE path LIKE ? OR extra LIKE ?')
       .all(likePattern, `%${likePattern}%`) as NodeRow[]
-    // Deduplicate by id in case both conditions match
+
+    // Build regex for precise matching
+    const regexStr = likePattern.replace(/%/g, '.*').replace(/_/g, '.')
+    const regex = new RegExp(`^${regexStr}$`)
+
     const seen = new Set<string>()
     const unique: NodeRow[] = []
     for (const row of rows) {
-      if (!seen.has(row.id)) {
+      if (seen.has(row.id))
+        continue
+      // Check primary path
+      if (row.path && regex.test(row.path)) {
         seen.add(row.id)
         unique.push(row)
+        continue
+      }
+      // Check extra.paths precisely (eliminates LIKE false positives)
+      if (row.extra) {
+        try {
+          const extra = JSON.parse(row.extra)
+          const paths = extra?.paths as string[] | undefined
+          if (paths?.some((p: string) => regex.test(p))) {
+            seen.add(row.id)
+            unique.push(row)
+          }
+        }
+        catch {
+          // Ignore malformed JSON
+        }
       }
     }
     return unique.map(r => this.rowToNode(r))
@@ -647,7 +670,7 @@ export class SQLiteStore implements GraphStore {
     }
 
     const metadata
-      = row.entity_type || row.path
+      = row.entity_type || row.path || row.extra
         ? {
             entityType: (row.entity_type as StructuralMetadata['entityType']) ?? undefined,
             path: row.path ?? undefined,

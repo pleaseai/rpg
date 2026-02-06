@@ -86,6 +86,13 @@ describe('computeLCA (PathTrie)', () => {
     expect(result).toHaveLength(1)
     expect(result).toContain('a')
   })
+
+  it('should distinguish similar-prefix segment names', () => {
+    // src/graph and src/graph-store are different segments under src
+    const result = computeLCA(new Set(['src/graph', 'src/graph-store']))
+    expect(result).toHaveLength(1)
+    expect(result).toContain('src')
+  })
 })
 
 describe('ArtifactGrounder', () => {
@@ -254,6 +261,92 @@ describe('ArtifactGrounder', () => {
     const ids = results.map(n => n.id)
     expect(ids).toContain('domain:Graph')
     expect(ids).toContain('src/graph/node.ts:file')
+  })
+
+  it('should not set extra.paths for single-LCA nodes', async () => {
+    const rpg = await createTestRPG()
+
+    await rpg.addHighLevelNode({
+      id: 'domain:SingleDir',
+      feature: { description: 'single directory module' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'src/graph/a.ts:file',
+      feature: { description: 'file a' },
+      metadata: { entityType: 'file', path: 'src/graph/a.ts' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'src/graph/b.ts:file',
+      feature: { description: 'file b' },
+      metadata: { entityType: 'file', path: 'src/graph/b.ts' },
+    })
+    await rpg.addFunctionalEdge({ source: 'domain:SingleDir', target: 'src/graph/a.ts:file' })
+    await rpg.addFunctionalEdge({ source: 'domain:SingleDir', target: 'src/graph/b.ts:file' })
+
+    const grounder = new ArtifactGrounder(rpg)
+    await grounder.ground()
+
+    const node = await rpg.getNode('domain:SingleDir')
+    expect(node?.metadata?.path).toBe('src/graph')
+    expect(node?.metadata?.extra?.paths).toBeUndefined()
+  })
+
+  it('should preserve pre-existing metadata.extra fields during grounding', async () => {
+    const rpg = await createTestRPG()
+
+    await rpg.addHighLevelNode({
+      id: 'domain:WithExtra',
+      feature: { description: 'node with existing extra' },
+      metadata: { entityType: 'module', extra: { customField: 'preserved-value' } },
+    })
+    await rpg.addLowLevelNode({
+      id: 'src/a/x.ts:file',
+      feature: { description: 'file x' },
+      metadata: { entityType: 'file', path: 'src/a/x.ts' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'tests/b/y.ts:file',
+      feature: { description: 'file y' },
+      metadata: { entityType: 'file', path: 'tests/b/y.ts' },
+    })
+    await rpg.addFunctionalEdge({ source: 'domain:WithExtra', target: 'src/a/x.ts:file' })
+    await rpg.addFunctionalEdge({ source: 'domain:WithExtra', target: 'tests/b/y.ts:file' })
+
+    const grounder = new ArtifactGrounder(rpg)
+    await grounder.ground()
+
+    const node = await rpg.getNode('domain:WithExtra')
+    expect(node?.metadata?.extra?.paths).toBeDefined()
+    expect(node?.metadata?.extra?.customField).toBe('preserved-value')
+  })
+
+  it('should skip LowLevelNodes with missing metadata.path gracefully', async () => {
+    const rpg = await createTestRPG()
+
+    await rpg.addHighLevelNode({
+      id: 'domain:PartialPaths',
+      feature: { description: 'partial path data' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'src/graph/node.ts:file',
+      feature: { description: 'graph nodes' },
+      metadata: { entityType: 'file', path: 'src/graph/node.ts' },
+    })
+    await rpg.addLowLevelNode({
+      id: 'missing-path:file',
+      feature: { description: 'no path node' },
+      metadata: { entityType: 'file' },
+    })
+    await rpg.addFunctionalEdge({ source: 'domain:PartialPaths', target: 'src/graph/node.ts:file' })
+    await rpg.addFunctionalEdge({ source: 'domain:PartialPaths', target: 'missing-path:file' })
+
+    const grounder = new ArtifactGrounder(rpg)
+    await grounder.ground()
+
+    // Should use only the node with a path
+    const node = await rpg.getNode('domain:PartialPaths')
+    expect(node?.metadata?.path).toBe('src/graph')
+    expect(node?.metadata?.entityType).toBe('module')
   })
 
   it('should make HighLevelNodes findable via searchByPath using extra.paths', async () => {

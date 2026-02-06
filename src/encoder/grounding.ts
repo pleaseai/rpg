@@ -19,7 +19,7 @@ class TrieNode {
  * Prefix tree for computing Lowest Common Ancestor (LCA) paths
  * from a set of directory paths.
  *
- * Implements COMPUTE_LCA from RPG-Encoder Algorithm 1 (§3.3):
+ * Implements COMPUTE_LCA from RPG-Encoder Algorithm 1 (Appendix A.1.3):
  * - Builds a prefix tree from directory path segments
  * - Post-order traversal identifies branching and terminal nodes
  * - Prunes subtrees to consolidate redundant sub-paths
@@ -86,7 +86,7 @@ class PathTrie {
 /**
  * Artifact Grounding — bottom-up LCA propagation for RPG HighLevelNodes.
  *
- * Implements Algorithm 1 from RPG-Encoder §3.3:
+ * Implements Algorithm 1 from RPG-Encoder Appendix A.1.3:
  * Assigns `metadata.path` to every HighLevelNode by computing the
  * Lowest Common Ancestor of its leaf descendants' directory paths.
  *
@@ -110,8 +110,15 @@ export class ArtifactGrounder {
     for (const node of highLevelNodes) {
       const parent = await this.rpg.getParent(node.id)
       if (!parent) {
-        // This is a root — start propagation from here
-        await this.propagate(node.id)
+        try {
+          await this.propagate(node.id)
+        }
+        catch (error) {
+          console.warn(
+            `[ArtifactGrounder] Failed to ground subtree rooted at "${node.id}": `
+            + `${error instanceof Error ? error.message : String(error)}`,
+          )
+        }
       }
     }
   }
@@ -125,14 +132,22 @@ export class ArtifactGrounder {
    */
   private async propagate(nodeId: string): Promise<Set<string>> {
     const node = await this.rpg.getNode(nodeId)
-    if (!node)
+    if (!node) {
+      console.warn(
+        `[ArtifactGrounder] Node "${nodeId}" referenced in graph but not found. Skipping subtree.`,
+      )
       return new Set()
+    }
 
     // Base case: LowLevelNode — return its directory
     if (isLowLevelNode(node)) {
       const filePath = node.metadata?.path
-      if (!filePath)
+      if (!filePath) {
+        console.warn(
+          `[ArtifactGrounder] LowLevelNode "${nodeId}" has no metadata.path. Skipping.`,
+        )
         return new Set()
+      }
       return new Set([path.dirname(filePath)])
     }
 
