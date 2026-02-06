@@ -161,8 +161,7 @@ export class SearchNode {
   private async collectSubtreeIds(scopes: string[]): Promise<Set<string>> {
     const ids = new Set<string>()
     const queue: string[] = [...scopes]
-    for (let i = 0; i < queue.length; i++) {
-      const current = queue[i] as string
+    for (const current of queue) {
       if (ids.has(current))
         continue
       ids.add(current)
