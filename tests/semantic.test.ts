@@ -206,6 +206,13 @@ describe('semanticExtractor', () => {
       expect(result.subFeatures).toEqual(['dispatch errors'])
     })
 
+    it('does not split "and" when rest is not a verb phrase', () => {
+      const result = extractor.validateFeatureName('manage users and their permissions')
+      // "their permissions" is not a verb phrase, so no split — full text kept
+      expect(result.subFeatures).toBeUndefined()
+      expect(result.description).toBe('coordinate users and their permissions')
+    })
+
     it('strips implementation detail keywords', () => {
       const result = extractor.validateFeatureName('iterate array to find user')
       // "iterate" and "array" are stripped
@@ -288,10 +295,9 @@ describe('semanticExtractor', () => {
         'src/transformer.ts',
       )
 
-      // Heuristic mode should include child descriptions as sub-features
-      if (result.subFeatures) {
-        expect(result.subFeatures.length).toBeGreaterThan(0)
-      }
+      // Heuristic mode includes child descriptions as sub-features when >1 child
+      expect(result.subFeatures).toBeDefined()
+      expect(result.subFeatures!.length).toBeGreaterThan(0)
     })
   })
 

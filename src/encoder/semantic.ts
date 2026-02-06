@@ -515,7 +515,6 @@ If the entity has only one responsibility, leave subFeatures as an empty array.`
     'do',
     'manage',
     'run',
-    'execute',
     'perform',
   ])
 
@@ -556,6 +555,39 @@ If the entity has only one responsibility, leave subFeatures as an empty array.`
     'break',
     'continue',
   ])
+
+  /**
+   * Non-action words that indicate a fragment is not a verb phrase
+   */
+  private static readonly NON_ACTION_PREFIXES = new Set([
+    'a',
+    'an',
+    'the',
+    'their',
+    'its',
+    'his',
+    'her',
+    'our',
+    'your',
+    'this',
+    'that',
+    'these',
+    'those',
+    'some',
+    'all',
+    'each',
+    'every',
+  ])
+
+  /**
+   * Check if text looks like an action (verb phrase) rather than a noun fragment
+   */
+  private looksLikeAction(text: string): boolean {
+    const firstWord = text.split(/\s+/)[0]
+    if (!firstWord)
+      return false
+    return !SemanticExtractor.NON_ACTION_PREFIXES.has(firstWord)
+  }
 
   /**
    * Replace a vague leading verb with a more specific alternative
@@ -603,7 +635,8 @@ If the entity has only one responsibility, leave subFeatures as an empty array.`
         .slice(1)
         .map(p => p.trim())
         .filter(p => p.length > 0)
-      // Only split if first part has >= 2 words and at least one rest part is non-empty
+        .filter(p => this.looksLikeAction(p))
+      // Only split if first part has >= 2 words and at least one rest part is a valid action
       if (first.split(/\s+/).length >= 2 && rest.length > 0) {
         desc = first
         subFeatures = rest

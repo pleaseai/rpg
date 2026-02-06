@@ -59,7 +59,7 @@ export interface EncodingResult {
  */
 interface ExtractedEntity {
   id: string
-  feature: { description: string, keywords?: string[] }
+  feature: SemanticFeature
   metadata: {
     entityType: 'file' | 'class' | 'function' | 'method'
     path: string
@@ -358,10 +358,7 @@ export class RPGEncoder {
     // Only include top-level entities (functions/classes, not methods nested inside classes)
     const directChildFeatures: SemanticFeature[] = childEntities
       .filter(e => e.metadata.entityType !== 'method')
-      .map(e => ({
-        description: e.feature.description,
-        keywords: e.feature.keywords ?? [],
-      }))
+      .map(e => e.feature)
 
     // Step 3: Aggregate into file-level feature
     const fileId = this.generateEntityId(relativePath, 'file')
@@ -381,10 +378,7 @@ export class RPGEncoder {
 
     entities.push({
       id: fileId,
-      feature: {
-        description: fileFeature.description,
-        keywords: fileFeature.keywords,
-      },
+      feature: fileFeature,
       metadata: {
         entityType: 'file',
         path: relativePath,
@@ -467,16 +461,11 @@ export class RPGEncoder {
   /**
    * Extract semantic feature with caching
    */
-  private async extractSemanticFeature(
-    input: EntityInput,
-  ): Promise<{ description: string, keywords?: string[] }> {
+  private async extractSemanticFeature(input: EntityInput): Promise<SemanticFeature> {
     // Check cache first
     const cached = await this.cache.get(input)
     if (cached) {
-      return {
-        description: cached.description,
-        keywords: cached.keywords,
-      }
+      return cached
     }
 
     // Extract using semantic extractor
@@ -485,10 +474,7 @@ export class RPGEncoder {
     // Cache the result
     await this.cache.set(input, feature)
 
-    return {
-      description: feature.description,
-      keywords: feature.keywords,
-    }
+    return feature
   }
 
   /**
