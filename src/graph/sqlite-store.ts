@@ -185,6 +185,10 @@ export class SQLiteStore implements GraphStore {
         sets.push('line_end = ?')
         values.push(updates.metadata.endLine)
       }
+      if (updates.metadata.extra !== undefined) {
+        sets.push('extra = ?')
+        values.push(JSON.stringify(updates.metadata.extra))
+      }
     }
 
     if (sets.length === 0)
@@ -502,15 +506,38 @@ export class SQLiteStore implements GraphStore {
   }
 
   async searchByPath(pattern: string): Promise<Node[]> {
-    // Convert glob/regex patterns to SQL LIKE:
-    //   ".*" → "%"  (regex any)
-    //   "*"  → "%"  (glob any)
-    //   "."  → "_"  (single char, only when standalone regex dot)
     const likePattern = pattern.replace(/\.\*/g, '%').replace(/\*/g, '%')
+
+    // SQL LIKE pre-filters both primary path and extra JSON (coarse substring match).
+    // Precise regex verification below eliminates false positives from the extra LIKE.
     const rows = this.db
-      .prepare('SELECT * FROM nodes WHERE path LIKE ?')
-      .all(likePattern) as NodeRow[]
-    return rows.map(r => this.rowToNode(r))
+      .prepare('SELECT * FROM nodes WHERE path LIKE ? OR extra LIKE ?')
+      .all(likePattern, `%${likePattern}%`) as NodeRow[]
+
+    const placeholder = '<<DOTSTAR>>'
+    const regexStr = pattern
+      .replace(/\.\*/g, placeholder) // preserve existing .*
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/%/g, '.*') // SQL LIKE % → regex .*
+      .replace(/\*/g, '.*') // glob * → regex .*
+      .replaceAll(placeholder, '.*') // restore preserved .*
+    const regex = new RegExp(`^${regexStr}$`)
+
+    return rows.filter((row) => {
+      if (row.path && regex.test(row.path))
+        return true
+
+      if (row.extra) {
+        try {
+          const parsed = JSON.parse(row.extra) as { paths?: string[] }
+          return parsed.paths?.some(p => regex.test(p)) ?? false
+        }
+        catch {
+          return false
+        }
+      }
+      return false
+    }).map(r => this.rowToNode(r))
   }
 
   // ==================== Ordering ====================
@@ -633,7 +660,7 @@ export class SQLiteStore implements GraphStore {
     }
 
     const metadata
-      = row.entity_type || row.path
+      = row.entity_type || row.path || row.extra
         ? {
             entityType: (row.entity_type as StructuralMetadata['entityType']) ?? undefined,
             path: row.path ?? undefined,

@@ -118,6 +118,8 @@ export class SurrealStore implements GraphStore {
         sets.line_start = updates.metadata.startLine
       if (updates.metadata.endLine !== undefined)
         sets.line_end = updates.metadata.endLine
+      if (updates.metadata.extra !== undefined)
+        sets.extra = updates.metadata.extra
     }
 
     if (Object.keys(sets).length === 0)
@@ -467,12 +469,25 @@ export class SurrealStore implements GraphStore {
 
   async searchByPath(pattern: string): Promise<Node[]> {
     const [rows] = await this.db
-      .query<[NodeRecord[]]>('SELECT * FROM node WHERE path != NONE')
+      .query<[NodeRecord[]]>('SELECT * FROM node WHERE path != NONE OR extra != NONE')
       .collect()
 
-    // Convert glob pattern to regex and filter in application code
-    const regex = new RegExp(pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*'))
-    return rows.filter(r => r.path && regex.test(r.path)).map(r => this.recordToNode(r))
+    const placeholder = '<<DOTSTAR>>'
+    const regexStr = pattern
+      .replace(/\.\*/g, placeholder) // preserve existing .*
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/%/g, '.*') // SQL LIKE % → regex .*
+      .replace(/\*/g, '.*') // glob * → regex .*
+      .replaceAll(placeholder, '.*') // restore preserved .*
+    const regex = new RegExp(`^${regexStr}$`)
+    return rows
+      .filter((r) => {
+        if (r.path && regex.test(r.path))
+          return true
+        const extraPaths = r.extra?.paths
+        return Array.isArray(extraPaths) && extraPaths.some(p => regex.test(p))
+      })
+      .map(r => this.recordToNode(r))
   }
 
   // ==================== Ordering ====================
@@ -607,7 +622,7 @@ export class SurrealStore implements GraphStore {
     }
 
     const metadata
-      = record.entity_type || record.path
+      = record.entity_type || record.path || record.extra
         ? {
             entityType: (record.entity_type as StructuralMetadata['entityType']) ?? undefined,
             path: record.path ?? undefined,
