@@ -34,5 +34,6 @@ export default antfu({
     'regexp/no-super-linear-backtracking': 'warn',
     // Allow TypeScript const/type with same name pattern
     'ts/no-redeclare': 'off',
+    'test/prefer-lowercase-title': 'off',
   },
 })

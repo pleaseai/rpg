@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { RPGEncoder } from '../src/encoder'
@@ -5,7 +6,17 @@ import { RPGEncoder } from '../src/encoder'
 // Get current project root for testing
 const PROJECT_ROOT = path.resolve(__dirname, '..')
 
-describe('rPGEncoder', () => {
+function hasGitAncestor(repoPath: string, ref: string): boolean {
+  try {
+    execFileSync('git', ['rev-parse', '--verify', ref], { cwd: repoPath, stdio: 'pipe' })
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
+describe('RPGEncoder', () => {
   let encoder: RPGEncoder
 
   beforeEach(() => {
@@ -49,13 +60,39 @@ describe('rPGEncoder', () => {
     expect(result.rpg.getConfig().rootPath).toBe('/tmp/test-repo')
   })
 
-  it('evolve accepts commit range', async () => {
-    // This should not throw
-    await expect(encoder.evolve({ commitRange: 'HEAD~5..HEAD' })).resolves.toBeUndefined()
+  it('evolve accepts rpg and commit range', async () => {
+    const { rpg } = await encoder.encode()
+
+    // /tmp/test-repo is not a git repository, so evolve should throw
+    await expect(encoder.evolve(rpg, { commitRange: 'HEAD~5..HEAD' })).rejects.toThrow(
+      /Failed to parse git diff/,
+    )
   })
+
+  it.skipIf(!hasGitAncestor(PROJECT_ROOT, 'HEAD~1'))(
+    'evolve returns result structure on valid repo',
+    async () => {
+      // Use the actual project root which is a real git repo
+      // Skipped in shallow clones (e.g., CI with fetch-depth: 1) where HEAD~1 is unavailable
+      const realEncoder = new RPGEncoder(PROJECT_ROOT, {
+        include: ['src/encoder/evolution/types.ts'],
+      })
+      const { rpg } = await realEncoder.encode()
+      const result = await realEncoder.evolve(rpg, { commitRange: 'HEAD~1..HEAD' })
+
+      expect(result).toHaveProperty('inserted')
+      expect(result).toHaveProperty('deleted')
+      expect(result).toHaveProperty('modified')
+      expect(result).toHaveProperty('rerouted')
+      expect(result).toHaveProperty('prunedNodes')
+      expect(result).toHaveProperty('duration')
+      expect(result).toHaveProperty('llmCalls')
+      expect(result).toHaveProperty('errors')
+    },
+  )
 })
 
-describe('rPGEncoder Options', () => {
+describe('RPGEncoder Options', () => {
   it('include patterns filter files', () => {
     const encoder = new RPGEncoder('/repo', {
       include: ['**/*.ts', '**/*.js'],
@@ -85,7 +122,7 @@ describe('rPGEncoder Options', () => {
   })
 })
 
-describe('rPGEncoder.discoverFiles', () => {
+describe('RPGEncoder.discoverFiles', () => {
   it('discovers TypeScript files in repository', async () => {
     const encoder = new RPGEncoder(PROJECT_ROOT, {
       include: ['src/**/*.ts'],
@@ -130,7 +167,7 @@ describe('rPGEncoder.discoverFiles', () => {
   })
 })
 
-describe('rPGEncoder.extractEntities', () => {
+describe('RPGEncoder.extractEntities', () => {
   it('extracts entities from TypeScript files', async () => {
     const encoder = new RPGEncoder(PROJECT_ROOT, {
       include: ['src/encoder/encoder.ts'],
@@ -186,7 +223,7 @@ describe('rPGEncoder.extractEntities', () => {
   })
 })
 
-describe('rPGEncoder.buildFunctionalHierarchy', () => {
+describe('RPGEncoder.buildFunctionalHierarchy', () => {
   it('creates high-level nodes for directories', async () => {
     const encoder = new RPGEncoder(PROJECT_ROOT, {
       include: ['src/encoder/**/*.ts'],
@@ -252,7 +289,7 @@ describe('rPGEncoder.buildFunctionalHierarchy', () => {
   })
 })
 
-describe('rPGEncoder.injectDependencies', () => {
+describe('RPGEncoder.injectDependencies', () => {
   it('creates dependency edges for imports', async () => {
     const encoder = new RPGEncoder(PROJECT_ROOT, {
       include: ['src/encoder/**/*.ts'],
