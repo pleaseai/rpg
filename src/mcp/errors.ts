@@ -6,6 +6,7 @@ export const RPGErrorCode = {
   NODE_NOT_FOUND: 'NODE_NOT_FOUND',
   INVALID_PATH: 'INVALID_PATH',
   ENCODE_FAILED: 'ENCODE_FAILED',
+  EVOLVE_FAILED: 'EVOLVE_FAILED',
   INVALID_INPUT: 'INVALID_INPUT',
 } as const
 
@@ -53,6 +54,13 @@ export function invalidPathError(path: string): RPGError {
  */
 export function encodeFailedError(reason: string): RPGError {
   return new RPGError(RPGErrorCode.ENCODE_FAILED, `Encoding failed: ${reason}`)
+}
+
+/**
+ * Create an evolution failed error
+ */
+export function evolveFailedError(reason: string): RPGError {
+  return new RPGError(RPGErrorCode.EVOLVE_FAILED, `Evolution failed: ${reason}`)
 }
 
 /**

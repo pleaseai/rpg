@@ -1,6 +1,7 @@
 // MCP Errors
 export {
   encodeFailedError,
+  evolveFailedError,
   invalidInputError,
   invalidPathError,
   nodeNotFoundError,
@@ -15,7 +16,9 @@ export { createMcpServer, loadRPG, main } from './server'
 // MCP Tools
 export {
   EncodeInputSchema,
+  EvolveInputSchema,
   executeEncode,
+  executeEvolve,
   executeExplore,
   executeFetch,
   executeSearch,
@@ -27,4 +30,4 @@ export {
   StatsInputSchema,
 } from './tools'
 
-export type { EncodeInput, ExploreInput, FetchInput, SearchInput, StatsInput } from './tools'
+export type { EncodeInput, EvolveInput, ExploreInput, FetchInput, SearchInput, StatsInput } from './tools'

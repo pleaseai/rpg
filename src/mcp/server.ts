@@ -9,7 +9,9 @@ import { RepositoryPlanningGraph } from '../graph'
 import { invalidPathError, RPGError } from './errors'
 import {
   EncodeInputSchema,
+  EvolveInputSchema,
   executeEncode,
+  executeEvolve,
   executeExplore,
   executeFetch,
   executeSearch,
@@ -62,6 +64,13 @@ export function createMcpServer(
     RPG_TOOLS.rpg_encode.description,
     EncodeInputSchema.shape,
     async args => wrapHandler(() => executeEncode(EncodeInputSchema.parse(args))),
+  )
+
+  server.tool(
+    RPG_TOOLS.rpg_evolve.name,
+    RPG_TOOLS.rpg_evolve.description,
+    EvolveInputSchema.shape,
+    async args => wrapHandler(() => executeEvolve(rpg, EvolveInputSchema.parse(args))),
   )
 
   server.tool(

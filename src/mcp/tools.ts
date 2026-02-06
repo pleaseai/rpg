@@ -2,13 +2,16 @@ import type { SemanticSearch } from '../encoder/semantic-search'
 import type { RepositoryPlanningGraph } from '../graph'
 import type { ExploreEdgeType } from '../tools/explore'
 import type { SearchMode, SearchStrategy } from '../tools/search'
+import { existsSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import { z } from 'zod'
 import { RPGEncoder } from '../encoder/encoder'
+import { RPGEvolver } from '../encoder/evolution/evolve'
 import { ExploreRPG } from '../tools/explore'
 import { FetchNode } from '../tools/fetch'
 import { SearchNode } from '../tools/search'
-import { encodeFailedError, nodeNotFoundError, rpgNotLoadedError } from './errors'
+import { encodeFailedError, evolveFailedError, invalidInputError, invalidPathError, nodeNotFoundError, rpgNotLoadedError } from './errors'
 
 /**
  * Input schema for rpg_search tool
@@ -72,6 +75,19 @@ export const EncodeInputSchema = z.object({
 export type EncodeInput = z.infer<typeof EncodeInputSchema>
 
 /**
+ * Input schema for rpg_evolve tool
+ */
+export const EvolveInputSchema = z.object({
+  commitRange: z.string().describe('Git commit range (e.g., "HEAD~1..HEAD")'),
+  driftThreshold: z.number().min(0).max(1).optional().describe('Cosine distance threshold for semantic drift (default 0.3)'),
+  useLLM: z.boolean().optional().describe('Use LLM for semantic routing (default true)'),
+  includeSource: z.boolean().optional().describe('Include source code in new/modified nodes'),
+  outputPath: z.string().optional().describe('Save updated RPG to this path'),
+})
+
+export type EvolveInput = z.infer<typeof EvolveInputSchema>
+
+/**
  * Input schema for rpg_stats tool (no input required)
  */
 export const StatsInputSchema = z.object({})
@@ -105,6 +121,12 @@ export const RPG_TOOLS = {
     description:
       'Encode a repository into a Repository Planning Graph. Extracts semantic features, builds functional hierarchy, and identifies dependencies.',
     inputSchema: EncodeInputSchema,
+  },
+  rpg_evolve: {
+    name: 'rpg_evolve',
+    description:
+      'Incrementally update the loaded RPG from git commits. Parses the diff, then deletes removed entities, modifies changed entities (with semantic drift detection), and inserts new entities.',
+    inputSchema: EvolveInputSchema,
   },
   rpg_stats: {
     name: 'rpg_stats',
@@ -236,6 +258,56 @@ export async function executeEncode(input: EncodeInput) {
   }
   catch (error) {
     throw encodeFailedError(error instanceof Error ? error.message : String(error))
+  }
+}
+
+/**
+ * Execute rpg_evolve tool
+ */
+export async function executeEvolve(rpg: RepositoryPlanningGraph | null, input: EvolveInput) {
+  if (!rpg) {
+    throw rpgNotLoadedError()
+  }
+
+  const config = rpg.getConfig()
+  const rootPath = config.rootPath
+  if (!rootPath) {
+    throw invalidInputError('RPG config is missing rootPath — cannot determine repository location')
+  }
+
+  if (!existsSync(rootPath)) {
+    throw invalidPathError(rootPath)
+  }
+
+  if (input.outputPath) {
+    const parentDir = dirname(input.outputPath)
+    if (!existsSync(parentDir)) {
+      throw invalidPathError(`Output directory does not exist: ${parentDir}`)
+    }
+  }
+
+  try {
+    const evolver = new RPGEvolver(rpg, {
+      commitRange: input.commitRange,
+      repoPath: rootPath,
+      driftThreshold: input.driftThreshold,
+      useLLM: input.useLLM,
+      includeSource: input.includeSource,
+    })
+
+    const result = await evolver.evolve()
+
+    if (input.outputPath) {
+      await writeFile(input.outputPath, await rpg.toJSON())
+    }
+
+    return result
+  }
+  catch (error) {
+    if (error instanceof Error && error.name === 'RPGError') {
+      throw error
+    }
+    throw evolveFailedError(error instanceof Error ? error.message : String(error))
   }
 }
 

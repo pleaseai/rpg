@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { RepositoryPlanningGraph } from '../src/graph'
 import {
   encodeFailedError,
+  evolveFailedError,
   invalidInputError,
   invalidPathError,
   nodeNotFoundError,
@@ -13,6 +14,8 @@ import {
 } from '../src/mcp/errors'
 import {
   EncodeInputSchema,
+  EvolveInputSchema,
+  executeEvolve,
   executeExplore,
   executeFetch,
   executeSearch,
@@ -161,6 +164,54 @@ describe('MCP Tool Schemas', () => {
       expect(result).toEqual({})
     })
   })
+
+  describe('evolveInputSchema', () => {
+    it('should accept valid evolve input with all fields', () => {
+      const input = {
+        commitRange: 'HEAD~1..HEAD',
+        driftThreshold: 0.3,
+        useLLM: true,
+        includeSource: false,
+        outputPath: '/tmp/rpg.json',
+      }
+      const result = EvolveInputSchema.parse(input)
+      expect(result.commitRange).toBe('HEAD~1..HEAD')
+      expect(result.driftThreshold).toBe(0.3)
+      expect(result.useLLM).toBe(true)
+      expect(result.includeSource).toBe(false)
+      expect(result.outputPath).toBe('/tmp/rpg.json')
+    })
+
+    it('should require commitRange', () => {
+      const input = {}
+      expect(() => EvolveInputSchema.parse(input)).toThrow()
+    })
+
+    it('should accept input with only commitRange', () => {
+      const input = { commitRange: 'abc123..def456' }
+      const result = EvolveInputSchema.parse(input)
+      expect(result.commitRange).toBe('abc123..def456')
+      expect(result.driftThreshold).toBeUndefined()
+      expect(result.useLLM).toBeUndefined()
+      expect(result.includeSource).toBeUndefined()
+      expect(result.outputPath).toBeUndefined()
+    })
+
+    it('should reject driftThreshold below 0', () => {
+      const input = { commitRange: 'HEAD~1..HEAD', driftThreshold: -0.1 }
+      expect(() => EvolveInputSchema.parse(input)).toThrow()
+    })
+
+    it('should reject driftThreshold above 1', () => {
+      const input = { commitRange: 'HEAD~1..HEAD', driftThreshold: 1.5 }
+      expect(() => EvolveInputSchema.parse(input)).toThrow()
+    })
+
+    it('should accept driftThreshold boundary values', () => {
+      expect(EvolveInputSchema.parse({ commitRange: 'a..b', driftThreshold: 0 }).driftThreshold).toBe(0)
+      expect(EvolveInputSchema.parse({ commitRange: 'a..b', driftThreshold: 1 }).driftThreshold).toBe(1)
+    })
+  })
 })
 
 describe('MCP Error Handling', () => {
@@ -202,6 +253,12 @@ describe('MCP Error Handling', () => {
       const error = invalidInputError('bad input')
       expect(error.code).toBe(RPGErrorCode.INVALID_INPUT)
       expect(error.message).toContain('bad input')
+    })
+
+    it('should create evolveFailedError', () => {
+      const error = evolveFailedError('pipeline crashed')
+      expect(error.code).toBe(RPGErrorCode.EVOLVE_FAILED)
+      expect(error.message).toContain('pipeline crashed')
     })
   })
 })
@@ -336,6 +393,45 @@ describe('MCP Tool Execution', () => {
         direction: 'out',
       })
       expect(deep.nodes.length).toBeGreaterThanOrEqual(shallow.nodes.length)
+    })
+  })
+
+  describe('executeEvolve', () => {
+    it('should throw when RPG is null', async () => {
+      await expect(executeEvolve(null, { commitRange: 'HEAD~1..HEAD' })).rejects.toThrow(RPGError)
+    })
+
+    it('should throw when RPG config has no rootPath', async () => {
+      // Create an RPG without rootPath in config
+      const json = await rpg.toJSON()
+      const data = JSON.parse(json)
+      data.config = { ...data.config, rootPath: undefined }
+      const rpgNoRoot = await RepositoryPlanningGraph.fromJSON(JSON.stringify(data))
+
+      await expect(executeEvolve(rpgNoRoot, { commitRange: 'HEAD~1..HEAD' })).rejects.toThrow(
+        /missing rootPath/,
+      )
+    })
+
+    it('should throw when rootPath does not exist on filesystem', async () => {
+      // sample-rpg.json has rootPath=/tmp/sample-project which doesn't exist
+      await expect(
+        executeEvolve(rpg, { commitRange: 'HEAD~1..HEAD' }),
+      ).rejects.toThrow(/Invalid path/)
+    })
+
+    it('should throw when outputPath parent directory does not exist', async () => {
+      const json = await rpg.toJSON()
+      const data = JSON.parse(json)
+      data.config.rootPath = process.cwd()
+      const rpgWithPath = await RepositoryPlanningGraph.fromJSON(JSON.stringify(data))
+
+      await expect(
+        executeEvolve(rpgWithPath, {
+          commitRange: 'HEAD~1..HEAD',
+          outputPath: '/nonexistent/dir/output.json',
+        }),
+      ).rejects.toThrow(/Output directory does not exist/)
     })
   })
 
