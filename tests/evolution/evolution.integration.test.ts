@@ -54,7 +54,7 @@ describe('evolution integration', () => {
     }
   })
 
-  it('rPGEncoder.evolve() delegates to RPGEvolver', async () => {
+  it('RPGEncoder.evolve() delegates to RPGEvolver', async () => {
     const encoder = new RPGEncoder(FIXTURE_REPO, {
       include: ['src/**/*.ts'],
       exclude: ['**/node_modules/**'],
@@ -72,7 +72,7 @@ describe('evolution integration', () => {
     expect(result.duration).toBeGreaterThan(0)
   })
 
-  it('aC-5: evolution uses fewer LLM calls than full re-encode', async () => {
+  it('AC-5: evolution uses fewer LLM calls than full re-encode', async () => {
     // With useLLM: false, both should be 0 LLM calls
     // This test documents the cost measurement structure
     const encoder = new RPGEncoder(FIXTURE_REPO, {

@@ -13,7 +13,7 @@ describe('diffParser.extractEntitiesFromRevision', () => {
     expect(entities.length).toBeGreaterThan(0)
 
     // Should include file-level entity
-    const fileEntity = entities.find((e) => e.entityType === 'file')
+    const fileEntity = entities.find(e => e.entityType === 'file')
     expect(fileEntity).toBeDefined()
     expect(fileEntity?.filePath).toBe('src/index.ts')
 
@@ -51,9 +51,9 @@ describe('diffParser AC-1: only process changed files', () => {
 
     // The fixture has many files, but diff should only process changed ones
     const allEntityFilePaths = new Set([
-      ...result.insertions.map((e) => e.filePath),
-      ...result.deletions.map((e) => e.filePath),
-      ...result.modifications.map((m) => m.new.filePath),
+      ...result.insertions.map(e => e.filePath),
+      ...result.deletions.map(e => e.filePath),
+      ...result.modifications.map(m => m.new.filePath),
     ])
 
     // Should have processed only the changed .ts file(s)
@@ -62,7 +62,7 @@ describe('diffParser AC-1: only process changed files', () => {
 
     // Verify: all processed files should be from the git diff
     const fileChanges = await parser.getFileChanges('5f920b4~1..5f920b4')
-    const changedPaths = new Set(fileChanges.map((c) => c.filePath))
+    const changedPaths = new Set(fileChanges.map(c => c.filePath))
     for (const fp of allEntityFilePaths) {
       expect(changedPaths.has(fp)).toBe(true)
     }
