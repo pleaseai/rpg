@@ -53,6 +53,22 @@ describe('MCP Tool Schemas', () => {
       const input = { mode: 'invalid' }
       expect(() => SearchInputSchema.parse(input)).toThrow()
     })
+
+    it('should accept searchScopes parameter', () => {
+      const input = {
+        mode: 'features',
+        featureTerms: ['authentication'],
+        searchScopes: ['auth-module'],
+      }
+      const result = SearchInputSchema.parse(input)
+      expect(result.searchScopes).toEqual(['auth-module'])
+    })
+
+    it('should accept input without searchScopes', () => {
+      const input = { mode: 'features', featureTerms: ['auth'] }
+      const result = SearchInputSchema.parse(input)
+      expect(result.searchScopes).toBeUndefined()
+    })
   })
 
   describe('fetchInputSchema', () => {
@@ -230,6 +246,19 @@ describe('MCP Tool Execution', () => {
         filePattern: '*.ts',
       })
       expect(result.mode).toBe('auto')
+    })
+
+    it('should forward searchScopes to SearchNode', async () => {
+      // Search for 'math' feature within the 'utils' subtree only
+      const result = await executeSearch(rpg, {
+        mode: 'features',
+        featureTerms: ['math'],
+        searchScopes: ['utils'],
+      })
+      // Should find at least one result
+      expect(result.nodes.length).toBeGreaterThan(0)
+      // All results should be within the utils subtree
+      expect(result.nodes.every(n => n.id.startsWith('utils'))).toBe(true)
     })
   })
 

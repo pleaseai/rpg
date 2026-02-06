@@ -65,25 +65,7 @@ export class SearchNode {
    * Execute a search query
    */
   async query(options: SearchOptions): Promise<SearchResult> {
-    const results: Node[] = []
-
-    if (options.mode === 'features' || options.mode === 'auto') {
-      if (options.featureTerms) {
-        const strategy = options.searchStrategy ?? (this.semanticSearch ? 'hybrid' : 'string')
-        const featureResults = await this.searchFeatures(options.featureTerms, strategy)
-        results.push(...featureResults)
-      }
-    }
-
-    if (options.mode === 'snippets' || options.mode === 'auto') {
-      // Path/pattern-based search
-      if (options.filePattern) {
-        const matches = await this.rpg.searchByPath(options.filePattern)
-        results.push(...matches)
-      }
-    }
-
-    // Deduplicate by node ID
+    const results = await this.resolveResults(options)
     const uniqueNodes = Array.from(new Map(results.map(n => [n.id, n])).values())
 
     return {
@@ -93,38 +75,102 @@ export class SearchNode {
     }
   }
 
+  private async resolveResults(options: SearchOptions): Promise<Node[]> {
+    if (options.mode === 'snippets') {
+      return options.filePattern ? this.rpg.searchByPath(options.filePattern) : []
+    }
+
+    // Both 'features' and 'auto' start with feature search
+    const featureResults = options.featureTerms
+      ? await this.searchFeatures(
+          options.featureTerms,
+          this.resolveStrategy(options.searchStrategy),
+          options.searchScopes,
+        )
+      : []
+
+    if (options.mode === 'features') {
+      return featureResults
+    }
+
+    // Auto mode: staged fallback per paper §5.1
+    // Snippet search only triggers when feature results are empty (no feature matches)
+    if (featureResults.length > 0 || !options.filePattern) {
+      return featureResults
+    }
+    return this.rpg.searchByPath(options.filePattern)
+  }
+
+  private resolveStrategy(explicit?: SearchStrategy): SearchStrategy {
+    return explicit ?? (this.semanticSearch ? 'hybrid' : 'string')
+  }
+
   /**
    * Search by feature terms using the configured strategy
    */
-  private async searchFeatures(featureTerms: string[], strategy: SearchStrategy): Promise<Node[]> {
-    // Always fall back to string match if no semantic search available
+  private async searchFeatures(
+    featureTerms: string[],
+    strategy: SearchStrategy,
+    scopes?: string[],
+  ): Promise<Node[]> {
     if (strategy === 'string' || !this.semanticSearch) {
-      const results: Node[] = []
-      for (const term of featureTerms) {
-        const matches = await this.rpg.searchByFeature(term)
-        results.push(...matches)
-      }
-      return results
+      return this.searchByString(featureTerms, scopes)
     }
 
-    // Use semantic search for vector/fts/hybrid strategies
-    const results: Node[] = []
-    for (const term of featureTerms) {
-      const searchResults
-        = strategy === 'hybrid'
-          ? await this.semanticSearch.searchHybrid(term)
-          : strategy === 'fts'
-            ? await this.semanticSearch.searchFts(term)
-            : await this.semanticSearch.search(term)
+    const results = await this.searchBySemantic(featureTerms, strategy, this.semanticSearch)
+    if (!scopes || scopes.length === 0)
+      return results
 
-      // Map search results back to RPG nodes
-      for (const sr of searchResults) {
-        const node = await this.rpg.getNode(sr.id)
-        if (node) {
+    const subtreeIds = await this.collectSubtreeIds(scopes)
+    return results.filter(node => subtreeIds.has(node.id))
+  }
+
+  private async searchByString(terms: string[], scopes?: string[]): Promise<Node[]> {
+    const results: Node[] = []
+    for (const term of terms) {
+      results.push(...await this.rpg.searchByFeature(term, scopes))
+    }
+    return results
+  }
+
+  private async searchBySemantic(
+    terms: string[],
+    strategy: SearchStrategy,
+    semanticSearch: SemanticSearch,
+  ): Promise<Node[]> {
+    const results: Node[] = []
+    for (const term of terms) {
+      const hits = await this.executeSemanticQuery(semanticSearch, term, strategy)
+      for (const hit of hits) {
+        const node = await this.rpg.getNode(hit.id)
+        if (node)
           results.push(node)
-        }
       }
     }
     return results
+  }
+
+  private executeSemanticQuery(search: SemanticSearch, term: string, strategy: SearchStrategy) {
+    if (strategy === 'hybrid')
+      return search.searchHybrid(term)
+    if (strategy === 'fts')
+      return search.searchFts(term)
+    return search.search(term)
+  }
+
+  private async collectSubtreeIds(scopes: string[]): Promise<Set<string>> {
+    const ids = new Set<string>()
+    const queue: string[] = [...scopes]
+    for (const current of queue) {
+      if (ids.has(current))
+        continue
+      ids.add(current)
+      const children = await this.rpg.getChildren(current)
+      for (const child of children) {
+        if (!ids.has(child.id))
+          queue.push(child.id)
+      }
+    }
+    return ids
   }
 }

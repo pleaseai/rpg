@@ -17,6 +17,7 @@ export const SearchInputSchema = z.object({
   mode: z.enum(['features', 'snippets', 'auto']).default('auto'),
   featureTerms: z.array(z.string()).optional(),
   filePattern: z.string().optional(),
+  searchScopes: z.array(z.string()).optional().describe('Feature node IDs to restrict search to their subtrees'),
   searchStrategy: z
     .enum(['hybrid', 'vector', 'fts', 'string'])
     .optional()
@@ -84,7 +85,7 @@ export const RPG_TOOLS = {
   rpg_search: {
     name: 'rpg_search',
     description:
-      'Semantic code search using Repository Planning Graph. Search for code by features (behavioral descriptions) or snippets (file patterns).',
+      'Semantic code search using Repository Planning Graph. Search by features (behavioral descriptions) or snippets (file patterns). In auto mode, uses staged fallback: feature search runs first, snippet search only triggers when feature results are empty. Use searchScopes to restrict search to specific subtrees.',
     inputSchema: SearchInputSchema,
   },
   rpg_fetch: {
@@ -130,6 +131,7 @@ export async function executeSearch(
     mode: input.mode as SearchMode,
     featureTerms: input.featureTerms,
     filePattern: input.filePattern,
+    searchScopes: input.searchScopes,
     searchStrategy: input.searchStrategy as SearchStrategy | undefined,
   })
 
