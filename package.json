@@ -76,7 +76,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/amondnet/rpg.git"
+    "url": "https://github.com/pleaseai/rpg.git"
   },
   "engines": {
     "bun": ">=1.0.0",

@@ -88,7 +88,7 @@ Extract RPG from existing codebases through three mechanisms:
 curl -fsSL https://bun.sh/install | bash
 
 # Clone and install
-git clone https://github.com/amondnet/rpg.git
+git clone https://github.com/pleaseai/rpg.git
 cd rpg
 bun install
 ```
