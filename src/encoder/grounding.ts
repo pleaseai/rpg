@@ -110,6 +110,8 @@ export class ArtifactGrounder {
 
     if (isHighLevelNode(node) && dirSet.size > 0) {
       const lcaPaths = computeLCA(dirSet)
+      if (lcaPaths.length === 0)
+        return dirSet
       const sorted = lcaPaths.length > 1 ? [...lcaPaths].sort() : lcaPaths
       const isMulti = sorted.length > 1
 

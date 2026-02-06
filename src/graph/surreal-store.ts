@@ -472,13 +472,18 @@ export class SurrealStore implements GraphStore {
       .query<[NodeRecord[]]>('SELECT * FROM node WHERE path != NONE OR extra != NONE')
       .collect()
 
-    const regex = new RegExp(pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*'))
+    const likePattern = pattern.replace(/\.\*/g, '%').replace(/\*/g, '%')
+    const regexStr = likePattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/%/g, '.*')
+      .replace(/_/g, '.')
+    const regex = new RegExp(`^${regexStr}$`)
     return rows
       .filter((r) => {
         if (r.path && regex.test(r.path))
           return true
-        const extraPaths = r.extra?.paths as string[] | undefined
-        return extraPaths?.some(p => regex.test(p)) ?? false
+        const extraPaths = r.extra?.paths
+        return Array.isArray(extraPaths) && extraPaths.some(p => regex.test(p))
       })
       .map(r => this.recordToNode(r))
   }

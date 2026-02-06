@@ -49,6 +49,8 @@ export interface EncodingResult {
   entitiesExtracted: number
   /** Time taken in milliseconds */
   duration: number
+  /** Non-fatal warnings collected during encoding (e.g. grounding failures) */
+  warnings?: string[]
 }
 
 /**
@@ -182,15 +184,16 @@ export class RPGEncoder {
     await this.buildFunctionalHierarchy(rpg)
 
     // Phase 3a: Artifact Grounding — metadata propagation
+    const warnings: string[] = []
     try {
       const grounder = new ArtifactGrounder(rpg)
       await grounder.ground()
     }
     catch (error) {
-      console.warn(
-        `[RPGEncoder] Artifact grounding failed, continuing without path metadata: `
-        + `${error instanceof Error ? error.message : String(error)}`,
-      )
+      const msg = `Artifact grounding failed, continuing without path metadata: `
+        + `${error instanceof Error ? error.message : String(error)}`
+      console.warn(`[RPGEncoder] ${msg}`)
+      warnings.push(msg)
     }
 
     // Phase 3b: Artifact Grounding — dependency injection
@@ -201,6 +204,7 @@ export class RPGEncoder {
       filesProcessed: files.length,
       entitiesExtracted,
       duration: Date.now() - startTime,
+      ...(warnings.length > 0 && { warnings }),
     }
   }
 
