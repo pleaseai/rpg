@@ -1,15 +1,19 @@
 import type { RPGConfig } from '../graph'
+import type { LowLevelNode } from '../graph/node'
 import type { CodeEntity } from '../utils/ast'
 import type { CacheOptions } from './cache'
 import type { EvolutionResult } from './evolution/types'
+import type { FileFeatureGroup } from './reorganization'
 import type { EntityInput, SemanticFeature, SemanticOptions } from './semantic'
 import fs from 'node:fs'
 import { readdir, readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { RepositoryPlanningGraph } from '../graph'
 import { ASTParser } from '../utils/ast'
+import { LLMClient } from '../utils/llm'
 import { SemanticCache } from './cache'
 import { RPGEvolver } from './evolution/evolve'
+import { DomainDiscovery, HierarchyBuilder } from './reorganization'
 import { SemanticExtractor } from './semantic'
 
 /**
@@ -79,6 +83,7 @@ export class RPGEncoder {
   private options: EncoderOptions
   private astParser: ASTParser
   private semanticExtractor: SemanticExtractor
+  private llmClient: LLMClient | null = null
   private cache: SemanticCache
 
   constructor(repoPath: string, options?: Partial<Omit<EncoderOptions, 'repoPath'>>) {
@@ -98,6 +103,34 @@ export class RPGEncoder {
     this.cache = new SemanticCache({
       cacheDir: path.join(this.repoPath, '.please', 'cache'),
       ...this.options.cache,
+    })
+
+    // Initialize shared LLM client for reorganization module
+    this.llmClient = this.createLLMClient()
+  }
+
+  private createLLMClient(): LLMClient | null {
+    const semantic = this.options.semantic
+    if (semantic?.useLLM === false)
+      return null
+
+    const provider
+      = semantic?.provider
+        ?? (process.env.GOOGLE_API_KEY
+          ? 'google'
+          : process.env.ANTHROPIC_API_KEY
+            ? 'anthropic'
+            : process.env.OPENAI_API_KEY
+              ? 'openai'
+              : null)
+
+    if (!provider)
+      return null
+
+    return new LLMClient({
+      provider,
+      apiKey: semantic?.apiKey,
+      maxTokens: semantic?.maxTokens,
     })
   }
 
@@ -492,125 +525,75 @@ export class RPGEncoder {
   }
 
   /**
-   * Build functional hierarchy from extracted entities
+   * Build functional hierarchy using LLM-based semantic reorganization.
    *
-   * Groups low-level nodes into high-level directory nodes and creates
-   * functional edges representing the parent-child hierarchy.
+   * Implements paper §3.2: Domain Discovery + Hierarchical Construction.
+   * Replaces the old directory-mirroring approach with semantic 3-level paths.
    */
   private async buildFunctionalHierarchy(rpg: RepositoryPlanningGraph): Promise<void> {
     const lowLevelNodes = await rpg.getLowLevelNodes()
-    const directoryGroups = this.groupNodesByDirectory(lowLevelNodes)
+    const fileGroups = this.buildFileFeatureGroups(lowLevelNodes)
 
-    // Create high-level directory nodes
-    const directoryNodeIds = await this.createDirectoryNodes(rpg, directoryGroups)
+    // Nothing to reorganize if no file nodes exist
+    if (fileGroups.length === 0)
+      return
 
-    // Create edges: directory hierarchy and directory-to-file only
-    // (file→entity edges are now created in Phase 1 during entity extraction)
-    await this.createDirectoryHierarchyEdges(rpg, directoryNodeIds)
-    await this.createDirectoryToFileEdges(rpg, directoryGroups, directoryNodeIds)
+    if (!this.llmClient) {
+      // If user explicitly requested LLM, throw. Otherwise skip silently.
+      if (this.options.semantic?.useLLM === true || this.options.semantic?.provider) {
+        throw new Error(
+          'Semantic reorganization requires an LLM provider. '
+          + 'Set GOOGLE_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY.',
+        )
+      }
+      return
+    }
+
+    // Step 1: Domain Discovery — identify functional areas
+    const domainDiscovery = new DomainDiscovery(this.llmClient)
+    const { functionalAreas } = await domainDiscovery.discover(fileGroups)
+
+    // Step 2: Hierarchical Construction — build 3-level paths and link nodes
+    const hierarchyBuilder = new HierarchyBuilder(rpg, this.llmClient)
+    await hierarchyBuilder.build(functionalAreas, fileGroups)
   }
 
   /**
-   * Create high-level nodes for each directory
+   * Build file feature groups from low-level nodes.
+   *
+   * Groups file-level LowLevelNodes by top-level directory, extracting only
+   * file-level features. This is the paper's "granularity-based input compression".
    */
-  private async createDirectoryNodes(
-    rpg: RepositoryPlanningGraph,
-    directoryGroups: Map<string, Array<{ id: string, metadata?: { path?: string } }>>,
-  ): Promise<Map<string, string>> {
-    const directoryNodeIds = new Map<string, string>()
+  private buildFileFeatureGroups(lowLevelNodes: LowLevelNode[]): FileFeatureGroup[] {
+    const fileNodes = lowLevelNodes.filter(n => n.metadata?.entityType === 'file')
 
-    for (const dirPath of directoryGroups.keys()) {
-      if (dirPath === '.' || dirPath === '')
+    // Group by top-level directory
+    const groups = new Map<string, FileFeatureGroup>()
+
+    for (const node of fileNodes) {
+      const filePath = node.metadata?.path
+      if (!filePath)
         continue
 
-      const dirId = `dir:${dirPath}`
-      const feature = await this.extractSemanticFeature({
-        type: 'module',
-        name: path.basename(dirPath),
-        filePath: dirPath,
+      // Extract top-level directory as group label
+      const segments = filePath.split('/')
+      const groupLabel = segments.length > 1 ? segments[0]! : '.'
+
+      let group = groups.get(groupLabel)
+      if (!group) {
+        group = { groupLabel, fileFeatures: [] }
+        groups.set(groupLabel, group)
+      }
+
+      group.fileFeatures.push({
+        fileId: node.id,
+        filePath,
+        description: node.feature.description,
+        keywords: node.feature.keywords ?? [],
       })
-
-      await rpg.addHighLevelNode({
-        id: dirId,
-        feature,
-        directoryPath: dirPath,
-        metadata: { entityType: 'module', path: dirPath },
-      })
-
-      directoryNodeIds.set(dirPath, dirId)
     }
 
-    return directoryNodeIds
-  }
-
-  /**
-   * Create parent-child edges for directory hierarchy
-   */
-  private async createDirectoryHierarchyEdges(
-    rpg: RepositoryPlanningGraph,
-    directoryNodeIds: Map<string, string>,
-  ): Promise<void> {
-    const sortedDirs = [...directoryNodeIds.keys()].sort(
-      (a, b) => a.split('/').length - b.split('/').length,
-    )
-
-    for (const dirPath of sortedDirs) {
-      const parentDir = path.dirname(dirPath)
-      const sourceId = directoryNodeIds.get(parentDir)
-      const targetId = directoryNodeIds.get(dirPath)
-
-      if (sourceId && targetId) {
-        await rpg.addFunctionalEdge({ source: sourceId, target: targetId })
-      }
-    }
-  }
-
-  /**
-   * Connect file nodes to their directory nodes
-   */
-  private async createDirectoryToFileEdges(
-    rpg: RepositoryPlanningGraph,
-    directoryGroups: Map<string, Array<{ id: string, metadata?: { entityType?: string } }>>,
-    directoryNodeIds: Map<string, string>,
-  ): Promise<void> {
-    for (const [dirPath, nodes] of directoryGroups.entries()) {
-      const dirId = directoryNodeIds.get(dirPath)
-      if (!dirId)
-        continue
-
-      for (const node of nodes) {
-        if (node.metadata?.entityType === 'file') {
-          await rpg.addFunctionalEdge({ source: dirId, target: node.id })
-        }
-      }
-    }
-  }
-
-  /**
-   * Group low-level nodes by their directory path
-   */
-  private groupNodesByDirectory(
-    nodes: Array<{ id: string, metadata?: { path?: string, entityType?: string } }>,
-  ): Map<string, typeof nodes> {
-    const groups = new Map<string, typeof nodes>()
-
-    for (const node of nodes) {
-      const nodePath = node.metadata?.path
-      if (!nodePath)
-        continue
-
-      const dirPath = path.dirname(nodePath)
-
-      const group = groups.get(dirPath)
-      if (group) {
-        group.push(node)
-      }
-      else {
-        groups.set(dirPath, [node])
-      }
-    }
-
-    return groups
+    return [...groups.values()]
   }
 
   /**
