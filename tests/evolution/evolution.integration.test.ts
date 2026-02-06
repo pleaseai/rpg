@@ -10,7 +10,8 @@ function hasGitAncestor(repoPath: string, ref: string): boolean {
   try {
     execFileSync('git', ['rev-parse', '--verify', ref], { cwd: repoPath, stdio: 'pipe' })
     return true
-  } catch {
+  }
+  catch {
     return false
   }
 }
@@ -66,7 +67,7 @@ describe('evolution integration', () => {
         expect(await rpg.hasNode(edge.source)).toBe(true)
         expect(await rpg.hasNode(edge.target)).toBe(true)
       }
-    }
+    },
   )
 
   it.skipIf(!hasGitAncestor(FIXTURE_REPO, 'HEAD~1'))(
@@ -87,7 +88,7 @@ describe('evolution integration', () => {
       expect(result).toHaveProperty('modified')
       expect(result).toHaveProperty('duration')
       expect(result.duration).toBeGreaterThan(0)
-    }
+    },
   )
 
   it.skipIf(!hasGitAncestor(FIXTURE_REPO, 'HEAD~1'))(
@@ -118,6 +119,6 @@ describe('evolution integration', () => {
 
       // LLM calls should be 0 in heuristic mode
       expect(result.llmCalls).toBe(0)
-    }
+    },
   )
 })

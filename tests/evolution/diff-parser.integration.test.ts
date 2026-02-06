@@ -1,6 +1,17 @@
+import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { DiffParser } from '../../src/encoder/evolution/diff-parser'
+
+function hasGitAncestor(repoPath: string, ref: string): boolean {
+  try {
+    execFileSync('git', ['rev-parse', '--verify', ref], { cwd: repoPath, stdio: 'pipe' })
+    return true
+  }
+  catch {
+    return false
+  }
+}
 
 describe('diffParser.extractEntitiesFromRevision', () => {
   it('extracts entities from a TypeScript file at a revision', async () => {
@@ -42,29 +53,35 @@ describe('diffParser.extractEntitiesFromRevision', () => {
 })
 
 describe('diffParser AC-1: only process changed files', () => {
-  it('only parses changed files from diff, not the entire repository', async () => {
-    const fixtureRepo = path.resolve(__dirname, '../fixtures/superjson')
-    const parser = new DiffParser(fixtureRepo)
+  // 5f920b4 modifies src/index.test.ts — a known commit with .ts changes
+  const COMMIT_WITH_TS_CHANGE = '5f920b4'
+  const fixtureRepo = path.resolve(__dirname, '../fixtures/superjson')
 
-    // Use a commit range that modifies a .ts file (5f920b4 modifies src/index.test.ts)
-    const result = await parser.parse('5f920b4~1..5f920b4')
+  it.skipIf(!hasGitAncestor(fixtureRepo, `${COMMIT_WITH_TS_CHANGE}~1`))(
+    'only parses changed files from diff, not the entire repository',
+    async () => {
+      const parser = new DiffParser(fixtureRepo)
+      const commitRange = `${COMMIT_WITH_TS_CHANGE}~1..${COMMIT_WITH_TS_CHANGE}`
 
-    // The fixture has many files, but diff should only process changed ones
-    const allEntityFilePaths = new Set([
-      ...result.insertions.map(e => e.filePath),
-      ...result.deletions.map(e => e.filePath),
-      ...result.modifications.map(m => m.new.filePath),
-    ])
+      const result = await parser.parse(commitRange)
 
-    // Should have processed only the changed .ts file(s)
-    expect(allEntityFilePaths.size).toBeGreaterThan(0)
-    expect(allEntityFilePaths.size).toBeLessThanOrEqual(5)
+      // The fixture has many files, but diff should only process changed ones
+      const allEntityFilePaths = new Set([
+        ...result.insertions.map(e => e.filePath),
+        ...result.deletions.map(e => e.filePath),
+        ...result.modifications.map(m => m.new.filePath),
+      ])
 
-    // Verify: all processed files should be from the git diff
-    const fileChanges = await parser.getFileChanges('5f920b4~1..5f920b4')
-    const changedPaths = new Set(fileChanges.map(c => c.filePath))
-    for (const fp of allEntityFilePaths) {
-      expect(changedPaths.has(fp)).toBe(true)
-    }
-  })
+      // Should have processed only the changed .ts file(s)
+      expect(allEntityFilePaths.size).toBeGreaterThan(0)
+      expect(allEntityFilePaths.size).toBeLessThanOrEqual(5)
+
+      // Verify: all processed files should be from the git diff
+      const fileChanges = await parser.getFileChanges(commitRange)
+      const changedPaths = new Set(fileChanges.map(c => c.filePath))
+      for (const fp of allEntityFilePaths) {
+        expect(changedPaths.has(fp)).toBe(true)
+      }
+    },
+  )
 })
