@@ -268,19 +268,31 @@ describe('RPGEncoder.buildFunctionalHierarchy', () => {
   })
 
   it('throws when useLLM is true but no provider is available', async () => {
-    const encoder = new RPGEncoder(PROJECT_ROOT, {
-      include: ['src/encoder/encoder.ts'],
-      exclude: [],
-      semantic: { useLLM: true },
-    })
-    // Will throw if no API keys are set and useLLM is explicitly true
-    // If API keys happen to be set, this test effectively becomes a no-op
-    if (
-      !process.env.GOOGLE_API_KEY
-      && !process.env.ANTHROPIC_API_KEY
-      && !process.env.OPENAI_API_KEY
-    ) {
+    const savedGoogle = process.env.GOOGLE_API_KEY
+    const savedAnthropic = process.env.ANTHROPIC_API_KEY
+    const savedOpenAI = process.env.OPENAI_API_KEY
+    process.env.GOOGLE_API_KEY = ''
+    process.env.ANTHROPIC_API_KEY = ''
+    process.env.OPENAI_API_KEY = ''
+
+    try {
+      const encoder = new RPGEncoder(PROJECT_ROOT, {
+        include: ['src/encoder/encoder.ts'],
+        exclude: [],
+        semantic: { useLLM: true },
+      })
       await expect(encoder.encode()).rejects.toThrow('LLM provider')
+    }
+    finally {
+      if (savedGoogle !== undefined)
+        process.env.GOOGLE_API_KEY = savedGoogle
+      else process.env.GOOGLE_API_KEY = ''
+      if (savedAnthropic !== undefined)
+        process.env.ANTHROPIC_API_KEY = savedAnthropic
+      else process.env.ANTHROPIC_API_KEY = ''
+      if (savedOpenAI !== undefined)
+        process.env.OPENAI_API_KEY = savedOpenAI
+      else process.env.OPENAI_API_KEY = ''
     }
   })
 })

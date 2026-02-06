@@ -1,5 +1,3 @@
-import type { LLMClient } from '../../utils/llm'
-
 /**
  * File-level feature group — input to Domain Discovery and Hierarchical Construction.
  *
@@ -35,12 +33,4 @@ export interface HierarchicalMapping {
    * e.g., "DataProcessing/pipeline orchestration/task scheduling": ["data_loader", "dataset"]
    */
   assignments: Record<string, string[]>
-}
-
-/**
- * Options for reorganization.
- */
-export interface ReorganizationOptions {
-  /** LLM client (required — no heuristic fallback) */
-  llmClient: LLMClient
 }

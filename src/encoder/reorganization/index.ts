@@ -5,5 +5,4 @@ export type {
   DomainDiscoveryResult,
   FileFeatureGroup,
   HierarchicalMapping,
-  ReorganizationOptions,
 } from './types'

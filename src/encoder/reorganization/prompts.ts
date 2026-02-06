@@ -124,9 +124,9 @@ Assign each group to a 3-level path (<functional_area>/<category>/<subcategory>)
  * Both prompts use the paper's <solution> wrapper format.
  */
 export function parseSolutionTag<T>(response: string): T {
-  const match = response.match(/<solution>\s*([\s\S]*?)\s*<\/solution>/)
+  const match = response.match(/<solution>([\s\S]*?)<\/solution>/)
   if (!match?.[1]) {
     throw new Error('No <solution> tag found in LLM response')
   }
-  return JSON.parse(match[1]) as T
+  return JSON.parse(match[1].trim()) as T
 }
