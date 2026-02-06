@@ -147,8 +147,8 @@ Currently only a skeleton exists at `src/zerorepo/zerorepo.ts`; core logic is no
 
 | Paper Component | Description | Status |
 |-----------------|-------------|--------|
-| **LCA-Based Metadata Propagation** | Trie-based bottom-up path propagation using Lowest Common Ancestor | ❌ Not implemented |
-| **Abstract → Physical Mapping** | Anchoring abstract features to code paths | ❌ Not implemented |
+| **LCA-Based Metadata Propagation** | Trie-based bottom-up path propagation using Lowest Common Ancestor | ✅ Implemented (PR #14) |
+| **Abstract → Physical Mapping** | Anchoring abstract features to code paths | ✅ Implemented (PR #14) |
 
 ### 2.4 RepoCraft Benchmark
 
