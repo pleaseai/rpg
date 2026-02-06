@@ -419,7 +419,7 @@ If the entity has only one responsibility, leave subFeatures as an empty array.`
       ['disable', 'disable'],
       ['start', 'start'],
       ['stop', 'stop'],
-      ['run', 'run'],
+      ['run', 'execute'],
       ['execute', 'execute'],
       ['on', 'dispatch'],
     ]
@@ -558,6 +558,21 @@ If the entity has only one responsibility, leave subFeatures as an empty array.`
   ])
 
   /**
+   * Replace a vague leading verb with a more specific alternative
+   */
+  private replaceVagueVerb(text: string): string {
+    const words = text.split(/\s+/)
+    if (words.length > 0 && SemanticExtractor.VAGUE_VERBS.has(words[0]!)) {
+      const replacement = SemanticExtractor.VAGUE_VERB_REPLACEMENTS[words[0]!]
+      if (replacement) {
+        words[0] = replacement
+        return words.join(' ')
+      }
+    }
+    return text
+  }
+
+  /**
    * Validate and normalize a feature name according to paper's naming rules.
    *
    * Rules enforced:
@@ -579,27 +594,26 @@ If the entity has only one responsibility, leave subFeatures as an empty array.`
     const filteredWords = words.filter(w => !SemanticExtractor.IMPLEMENTATION_KEYWORDS.has(w))
     desc = filteredWords.join(' ')
 
-    // Rule 6: Single responsibility check — split on "and" connecting two actions
+    // Rule 6: Single responsibility check — split on all "and" connecting actions
     let subFeatures: string[] | undefined
-    const andIndex = desc.indexOf(' and ')
-    if (andIndex !== -1) {
-      const before = desc.substring(0, andIndex).trim()
-      const after = desc.substring(andIndex + 5).trim()
-      // Only split if both parts look like verb phrases (have at least 2 words or 1 word that's a verb)
-      if (before.split(/\s+/).length >= 2 && after.split(/\s+/).length >= 1) {
-        desc = before
-        subFeatures = [after]
+    const andParts = desc.split(' and ')
+    if (andParts.length > 1) {
+      const first = andParts[0]!.trim()
+      const rest = andParts
+        .slice(1)
+        .map(p => p.trim())
+        .filter(p => p.length > 0)
+      // Only split if first part has >= 2 words and at least one rest part is non-empty
+      if (first.split(/\s+/).length >= 2 && rest.length > 0) {
+        desc = first
+        subFeatures = rest
       }
     }
 
-    // Rule 3: Replace vague verbs
-    const descWords = desc.split(/\s+/)
-    if (descWords.length > 0 && SemanticExtractor.VAGUE_VERBS.has(descWords[0]!)) {
-      const replacement = SemanticExtractor.VAGUE_VERB_REPLACEMENTS[descWords[0]!]
-      if (replacement) {
-        descWords[0] = replacement
-        desc = descWords.join(' ')
-      }
+    // Rule 3: Replace vague verbs (apply to both primary description and subFeatures)
+    desc = this.replaceVagueVerb(desc)
+    if (subFeatures) {
+      subFeatures = subFeatures.map(sf => this.replaceVagueVerb(sf))
     }
 
     // Rule 2: Word count check (3-8 words; truncate if >8, keep as-is if <3)

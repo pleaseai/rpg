@@ -192,6 +192,20 @@ describe('semanticExtractor', () => {
       expect(result.description).toContain('load')
     })
 
+    it('splits multiple "and" into multiple subFeatures', () => {
+      const result = extractor.validateFeatureName(
+        'validate input and normalize data and save result',
+      )
+      expect(result.description).toBe('validate input')
+      expect(result.subFeatures).toEqual(['normalize data', 'save result'])
+    })
+
+    it('applies vague verb replacement to subFeatures', () => {
+      const result = extractor.validateFeatureName('initialize config and handle errors')
+      expect(result.description).toBe('initialize config')
+      expect(result.subFeatures).toEqual(['dispatch errors'])
+    })
+
     it('strips implementation detail keywords', () => {
       const result = extractor.validateFeatureName('iterate array to find user')
       // "iterate" and "array" are stripped
