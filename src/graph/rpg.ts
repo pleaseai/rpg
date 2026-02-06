@@ -486,8 +486,10 @@ export class RepositoryPlanningGraph {
           const path = r.attrs.path as string | undefined
           if (path && regex.test(path))
             return true
-          const extraPaths = (r.attrs.extra as Record<string, unknown> | undefined)?.paths as string[] | undefined
-          return extraPaths?.some(p => regex.test(p)) ?? false
+          const extraPathsRaw = (r.attrs.extra as Record<string, unknown> | undefined)?.paths
+          if (!Array.isArray(extraPathsRaw))
+            return false
+          return extraPathsRaw.some(p => typeof p === 'string' && regex.test(p))
         })
         .map(r => attrsToNode(r.id, r.attrs))
     }

@@ -523,19 +523,14 @@ export class SQLiteStore implements GraphStore {
       .replaceAll(placeholder, '.*') // restore preserved .*
     const regex = new RegExp(`^${regexStr}$`)
 
-    const seen = new Set<string>()
     return rows.filter((row) => {
-      if (seen.has(row.id))
-        return false
-      seen.add(row.id)
-
       if (row.path && regex.test(row.path))
         return true
 
       if (row.extra) {
         try {
-          const paths = (JSON.parse(row.extra) as { paths?: string[] }).paths
-          return paths?.some(p => regex.test(p)) ?? false
+          const parsed = JSON.parse(row.extra) as { paths?: string[] }
+          return parsed.paths?.some(p => regex.test(p)) ?? false
         }
         catch {
           return false

@@ -14,8 +14,10 @@ describe('computeLCA (PathTrie)', () => {
   })
 
   it('should return single path for multiple files in same directory', () => {
-    // All files are in src/graph — LCA is src/graph
-    const result = computeLCA(new Set(['src/graph', 'src/graph']))
+    // All files are under src/graph/* — LCA is src/graph
+    const result = computeLCA(
+      new Set(['src/graph/fileA.ts', 'src/graph/fileB.ts']),
+    )
     expect(result).toEqual(['src/graph'])
   })
 

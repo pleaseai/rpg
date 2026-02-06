@@ -65,12 +65,13 @@ export class ArtifactGrounder {
 
   async ground(): Promise<void> {
     const highLevelNodes = await this.rpg.getHighLevelNodes()
+    const visited = new Set<string>()
 
     for (const node of highLevelNodes) {
       const parent = await this.rpg.getParent(node.id)
       if (!parent) {
         try {
-          await this.propagate(node.id)
+          await this.propagate(node.id, visited)
         }
         catch (error) {
           console.warn(
@@ -82,7 +83,10 @@ export class ArtifactGrounder {
     }
   }
 
-  private async propagate(nodeId: string): Promise<Set<string>> {
+  private async propagate(nodeId: string, visited: Set<string>): Promise<Set<string>> {
+    if (visited.has(nodeId))
+      return new Set()
+    visited.add(nodeId)
     const node = await this.rpg.getNode(nodeId)
     if (!node) {
       console.warn(`[ArtifactGrounder] Node "${nodeId}" not found, skipping subtree.`)
@@ -95,13 +99,13 @@ export class ArtifactGrounder {
         console.warn(`[ArtifactGrounder] LowLevelNode "${nodeId}" has no metadata.path, skipping.`)
         return new Set()
       }
-      return new Set([path.dirname(filePath)])
+      return new Set([path.dirname(filePath).replace(/\\/g, '/')])
     }
 
     const children = await this.rpg.getChildren(nodeId)
     const dirSet = new Set<string>()
 
-    const childDirSets = await Promise.all(children.map(child => this.propagate(child.id)))
+    const childDirSets = await Promise.all(children.map(child => this.propagate(child.id, visited)))
     for (const childDirs of childDirSets) {
       for (const dir of childDirs) {
         dirSet.add(dir)
