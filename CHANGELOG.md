@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/pleaseai/rpg/compare/v0.1.2...v0.1.3) (2026-02-10)
+
+
+### Features
+
+* add agent evaluation framework with Next.js proxy middleware test ([#40](https://github.com/pleaseai/rpg/issues/40)) ([da52f0c](https://github.com/pleaseai/rpg/commit/da52f0c913ffe1450c49252c10f32e07535b49e5))
+
 ## [0.1.2](https://github.com/pleaseai/rpg/compare/v0.1.1...v0.1.2) (2026-02-08)
 
 
