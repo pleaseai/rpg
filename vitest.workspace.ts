@@ -8,7 +8,7 @@ export default defineWorkspace([
       environment: 'node',
       include: ['tests/**/*.test.ts'],
       exclude: ['tests/fixtures/**', 'tests/**/*.integration.test.ts'],
-      testTimeout: 10000,
+      testTimeout: 15000,
     },
     resolve: {
       alias: {

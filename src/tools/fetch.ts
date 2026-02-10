@@ -116,17 +116,29 @@ export class FetchNode {
   }
 
   /**
-   * Read source code based on the configured mode
+   * Read source code based on the configured mode.
+   * Falls back to embedded source if the primary mode returns nothing.
    */
   private async readSource(node: Node): Promise<string | undefined> {
+    let source: string | undefined
     switch (this.mode) {
       case 'filesystem':
-        return this.readFromFilesystem(node)
+        source = await this.readFromFilesystem(node)
+        break
       case 'github':
-        return this.readFromGitHub(node)
+        source = await this.readFromGitHub(node)
+        break
       case 'embedded':
-        return 'sourceCode' in node ? node.sourceCode : undefined
+        return this.readEmbedded(node)
     }
+    return source ?? this.readEmbedded(node)
+  }
+
+  /**
+   * Read embedded source from node's sourceCode field
+   */
+  private readEmbedded(node: Node): string | undefined {
+    return 'sourceCode' in node ? (node as Record<string, unknown>).sourceCode as string : undefined
   }
 
   /**
