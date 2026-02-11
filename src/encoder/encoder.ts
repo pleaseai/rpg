@@ -324,7 +324,11 @@ export async function extractEntitiesFromFile(
 /**
  * Resolve an import module path to an actual file path relative to repo root.
  */
-export function resolveImportPath(sourceFile: string, modulePath: string): string | null {
+export function resolveImportPath(
+  sourceFile: string,
+  modulePath: string,
+  knownFiles?: Set<string>,
+): string | null {
   if (!modulePath.startsWith('.') && !modulePath.startsWith('/')) {
     return null
   }
@@ -333,23 +337,22 @@ export function resolveImportPath(sourceFile: string, modulePath: string): strin
   const resolvedPath = path.normalize(path.join(sourceDir, modulePath))
 
   const extensions = ['.ts', '.tsx', '.js', '.jsx', '.py', '']
+  const candidates: string[] = []
+
   for (const ext of extensions) {
-    const candidatePath = resolvedPath + ext
-    const normalizedPath = candidatePath.replace(/\\/g, '/')
-    if (!normalizedPath.startsWith('/')) {
-      return normalizedPath
-    }
+    candidates.push((resolvedPath + ext).replace(/\\/g, '/'))
   }
 
   for (const ext of extensions) {
-    const indexPath = path.join(resolvedPath, `index${ext}`)
-    const normalizedPath = indexPath.replace(/\\/g, '/')
-    if (!normalizedPath.startsWith('/')) {
-      return normalizedPath
-    }
+    candidates.push(path.join(resolvedPath, `index${ext}`).replace(/\\/g, '/'))
   }
 
-  return resolvedPath.replace(/\\/g, '/')
+  if (knownFiles) {
+    return candidates.find(c => knownFiles.has(c)) ?? null
+  }
+
+  // Fallback: return first non-absolute path candidate
+  return candidates.find(c => !c.startsWith('/')) ?? resolvedPath.replace(/\\/g, '/')
 }
 
 /**
@@ -372,6 +375,7 @@ export async function injectDependencies(
     }
   }
 
+  const knownFiles = new Set(filePathToNodeId.keys())
   const createdEdges = new Set<string>()
 
   for (const node of fileNodes) {
@@ -383,7 +387,7 @@ export async function injectDependencies(
     const parseResult = await astParser.parseFile(fullPath)
 
     for (const importInfo of parseResult.imports) {
-      const targetPath = resolveImportPath(filePath, importInfo.module)
+      const targetPath = resolveImportPath(filePath, importInfo.module, knownFiles)
       if (!targetPath)
         continue
 
@@ -521,9 +525,13 @@ export class RPGEncoder {
     }
     catch (error) {
       const msg = `File discovery failed: ${error instanceof Error ? error.message : String(error)}`
-      console.warn(`[RPGEncoder] ${msg}`)
+      console.error(`[RPGEncoder] ${msg}`)
       warnings.push(msg)
       files = []
+    }
+
+    if (files.length === 0 && warnings.length > 0) {
+      console.error(`[RPGEncoder] Proceeding with empty file list. The resulting graph will have no nodes.`)
     }
     let entitiesExtracted = 0
     const fileParseInfos: FileParseInfo[] = []

@@ -1,6 +1,6 @@
 import type { LiftableEntity } from '../src/mcp/interactive/state'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { jaccardDistance } from '../src/mcp/interactive/encoder'
+import { InteractiveEncoder, jaccardDistance } from '../src/mcp/interactive/encoder'
 import { InteractiveState } from '../src/mcp/interactive/state'
 
 function makeEntity(id: string, sourceCode?: string): LiftableEntity {
@@ -182,14 +182,20 @@ describe('InteractiveState', () => {
 })
 
 describe('Feature normalization', () => {
-  it('should normalize features (lowercase, trim, dedup) via the encoder flow', () => {
-    // This tests the normalization logic embedded in submitFeatures
-    // by verifying the expected behavior at the state level
-    const features = ['  Parse CLI Arguments ', 'parse cli arguments', 'Run Main Loop']
-    const normalized = features.map(f => f.toLowerCase().trim()).filter(Boolean)
-    const deduped = [...new Set(normalized)]
+  it('should normalize features (lowercase, trim, dedup) via submitFeatures', async () => {
+    const state = new InteractiveState()
+    state.entities = [
+      makeEntity('test.ts:main', 'function main() {}'),
+    ]
+    state.buildBatches()
 
-    expect(deduped).toEqual(['parse cli arguments', 'run main loop'])
+    const encoder = new InteractiveEncoder(state)
+    await encoder.submitFeatures(JSON.stringify({
+      'test.ts:main': ['  Parse CLI Arguments ', 'parse cli arguments', 'Run Main Loop'],
+    }))
+
+    const stored = state.liftedFeatures.get('test.ts:main')
+    expect(stored).toEqual(['parse cli arguments', 'run main loop'])
   })
 })
 

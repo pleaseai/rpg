@@ -78,7 +78,7 @@ export class InteractiveEncoder {
     this.state.reset()
     this.state.repoPath = repoPath
 
-    const repoName = (repoPath.split('/').pop() ?? 'unknown').toLowerCase()
+    const repoName = path.basename(repoPath).toLowerCase() || 'unknown'
     const config: RPGConfig = { name: repoName, rootPath: repoPath }
 
     const rpg = await RepositoryPlanningGraph.create(config)
@@ -761,7 +761,7 @@ export class InteractiveEncoder {
       const pending = this.state.pendingRouting.find(p => p.entityId === entityId)!
 
       if (decision === 'move' && targetPath) {
-        // Update hierarchy assignment
+        // Upsert hierarchy assignment
         const existing = this.state.hierarchyAssignments.findIndex(
           a => a.filePath === pending.currentPath,
         )
@@ -770,6 +770,12 @@ export class InteractiveEncoder {
             filePath: pending.currentPath,
             hierarchyPath: targetPath,
           }
+        }
+        else {
+          this.state.hierarchyAssignments.push({
+            filePath: pending.currentPath,
+            hierarchyPath: targetPath,
+          })
         }
       }
 

@@ -86,11 +86,41 @@ export class InteractiveState {
    * Used for optimistic concurrency control in routing decisions.
    */
   getGraphRevision(): string {
+    const entities = this.entities
+      .map(e => e.id)
+      .sort()
+
+    const lifted = [...this.liftedFeatures.entries()]
+      .sort(([idA], [idB]) => idA.localeCompare(idB))
+      .map(([entityId, features]) => ({
+        entityId,
+        features: [...features].sort(),
+      }))
+
+    const routing = this.pendingRouting
+      .slice()
+      .sort((a, b) => {
+        const byEntity = a.entityId.localeCompare(b.entityId)
+        if (byEntity !== 0)
+          return byEntity
+        return a.currentPath.localeCompare(b.currentPath)
+      })
+      .map(r => ({
+        entityId: r.entityId,
+        features: [...r.features].sort(),
+        currentPath: r.currentPath,
+        reason: r.reason,
+      }))
+
+    const hierarchy = this.hierarchyAssignments
+      .map(a => `${a.filePath}:${a.hierarchyPath}`)
+      .sort()
+
     const data = JSON.stringify({
-      entities: this.entities.map(e => e.id),
-      lifted: [...this.liftedFeatures.keys()].sort(),
-      routing: this.pendingRouting.map(r => r.entityId).sort(),
-      hierarchy: this.hierarchyAssignments.map(a => `${a.filePath}:${a.hierarchyPath}`).sort(),
+      entities,
+      lifted,
+      routing,
+      hierarchy,
     })
     return createHash('sha256').update(data).digest('hex').slice(0, 12)
   }
