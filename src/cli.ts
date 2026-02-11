@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import { config } from 'dotenv'
-
-config({ path: ['.env.local', '.env'] })
-
 import { readFile, writeFile } from 'node:fs/promises'
+
 import { program } from 'commander'
+import { config } from 'dotenv'
 import { RPGEncoder } from './encoder'
 import { RepositoryPlanningGraph } from './graph'
 import { ExploreRPG, FetchNode, SearchNode } from './tools'
 import { ZeroRepo } from './zerorepo'
+
+config({ path: ['.env.local', '.env'] })
 
 program
   .name('rpg')
