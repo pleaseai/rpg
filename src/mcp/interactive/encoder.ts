@@ -7,6 +7,7 @@ import {
   extractEntitiesFromFile,
   injectDependencies,
 } from '../../encoder/encoder'
+import { ArtifactGrounder } from '../../encoder/grounding'
 import { RepositoryPlanningGraph } from '../../graph'
 import { ASTParser } from '../../utils/ast'
 import {
@@ -631,6 +632,18 @@ export class InteractiveEncoder {
     // Build hierarchy nodes in the graph
     if (this.state.rpg) {
       await this.buildHierarchyNodes(assignments)
+
+      // Artifact Grounding: LCA-based metadata propagation (논문 Phase 3a)
+      try {
+        const grounder = new ArtifactGrounder(this.state.rpg)
+        await grounder.ground()
+      }
+      catch (error) {
+        console.warn(
+          `[InteractiveEncoder] Artifact grounding failed: `
+          + `${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
     }
 
     await this.persistGraph()

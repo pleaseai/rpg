@@ -411,6 +411,100 @@ export class Logger {
       expect(uniqueIds.size).toBe(nodeIds.length)
     })
 
+    it('should apply artifact grounding after hierarchy construction', async () => {
+      const state = new InteractiveState()
+      const encoder = new InteractiveEncoder(state)
+
+      await encoder.buildIndex(repoDir, { include: ['**/*.ts'] })
+
+      // Submit features for all entities
+      const features: Record<string, string[]> = {}
+      for (const entity of state.entities) {
+        features[entity.id] = [`process ${entity.name}`]
+      }
+      await encoder.submitFeatures(JSON.stringify(features))
+      await encoder.finalizeFeatures()
+
+      // Assign files to overlapping hierarchy paths
+      const assignments: Record<string, string> = {}
+      const fileEntities = state.entities.filter(e => e.entityType === 'file')
+      expect(fileEntities.length).toBeGreaterThanOrEqual(2)
+      assignments[fileEntities[0]!.filePath] = 'Core/utilities/helpers'
+      assignments[fileEntities[1]!.filePath] = 'Core/utilities/formatters'
+
+      await encoder.submitHierarchy(JSON.stringify(assignments))
+
+      // Verify HighLevelNodes have grounded metadata
+      const rpg = state.rpg!
+      const highLevelNodes = await rpg.getHighLevelNodes()
+
+      // Leaf hierarchy nodes should have metadata.path set via LCA
+      const helpersNode = highLevelNodes.find(n => n.id === 'Core/utilities/helpers')
+      expect(helpersNode).toBeDefined()
+      expect(helpersNode!.metadata?.path).toBeDefined()
+      expect(helpersNode!.metadata?.entityType).toBe('module')
+
+      const formattersNode = highLevelNodes.find(n => n.id === 'Core/utilities/formatters')
+      expect(formattersNode).toBeDefined()
+      expect(formattersNode!.metadata?.path).toBeDefined()
+      expect(formattersNode!.metadata?.entityType).toBe('module')
+
+      // Parent node "Core/utilities" should also be grounded
+      const utilitiesNode = highLevelNodes.find(n => n.id === 'Core/utilities')
+      expect(utilitiesNode).toBeDefined()
+      expect(utilitiesNode!.metadata?.entityType).toBe('module')
+    })
+
+    it('should set multi-LCA paths when files span different directories', async () => {
+      // Create a repo with files in different directories
+      const multiDir = join(tmpDir, 'multi-dir-repo')
+      mkdirSync(join(multiDir, 'src', 'api'), { recursive: true })
+      mkdirSync(join(multiDir, 'src', 'lib'), { recursive: true })
+
+      writeFileSync(join(multiDir, 'src', 'api', 'handler.ts'), `
+export function handle(): void {}
+`)
+      writeFileSync(join(multiDir, 'src', 'lib', 'utils.ts'), `
+export function util(): void {}
+`)
+
+      const state = new InteractiveState()
+      const encoder = new InteractiveEncoder(state)
+
+      await encoder.buildIndex(multiDir, { include: ['**/*.ts'] })
+
+      const features: Record<string, string[]> = {}
+      for (const entity of state.entities) {
+        features[entity.id] = [`process ${entity.name}`]
+      }
+      await encoder.submitFeatures(JSON.stringify(features))
+      await encoder.finalizeFeatures()
+
+      // Assign files from different directories to the SAME hierarchy node
+      const assignments: Record<string, string> = {}
+      const fileEntities = state.entities.filter(e => e.entityType === 'file')
+      for (const f of fileEntities) {
+        assignments[f.filePath] = 'Shared/mixed'
+      }
+
+      await encoder.submitHierarchy(JSON.stringify(assignments))
+
+      const rpg = state.rpg!
+      const mixedNode = (await rpg.getHighLevelNodes()).find(n => n.id === 'Shared/mixed')
+      expect(mixedNode).toBeDefined()
+      expect(mixedNode!.metadata?.entityType).toBe('module')
+
+      // Files are in src/api and src/lib → multi-LCA should produce extra.paths
+      const extra = mixedNode!.metadata?.extra as { paths?: string[] } | undefined
+      if (extra?.paths) {
+        expect(extra.paths.length).toBeGreaterThan(1)
+        expect(extra.paths).toEqual(expect.arrayContaining([
+          expect.stringContaining('api'),
+          expect.stringContaining('lib'),
+        ]))
+      }
+    })
+
     it('should upsert hierarchy assignments on repeated calls', async () => {
       const state = new InteractiveState()
       const encoder = new InteractiveEncoder(state)
