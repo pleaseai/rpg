@@ -88,13 +88,13 @@ export class InteractiveState {
   getGraphRevision(): string {
     const entities = this.entities
       .map(e => e.id)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
 
     const lifted = [...this.liftedFeatures.entries()]
       .sort(([idA], [idB]) => idA.localeCompare(idB))
       .map(([entityId, features]) => ({
         entityId,
-        features: [...features].sort(),
+        features: [...features].sort((a, b) => a.localeCompare(b)),
       }))
 
     const routing = this.pendingRouting
@@ -107,14 +107,14 @@ export class InteractiveState {
       })
       .map(r => ({
         entityId: r.entityId,
-        features: [...r.features].sort(),
+        features: [...r.features].sort((a, b) => a.localeCompare(b)),
         currentPath: r.currentPath,
         reason: r.reason,
       }))
 
     const hierarchy = this.hierarchyAssignments
       .map(a => `${a.filePath}:${a.hierarchyPath}`)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
 
     const data = JSON.stringify({
       entities,

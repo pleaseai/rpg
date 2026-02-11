@@ -47,8 +47,8 @@ export interface BuildResult {
  * All methods operate on shared InteractiveState.
  */
 export class InteractiveEncoder {
-  private state: InteractiveState
-  private astParser: ASTParser
+  private readonly state: InteractiveState
+  private readonly astParser: ASTParser
   /** Index for O(1) entity lookup by ID, built on first use */
   private entityIndex: Map<string, LiftableEntity> | null = null
 
@@ -278,27 +278,7 @@ export class InteractiveEncoder {
     parts.push('')
 
     for (const entity of entities) {
-      const lifted = this.state.liftedFeatures.has(entity.id)
-      const status = lifted ? ' ✓' : ''
-      parts.push(`### ${entity.id}${status}`)
-      parts.push(`- Type: ${entity.entityType}`)
-      parts.push(`- File: ${entity.filePath}`)
-      if (entity.startLine) {
-        parts.push(`- Lines: ${entity.startLine}–${entity.endLine}`)
-      }
-      if (entity.parentClass) {
-        parts.push(`- Parent class: ${entity.parentClass}`)
-      }
-      if (entity.sourceCode) {
-        // Truncate to ~3K chars per entity
-        const code = entity.sourceCode.length > 3000
-          ? `${entity.sourceCode.slice(0, 3000)}\n... (truncated, ${entity.sourceCode.length} chars total)`
-          : entity.sourceCode
-        parts.push('```')
-        parts.push(code)
-        parts.push('```')
-      }
-      parts.push('')
+      this.formatEntity(entity, parts)
     }
 
     if (batchIndex + 1 < totalBatches) {
@@ -309,6 +289,29 @@ export class InteractiveEncoder {
     }
 
     return parts.join('\n')
+  }
+
+  private formatEntity(entity: LiftableEntity, parts: string[]): void {
+    const lifted = this.state.liftedFeatures.has(entity.id)
+    const status = lifted ? ' ✓' : ''
+    parts.push(`### ${entity.id}${status}`)
+    parts.push(`- Type: ${entity.entityType}`)
+    parts.push(`- File: ${entity.filePath}`)
+    if (entity.startLine) {
+      parts.push(`- Lines: ${entity.startLine}–${entity.endLine}`)
+    }
+    if (entity.parentClass) {
+      parts.push(`- Parent class: ${entity.parentClass}`)
+    }
+    if (entity.sourceCode) {
+      const code = entity.sourceCode.length > 3000
+        ? `${entity.sourceCode.slice(0, 3000)}\n... (truncated, ${entity.sourceCode.length} chars total)`
+        : entity.sourceCode
+      parts.push('```')
+      parts.push(code)
+      parts.push('```')
+    }
+    parts.push('')
   }
 
   /**
@@ -324,59 +327,21 @@ export class InteractiveEncoder {
       throw new Error('Invalid JSON. Expected: {"entity_id": ["feature1", "feature2"], ...}')
     }
 
+    this.validateEntityIds(Object.keys(features))
+
     let processed = 0
     let driftDetected = 0
-    const notFound: string[] = []
-
-    // Validate all entity IDs first before mutating any state
-    for (const entityId of Object.keys(features)) {
-      if (!this.getEntityById(entityId)) {
-        notFound.push(entityId)
-      }
-    }
-    if (notFound.length > 0) {
-      throw new Error(`Entity not found: ${notFound.join(', ')}. Use rpg://encoding/entities to see valid IDs.`)
-    }
 
     for (const [entityId, featureList] of Object.entries(features)) {
       const entity = this.getEntityById(entityId)!
+      const deduped = this.normalizeFeatures(featureList)
 
-      // Normalize features
-      const normalized = featureList.map(f => f.toLowerCase().trim()).filter(Boolean)
-      const deduped = [...new Set(normalized)]
-
-      // Check for drift if entity was previously lifted
-      const existing = this.state.liftedFeatures.get(entityId)
-      if (existing) {
-        const jaccard = jaccardDistance(new Set(existing), new Set(deduped))
-        if (jaccard > 0.5) {
-          driftDetected++
-          this.state.pendingRouting.push({
-            entityId,
-            features: deduped,
-            currentPath: entity.filePath,
-            reason: 'drifted',
-          })
-        }
+      if (this.detectAndQueueDrift(entityId, deduped, entity.filePath)) {
+        driftDetected++
       }
 
       this.state.liftedFeatures.set(entityId, deduped)
-
-      // Update graph node feature
-      if (this.state.rpg) {
-        const node = await this.state.rpg.getNode(entityId)
-        if (node) {
-          await this.state.rpg.updateNode(entityId, {
-            ...node,
-            feature: {
-              description: deduped[0] ?? '',
-              subFeatures: deduped.slice(1),
-              keywords: deduped.flatMap(f => f.split(' ')).filter(w => w.length > 2),
-            },
-          })
-        }
-      }
-
+      await this.updateGraphNodeFeature(entityId, deduped)
       processed++
     }
 
@@ -394,6 +359,54 @@ export class InteractiveEncoder {
       driftDetected: driftDetected > 0 ? driftDetected : undefined,
       nextAction,
     }
+  }
+
+  private validateEntityIds(entityIds: string[]): void {
+    const notFound = entityIds.filter(id => !this.getEntityById(id))
+    if (notFound.length > 0) {
+      throw new Error(`Entity not found: ${notFound.join(', ')}. Use rpg://encoding/entities to see valid IDs.`)
+    }
+  }
+
+  private normalizeFeatures(featureList: string[]): string[] {
+    const normalized = featureList.map(f => f.toLowerCase().trim()).filter(Boolean)
+    return [...new Set(normalized)]
+  }
+
+  private detectAndQueueDrift(entityId: string, newFeatures: string[], currentPath: string): boolean {
+    const existing = this.state.liftedFeatures.get(entityId)
+    if (!existing)
+      return false
+
+    const jaccard = jaccardDistance(new Set(existing), new Set(newFeatures))
+    if (jaccard <= 0.5)
+      return false
+
+    this.state.pendingRouting.push({
+      entityId,
+      features: newFeatures,
+      currentPath,
+      reason: 'drifted',
+    })
+    return true
+  }
+
+  private async updateGraphNodeFeature(entityId: string, deduped: string[]): Promise<void> {
+    if (!this.state.rpg)
+      return
+
+    const node = await this.state.rpg.getNode(entityId)
+    if (!node)
+      return
+
+    await this.state.rpg.updateNode(entityId, {
+      ...node,
+      feature: {
+        description: deduped[0] ?? '',
+        subFeatures: deduped.slice(1),
+        keywords: deduped.flatMap(f => f.split(' ')).filter(w => w.length > 2),
+      },
+    })
   }
 
   /**
@@ -822,43 +835,55 @@ export class InteractiveEncoder {
       if (segments.length < 1)
         continue
 
-      // Create hierarchy nodes for each level
-      let parentId: string | null = null
-      for (let level = 0; level < segments.length; level++) {
-        const nodeId = segments.slice(0, level + 1).join('/')
-        if (!createdNodes.has(nodeId) && !(await rpg.hasNode(nodeId))) {
-          await rpg.addHighLevelNode({
-            id: nodeId,
-            feature: {
-              description: segments[level] ?? nodeId,
-              keywords: [],
-            },
-            directoryPath: nodeId,
-          })
-          createdNodes.add(nodeId)
+      const leafId = await this.ensureHierarchyPath(rpg, segments, createdNodes)
+      await this.linkFileToHierarchy(rpg, filePath, leafId)
+    }
+  }
 
-          // Link to parent
-          if (parentId) {
-            await rpg.addFunctionalEdge({ source: parentId, target: nodeId })
-          }
+  private async ensureHierarchyPath(
+    rpg: RepositoryPlanningGraph,
+    segments: string[],
+    createdNodes: Set<string>,
+  ): Promise<string> {
+    let parentId: string | null = null
+
+    for (let level = 0; level < segments.length; level++) {
+      const nodeId = segments.slice(0, level + 1).join('/')
+      if (!createdNodes.has(nodeId) && !(await rpg.hasNode(nodeId))) {
+        await rpg.addHighLevelNode({
+          id: nodeId,
+          feature: { description: segments[level] ?? nodeId, keywords: [] },
+          directoryPath: nodeId,
+        })
+        createdNodes.add(nodeId)
+        if (parentId) {
+          await rpg.addFunctionalEdge({ source: parentId, target: nodeId })
         }
-        parentId = nodeId
       }
+      parentId = nodeId
+    }
 
-      // Link file to its leaf hierarchy node
-      const fileEntity = this.state.entities.find(
-        e => e.filePath === filePath && e.entityType === 'file',
-      )
-      if (fileEntity && parentId) {
-        try {
-          await rpg.addFunctionalEdge({ source: parentId, target: fileEntity.id })
-        }
-        catch (error) {
-          const msg = error instanceof Error ? error.message : String(error)
-          if (!msg.includes('already exists') && !msg.includes('duplicate') && !msg.includes('UNIQUE')) {
-            throw error
-          }
-        }
+    return parentId!
+  }
+
+  private async linkFileToHierarchy(
+    rpg: RepositoryPlanningGraph,
+    filePath: string,
+    parentId: string,
+  ): Promise<void> {
+    const fileEntity = this.state.entities.find(
+      e => e.filePath === filePath && e.entityType === 'file',
+    )
+    if (!fileEntity)
+      return
+
+    try {
+      await rpg.addFunctionalEdge({ source: parentId, target: fileEntity.id })
+    }
+    catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
+      if (!msg.includes('already exists') && !msg.includes('duplicate') && !msg.includes('UNIQUE')) {
+        throw error
       }
     }
   }

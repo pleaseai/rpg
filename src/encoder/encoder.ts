@@ -105,42 +105,57 @@ async function walkDirectory(
   if (depth > maxDepth)
     return
 
-  let entries: string[]
+  const entries = await readDirSafe(dir)
+  if (!entries)
+    return
+
+  for (const entry of entries) {
+    await processEntry(rootPath, dir, entry, files, includePatterns, excludePatterns, depth, maxDepth)
+  }
+}
+
+async function readDirSafe(dir: string): Promise<string[] | null> {
   try {
-    entries = await readdir(dir)
+    return await readdir(dir)
   }
   catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     console.warn(`[discoverFiles] Skipping directory ${dir}: ${msg}`)
+    return null
+  }
+}
+
+async function processEntry(
+  rootPath: string,
+  dir: string,
+  entry: string,
+  files: string[],
+  includePatterns: string[],
+  excludePatterns: string[],
+  depth: number,
+  maxDepth: number,
+): Promise<void> {
+  const fullPath = path.join(dir, entry)
+  const relativePath = path.relative(rootPath, fullPath)
+
+  if (matchesPattern(relativePath, excludePatterns))
+    return
+
+  let stats: fs.Stats
+  try {
+    stats = await stat(fullPath)
+  }
+  catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.warn(`[discoverFiles] Skipping ${fullPath}: ${msg}`)
     return
   }
 
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry)
-    const relativePath = path.relative(rootPath, fullPath)
-
-    if (matchesPattern(relativePath, excludePatterns)) {
-      continue
-    }
-
-    let stats: fs.Stats
-    try {
-      stats = await stat(fullPath)
-    }
-    catch (error) {
-      const msg = error instanceof Error ? error.message : String(error)
-      console.warn(`[discoverFiles] Skipping ${fullPath}: ${msg}`)
-      continue
-    }
-
-    if (stats.isDirectory()) {
-      await walkDirectory(rootPath, fullPath, files, includePatterns, excludePatterns, depth + 1, maxDepth)
-    }
-    else if (stats.isFile()) {
-      if (matchesPattern(relativePath, includePatterns)) {
-        files.push(fullPath)
-      }
-    }
+  if (stats.isDirectory()) {
+    await walkDirectory(rootPath, fullPath, files, includePatterns, excludePatterns, depth + 1, maxDepth)
+  }
+  else if (stats.isFile() && matchesPattern(relativePath, includePatterns)) {
+    files.push(fullPath)
   }
 }
 
@@ -386,26 +401,38 @@ export async function injectDependencies(
     const fullPath = path.join(repoPath, filePath)
     const parseResult = await astParser.parseFile(fullPath)
 
-    for (const importInfo of parseResult.imports) {
-      const targetPath = resolveImportPath(filePath, importInfo.module, knownFiles)
-      if (!targetPath)
-        continue
+    await addImportEdges(rpg, node.id, filePath, parseResult.imports, filePathToNodeId, knownFiles, createdEdges)
+  }
+}
 
-      const targetNodeId = filePathToNodeId.get(targetPath)
-      if (!targetNodeId || targetNodeId === node.id)
-        continue
+async function addImportEdges(
+  rpg: RepositoryPlanningGraph,
+  sourceNodeId: string,
+  sourceFilePath: string,
+  imports: Array<{ module: string }>,
+  filePathToNodeId: Map<string, string>,
+  knownFiles: Set<string>,
+  createdEdges: Set<string>,
+): Promise<void> {
+  for (const importInfo of imports) {
+    const targetPath = resolveImportPath(sourceFilePath, importInfo.module, knownFiles)
+    if (!targetPath)
+      continue
 
-      const edgeKey = `${node.id}->${targetNodeId}`
-      if (createdEdges.has(edgeKey))
-        continue
-      createdEdges.add(edgeKey)
+    const targetNodeId = filePathToNodeId.get(targetPath)
+    if (!targetNodeId || targetNodeId === sourceNodeId)
+      continue
 
-      await rpg.addDependencyEdge({
-        source: node.id,
-        target: targetNodeId,
-        dependencyType: 'import',
-      })
-    }
+    const edgeKey = `${sourceNodeId}->${targetNodeId}`
+    if (createdEdges.has(edgeKey))
+      continue
+    createdEdges.add(edgeKey)
+
+    await rpg.addDependencyEdge({
+      source: sourceNodeId,
+      target: targetNodeId,
+      dependencyType: 'import',
+    })
   }
 }
 
