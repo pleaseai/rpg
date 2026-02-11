@@ -148,7 +148,7 @@ export class RPGEncoder {
     const startTime = Date.now()
 
     // Extract repository name from path
-    const repoName = this.repoPath.split('/').pop() ?? 'unknown'
+    const repoName = (this.repoPath.split('/').pop() ?? 'unknown').toLowerCase()
 
     const config: RPGConfig = {
       name: repoName,
