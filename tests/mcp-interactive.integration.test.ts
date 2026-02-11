@@ -165,10 +165,11 @@ export class Logger {
   })
 
   describe('error handling', () => {
+    let state: InteractiveState
     let encoder: InteractiveEncoder
 
     beforeAll(() => {
-      const state = new InteractiveState()
+      state = new InteractiveState()
       encoder = new InteractiveEncoder(state)
     })
 
@@ -195,6 +196,34 @@ export class Logger {
       await expect(
         encoder.submitRouting('[]', 'wrong-revision'),
       ).rejects.toThrow('Stale revision')
+    })
+
+    it('should handle invalid JSON in submitRouting', async () => {
+      const revision = state.getGraphRevision()
+      await expect(
+        encoder.submitRouting('bad json', revision),
+      ).rejects.toThrow('Invalid JSON')
+    })
+
+    it('should handle unknown file paths in submitHierarchy', async () => {
+      await expect(
+        encoder.submitHierarchy(JSON.stringify({ 'nonexistent/file.ts': 'Area/cat/sub' })),
+      ).rejects.toThrow('File not found')
+    })
+
+    it('should handle unknown file paths in submitSynthesis', async () => {
+      await expect(
+        encoder.submitSynthesis(JSON.stringify({
+          'nonexistent/file.ts': { description: 'test', keywords: ['test'] },
+        })),
+      ).rejects.toThrow('File not found')
+    })
+
+    it('should handle non-existent repo path in buildIndex', async () => {
+      const freshEncoder = new InteractiveEncoder(new InteractiveState())
+      await expect(
+        freshEncoder.buildIndex('/non/existent/path', { include: ['**/*.ts'] }),
+      ).rejects.toThrow('Repository path does not exist')
     })
   })
 
@@ -270,7 +299,7 @@ export class Logger {
       expect(batch).toContain('Graph revision:')
     })
 
-    it('should apply routing decisions', async () => {
+    it('should apply routing decisions with keep', async () => {
       const state = new InteractiveState()
       const encoder = new InteractiveEncoder(state)
 
@@ -289,6 +318,123 @@ export class Logger {
 
       expect(result.success).toBe(true)
       expect(state.pendingRouting.length).toBe(0)
+    })
+
+    it('should apply routing decisions with move and update hierarchy', async () => {
+      const state = new InteractiveState()
+      const encoder = new InteractiveEncoder(state)
+
+      await encoder.buildIndex(repoDir, { include: ['**/*.ts'] })
+
+      // Set up hierarchy assignment for the entity's file
+      const filePath = state.entities[0]!.filePath
+      state.hierarchyAssignments = [{ filePath, hierarchyPath: 'Old/path/here' }]
+
+      state.pendingRouting = [{
+        entityId: state.entities[0]!.id,
+        features: ['test'],
+        currentPath: filePath,
+        reason: 'drifted',
+      }]
+
+      const revision = state.getGraphRevision()
+      const decisions = [{
+        entityId: state.entities[0]!.id,
+        decision: 'move',
+        targetPath: 'New/area/subcategory',
+      }]
+      const result = await encoder.submitRouting(JSON.stringify(decisions), revision)
+
+      expect(result.success).toBe(true)
+      expect(state.pendingRouting.length).toBe(0)
+      // Verify hierarchy was updated
+      const assignment = state.hierarchyAssignments.find(a => a.filePath === filePath)
+      expect(assignment?.hierarchyPath).toBe('New/area/subcategory')
+    })
+
+    it('should reject unknown entity IDs in routing decisions', async () => {
+      const state = new InteractiveState()
+      const encoder = new InteractiveEncoder(state)
+
+      await encoder.buildIndex(repoDir, { include: ['**/*.ts'] })
+
+      state.pendingRouting = [{
+        entityId: state.entities[0]!.id,
+        features: ['test'],
+        currentPath: state.entities[0]!.filePath,
+        reason: 'drifted',
+      }]
+
+      const revision = state.getGraphRevision()
+      const decisions = [{ entityId: 'nonexistent:file', decision: 'keep' }]
+      await expect(
+        encoder.submitRouting(JSON.stringify(decisions), revision),
+      ).rejects.toThrow('Entity not found in pending routing')
+    })
+  })
+
+  describe('hierarchy deduplication', () => {
+    it('should create shared hierarchy nodes only once', async () => {
+      const state = new InteractiveState()
+      const encoder = new InteractiveEncoder(state)
+
+      await encoder.buildIndex(repoDir, { include: ['**/*.ts'] })
+
+      // Submit features for all entities first
+      const features: Record<string, string[]> = {}
+      for (const entity of state.entities) {
+        features[entity.id] = [`process ${entity.name}`]
+      }
+      await encoder.submitFeatures(JSON.stringify(features))
+      await encoder.finalizeFeatures()
+
+      // Assign files to overlapping hierarchy paths
+      const assignments: Record<string, string> = {}
+      const fileEntities = state.entities.filter(e => e.entityType === 'file')
+      if (fileEntities.length >= 2) {
+        assignments[fileEntities[0]!.filePath] = 'Core/utilities/helpers'
+        assignments[fileEntities[1]!.filePath] = 'Core/utilities/formatters'
+      }
+
+      await encoder.submitHierarchy(JSON.stringify(assignments))
+
+      // Verify hierarchy nodes: Core, Core/utilities, Core/utilities/helpers, Core/utilities/formatters
+      const rpg = state.rpg!
+      const highLevelNodes = await rpg.getHighLevelNodes()
+      const nodeIds = highLevelNodes.map(n => n.id)
+      expect(nodeIds).toContain('Core')
+      expect(nodeIds).toContain('Core/utilities')
+      expect(nodeIds).toContain('Core/utilities/helpers')
+      expect(nodeIds).toContain('Core/utilities/formatters')
+
+      // Verify no duplicates
+      const uniqueIds = new Set(nodeIds)
+      expect(uniqueIds.size).toBe(nodeIds.length)
+    })
+
+    it('should upsert hierarchy assignments on repeated calls', async () => {
+      const state = new InteractiveState()
+      const encoder = new InteractiveEncoder(state)
+
+      await encoder.buildIndex(repoDir, { include: ['**/*.ts'] })
+
+      const features: Record<string, string[]> = {}
+      for (const entity of state.entities) {
+        features[entity.id] = [`process ${entity.name}`]
+      }
+      await encoder.submitFeatures(JSON.stringify(features))
+      await encoder.finalizeFeatures()
+
+      const filePath = state.entities.find(e => e.entityType === 'file')!.filePath
+
+      // First assignment
+      await encoder.submitHierarchy(JSON.stringify({ [filePath]: 'Area/cat/sub' }))
+      expect(state.hierarchyAssignments.filter(a => a.filePath === filePath).length).toBe(1)
+
+      // Second assignment — should update, not duplicate
+      await encoder.submitHierarchy(JSON.stringify({ [filePath]: 'New/path/here' }))
+      expect(state.hierarchyAssignments.filter(a => a.filePath === filePath).length).toBe(1)
+      expect(state.hierarchyAssignments.find(a => a.filePath === filePath)?.hierarchyPath).toBe('New/path/here')
     })
   })
 })

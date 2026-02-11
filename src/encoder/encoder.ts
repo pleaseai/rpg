@@ -76,7 +76,7 @@ export async function discoverFiles(
   opts?: DiscoverFilesOptions,
 ): Promise<string[]> {
   if (!fs.existsSync(repoPath)) {
-    return []
+    throw new Error(`Repository path does not exist: ${repoPath}`)
   }
 
   const files: string[] = []
@@ -109,7 +109,9 @@ async function walkDirectory(
   try {
     entries = await readdir(dir)
   }
-  catch {
+  catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.warn(`[discoverFiles] Skipping directory ${dir}: ${msg}`)
     return
   }
 
@@ -125,7 +127,9 @@ async function walkDirectory(
     try {
       stats = await stat(fullPath)
     }
-    catch {
+    catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
+      console.warn(`[discoverFiles] Skipping ${fullPath}: ${msg}`)
       continue
     }
 
@@ -272,8 +276,9 @@ export async function extractEntitiesFromFile(
   try {
     sourceCode = await readFile(filePath, 'utf-8')
   }
-  catch {
-    // Ignore read errors
+  catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.warn(`[extractEntitiesFromFile] Cannot read ${filePath}: ${msg}`)
   }
 
   const parseResult = await astParser.parseFile(filePath)
@@ -505,11 +510,17 @@ export class RPGEncoder {
     const rpg = await RepositoryPlanningGraph.create(config)
 
     // Phase 1: Semantic Lifting (including file→child functional edges)
-    const files = await discoverFiles(this.repoPath, {
-      include: this.options.include,
-      exclude: this.options.exclude,
-      maxDepth: this.options.maxDepth,
-    })
+    let files: string[]
+    try {
+      files = await discoverFiles(this.repoPath, {
+        include: this.options.include,
+        exclude: this.options.exclude,
+        maxDepth: this.options.maxDepth,
+      })
+    }
+    catch {
+      files = []
+    }
     let entitiesExtracted = 0
     const fileParseInfos: FileParseInfo[] = []
 

@@ -87,10 +87,10 @@ export class InteractiveState {
    */
   getGraphRevision(): string {
     const data = JSON.stringify({
-      entities: this.entities.length,
-      lifted: this.liftedFeatures.size,
-      routing: this.pendingRouting.length,
-      hierarchy: this.hierarchyAssignments.length,
+      entities: this.entities.map(e => e.id),
+      lifted: [...this.liftedFeatures.keys()].sort(),
+      routing: this.pendingRouting.map(r => r.entityId),
+      hierarchy: this.hierarchyAssignments.map(a => `${a.filePath}:${a.hierarchyPath}`),
     })
     return createHash('sha256').update(data).digest('hex').slice(0, 12)
   }

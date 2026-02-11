@@ -97,8 +97,8 @@ export function createMcpServer(
     async () => wrapHandler(() => executeStats(rpg)),
   )
 
-  // Register interactive encoding protocol when enabled
-  if (options.interactive || options.rootPath) {
+  // Register interactive encoding protocol when explicitly enabled
+  if (options.interactive) {
     const state = new InteractiveState()
     state.repoPath = options.rootPath ?? null
     state.rpg = rpg

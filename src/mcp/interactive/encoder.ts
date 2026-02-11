@@ -48,10 +48,23 @@ export interface BuildResult {
 export class InteractiveEncoder {
   private state: InteractiveState
   private astParser: ASTParser
+  /** Index for O(1) entity lookup by ID, built on first use */
+  private entityIndex: Map<string, LiftableEntity> | null = null
 
   constructor(state: InteractiveState) {
     this.state = state
     this.astParser = new ASTParser()
+  }
+
+  private getEntityById(id: string): LiftableEntity | undefined {
+    if (!this.entityIndex) {
+      this.entityIndex = new Map(this.state.entities.map(e => [e.id, e]))
+    }
+    return this.entityIndex.get(id)
+  }
+
+  private invalidateEntityIndex(): void {
+    this.entityIndex = null
   }
 
   /**
@@ -135,6 +148,7 @@ export class InteractiveEncoder {
 
     // Store entities and build batches
     this.state.entities = allEntities
+    this.invalidateEntityIndex()
     this.state.buildBatches()
 
     await this.persistGraph()
@@ -313,12 +327,18 @@ export class InteractiveEncoder {
     let driftDetected = 0
     const notFound: string[] = []
 
-    for (const [entityId, featureList] of Object.entries(features)) {
-      const entity = this.state.entities.find(e => e.id === entityId)
-      if (!entity) {
+    // Validate all entity IDs first before mutating any state
+    for (const entityId of Object.keys(features)) {
+      if (!this.getEntityById(entityId)) {
         notFound.push(entityId)
-        continue
       }
+    }
+    if (notFound.length > 0) {
+      throw new Error(`Entity not found: ${notFound.join(', ')}. Use rpg://encoding/entities to see valid IDs.`)
+    }
+
+    for (const [entityId, featureList] of Object.entries(features)) {
+      const entity = this.getEntityById(entityId)!
 
       // Normalize features
       const normalized = featureList.map(f => f.toLowerCase().trim()).filter(Boolean)
@@ -357,10 +377,6 @@ export class InteractiveEncoder {
       }
 
       processed++
-    }
-
-    if (notFound.length > 0) {
-      throw new Error(`Entity not found: ${notFound.join(', ')}. Use rpg://encoding/entities to see valid IDs.`)
     }
 
     await this.persistGraph()
@@ -504,9 +520,8 @@ export class InteractiveEncoder {
     const notFound: string[] = []
 
     for (const [filePath, features] of Object.entries(synthesis)) {
-      const fileEntity = this.state.entities.find(
-        e => e.filePath === filePath && e.entityType === 'file',
-      )
+      const fileEntityId = `${filePath}:file`
+      const fileEntity = this.getEntityById(fileEntityId)
       if (!fileEntity) {
         notFound.push(filePath)
         continue
@@ -588,18 +603,29 @@ export class InteractiveEncoder {
     }
 
     let processed = 0
-    const areas = new Set<string>()
+    const notFound: string[] = []
 
     for (const [filePath, hierarchyPath] of Object.entries(assignments)) {
-      const fileEntity = this.state.entities.find(
-        e => e.filePath === filePath && e.entityType === 'file',
-      )
-      if (!fileEntity)
+      const fileEntityId = `${filePath}:file`
+      const fileEntity = this.getEntityById(fileEntityId)
+      if (!fileEntity) {
+        notFound.push(filePath)
         continue
+      }
 
-      this.state.hierarchyAssignments.push({ filePath, hierarchyPath })
-      areas.add(hierarchyPath.split('/')[0] ?? '')
+      // Upsert: replace existing assignment or append new one
+      const existingIdx = this.state.hierarchyAssignments.findIndex(a => a.filePath === filePath)
+      if (existingIdx >= 0) {
+        this.state.hierarchyAssignments[existingIdx] = { filePath, hierarchyPath }
+      }
+      else {
+        this.state.hierarchyAssignments.push({ filePath, hierarchyPath })
+      }
       processed++
+    }
+
+    if (notFound.length > 0) {
+      throw new Error(`File not found: ${notFound.join(', ')}. Use rpg://encoding/hierarchy to see valid file paths.`)
     }
 
     // Build hierarchy nodes in the graph
@@ -703,11 +729,14 @@ export class InteractiveEncoder {
     }
 
     let processed = 0
+    const notFound: string[] = []
 
     for (const { entityId, decision, targetPath } of decisions) {
       const pending = this.state.pendingRouting.find(p => p.entityId === entityId)
-      if (!pending)
+      if (!pending) {
+        notFound.push(entityId)
         continue
+      }
 
       if (decision === 'move' && targetPath) {
         // Update hierarchy assignment
@@ -727,6 +756,13 @@ export class InteractiveEncoder {
         p => p.entityId !== entityId,
       )
       processed++
+    }
+
+    if (notFound.length > 0) {
+      throw new Error(
+        `Entity not found in pending routing: ${notFound.join(', ')}. `
+        + `Read rpg://encoding/routing/0 for current candidates.`,
+      )
     }
 
     await this.persistGraph()
@@ -796,16 +832,21 @@ export class InteractiveEncoder {
         try {
           await rpg.addFunctionalEdge({ source: parentId, target: fileEntity.id })
         }
-        catch {
-          // Edge may already exist
+        catch (error) {
+          const msg = error instanceof Error ? error.message : String(error)
+          if (!msg.includes('already exists') && !msg.includes('duplicate') && !msg.includes('UNIQUE')) {
+            throw error
+          }
         }
       }
     }
   }
 
   private async persistGraph(): Promise<void> {
-    if (!this.state.rpg || !this.state.repoPath)
+    if (!this.state.rpg || !this.state.repoPath) {
+      console.warn('[InteractiveEncoder] Cannot persist graph: RPG or repoPath not set')
       return
+    }
 
     const outputDir = path.join(this.state.repoPath, '.rpg')
     await mkdir(outputDir, { recursive: true })
@@ -819,7 +860,7 @@ export class InteractiveEncoder {
  * Compute Jaccard distance between two sets.
  * Returns 0 when identical, 1 when completely disjoint.
  */
-function jaccardDistance(a: Set<string>, b: Set<string>): number {
+export function jaccardDistance(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 && b.size === 0)
     return 0
   let intersection = 0

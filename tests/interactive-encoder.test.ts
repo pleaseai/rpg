@@ -1,5 +1,6 @@
 import type { LiftableEntity } from '../src/mcp/interactive/state'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { jaccardDistance } from '../src/mcp/interactive/encoder'
 import { InteractiveState } from '../src/mcp/interactive/state'
 
 function makeEntity(id: string, sourceCode?: string): LiftableEntity {
@@ -216,16 +217,3 @@ describe('Jaccard distance', () => {
     expect(jaccardDistance(a, b)).toBe(0.5)
   })
 })
-
-// Helper: replicate the jaccardDistance function for testing
-function jaccardDistance(a: Set<string>, b: Set<string>): number {
-  if (a.size === 0 && b.size === 0)
-    return 0
-  let intersection = 0
-  for (const item of a) {
-    if (b.has(item))
-      intersection++
-  }
-  const union = a.size + b.size - intersection
-  return union === 0 ? 0 : 1 - intersection / union
-}
