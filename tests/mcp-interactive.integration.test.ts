@@ -456,15 +456,16 @@ export class Logger {
     })
 
     it('should set multi-LCA paths when files span different directories', async () => {
-      // Create a repo with files in different directories
+      // Create a repo with files in disjoint top-level directories (no common ancestor)
+      // so computeLCA produces multiple paths triggering extra.paths
       const multiDir = join(tmpDir, 'multi-dir-repo')
-      mkdirSync(join(multiDir, 'src', 'api'), { recursive: true })
-      mkdirSync(join(multiDir, 'src', 'lib'), { recursive: true })
+      mkdirSync(join(multiDir, 'api'), { recursive: true })
+      mkdirSync(join(multiDir, 'lib'), { recursive: true })
 
-      writeFileSync(join(multiDir, 'src', 'api', 'handler.ts'), `
+      writeFileSync(join(multiDir, 'api', 'handler.ts'), `
 export function handle(): void {}
 `)
-      writeFileSync(join(multiDir, 'src', 'lib', 'utils.ts'), `
+      writeFileSync(join(multiDir, 'lib', 'utils.ts'), `
 export function util(): void {}
 `)
 
@@ -480,7 +481,7 @@ export function util(): void {}
       await encoder.submitFeatures(JSON.stringify(features))
       await encoder.finalizeFeatures()
 
-      // Assign files from different directories to the SAME hierarchy node
+      // Assign files from disjoint directories to the SAME hierarchy node
       const assignments: Record<string, string> = {}
       const fileEntities = state.entities.filter(e => e.entityType === 'file')
       for (const f of fileEntities) {
@@ -494,15 +495,15 @@ export function util(): void {}
       expect(mixedNode).toBeDefined()
       expect(mixedNode!.metadata?.entityType).toBe('module')
 
-      // Files are in src/api and src/lib → multi-LCA should produce extra.paths
+      // Files are in api/ and lib/ (disjoint) → multi-LCA should produce extra.paths
       const extra = mixedNode!.metadata?.extra as { paths?: string[] } | undefined
-      if (extra?.paths) {
-        expect(extra.paths.length).toBeGreaterThan(1)
-        expect(extra.paths).toEqual(expect.arrayContaining([
-          expect.stringContaining('api'),
-          expect.stringContaining('lib'),
-        ]))
-      }
+      expect(extra).toBeDefined()
+      expect(extra!.paths).toBeDefined()
+      expect(extra!.paths!.length).toBeGreaterThan(1)
+      expect(extra!.paths).toEqual(expect.arrayContaining([
+        expect.stringContaining('api'),
+        expect.stringContaining('lib'),
+      ]))
     })
 
     it('should upsert hierarchy assignments on repeated calls', async () => {

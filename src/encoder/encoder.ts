@@ -558,7 +558,9 @@ export class RPGEncoder {
     }
 
     if (files.length === 0 && warnings.length > 0) {
-      console.error(`[RPGEncoder] Proceeding with empty file list. The resulting graph will have no nodes.`)
+      const emptyMsg = `Proceeding with empty file list. The resulting graph will have no nodes.`
+      console.warn(`[RPGEncoder] ${emptyMsg}`)
+      warnings.push(emptyMsg)
     }
     let entitiesExtracted = 0
     const fileParseInfos: FileParseInfo[] = []

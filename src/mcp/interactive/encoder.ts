@@ -26,6 +26,7 @@ export interface SubmitResult {
   entitiesProcessed: number
   coveragePercent: number
   driftDetected?: number
+  warnings?: string[]
   nextAction: string
 }
 
@@ -643,6 +644,7 @@ export class InteractiveEncoder {
     }
 
     // Build hierarchy nodes in the graph
+    const warnings: string[] = []
     if (this.state.rpg) {
       await this.buildHierarchyNodes(assignments)
 
@@ -652,10 +654,9 @@ export class InteractiveEncoder {
         await grounder.ground()
       }
       catch (error) {
-        console.warn(
-          `[InteractiveEncoder] Artifact grounding failed: `
-          + `${error instanceof Error ? error.message : String(error)}`,
-        )
+        const msg = `Artifact grounding failed: ${error instanceof Error ? error.message : String(error)}`
+        console.warn(`[InteractiveEncoder] ${msg}`)
+        warnings.push(msg)
       }
     }
 
@@ -670,6 +671,7 @@ export class InteractiveEncoder {
       success: true,
       entitiesProcessed: processed,
       coveragePercent: this.state.getCoveragePercent(),
+      ...(warnings.length > 0 && { warnings }),
       nextAction,
     }
   }
