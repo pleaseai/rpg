@@ -42,7 +42,7 @@ Which category is the most semantically compatible parent for this entity?`,
  */
 export const SemanticRoutingResponseSchema = z.object({
   selectedId: z.string().nullable(),
-  confidence: z.number(),
+  confidence: z.number().min(0).max(1),
 })
 
 /**

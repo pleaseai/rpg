@@ -7,7 +7,10 @@ export const DomainDiscoveryResponseSchema = z.object({
 export type DomainDiscoveryResponse = z.infer<typeof DomainDiscoveryResponseSchema>
 
 export const HierarchicalConstructionResponseSchema = z.object({
-  assignments: z.record(z.string(), z.array(z.string())),
+  assignments: z.record(
+    z.string().regex(/^[^/]+\/[^/]+\/[^/]+$/),
+    z.array(z.string()),
+  ),
 })
 export type HierarchicalConstructionResponse = z.infer<typeof HierarchicalConstructionResponseSchema>
 

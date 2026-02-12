@@ -1,5 +1,6 @@
 import type { LLMProvider } from '../utils/llm'
 import { z } from 'zod/v4'
+import { SemanticFeatureSchema as NodeSemanticFeatureSchema } from '../graph/node'
 import { LLMClient } from '../utils/llm'
 
 /**
@@ -17,11 +18,9 @@ export interface SemanticOptions {
 }
 
 /**
- * Zod schema for semantic feature
+ * Zod schema for semantic feature with required keywords (extends graph/node schema)
  */
-export const SemanticFeatureSchema = z.object({
-  description: z.string(),
-  subFeatures: z.array(z.string()).optional(),
+export const SemanticFeatureSchema = NodeSemanticFeatureSchema.extend({
   keywords: z.array(z.string()),
 })
 

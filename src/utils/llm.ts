@@ -148,17 +148,22 @@ export class LLMClient {
   }
 
   /**
-   * Generate a completion using Vercel AI SDK
+   * Shared helper for generateText calls with error handling and usage tracking.
    */
-  async complete(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
+  private async callGenerateText(
+    prompt: string,
+    systemPrompt?: string,
+    output?: Parameters<typeof generateText>[0]['output'],
+  ): Promise<Awaited<ReturnType<typeof generateText>>> {
     const modelId = this.options.model ?? DEFAULT_MODELS[this.options.provider]
     const model = this.providerInstance(modelId)
-
     const timeout = this.options.timeout ?? 120_000
+
     let result: Awaited<ReturnType<typeof generateText>>
     try {
       result = await generateText({
         model,
+        output,
         system: systemPrompt,
         prompt,
         maxOutputTokens: this.options.maxTokens,
@@ -175,18 +180,27 @@ export class LLMClient {
 
     const inputTokens = result.usage?.inputTokens ?? 0
     const outputTokens = result.usage?.outputTokens ?? 0
-
     this.usageStats.totalPromptTokens += inputTokens
     this.usageStats.totalCompletionTokens += outputTokens
     this.usageStats.totalTokens += inputTokens + outputTokens
     this.usageStats.requestCount++
 
+    return result
+  }
+
+  /**
+   * Generate a completion using Vercel AI SDK
+   */
+  async complete(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
+    const result = await this.callGenerateText(prompt, systemPrompt)
+    const modelId = this.options.model ?? DEFAULT_MODELS[this.options.provider]
+
     return {
       content: result.text,
       usage: {
-        promptTokens: inputTokens,
-        completionTokens: outputTokens,
-        totalTokens: inputTokens + outputTokens,
+        promptTokens: result.usage?.inputTokens ?? 0,
+        completionTokens: result.usage?.outputTokens ?? 0,
+        totalTokens: (result.usage?.inputTokens ?? 0) + (result.usage?.outputTokens ?? 0),
       },
       model: modelId,
     }
@@ -198,41 +212,14 @@ export class LLMClient {
    * Falls back to regex-based JSON extraction when no schema is given.
    */
   async completeJSON<T>(prompt: string, systemPrompt?: string, schema?: ZodType<T>): Promise<T> {
-    const modelId = this.options.model ?? DEFAULT_MODELS[this.options.provider]
-    const model = this.providerInstance(modelId)
-    const timeout = this.options.timeout ?? 120_000
-
     if (schema) {
-      try {
-        const result = await generateText({
-          model,
-          output: Output.object({ schema }),
-          system: systemPrompt,
-          prompt,
-          maxOutputTokens: this.options.maxTokens,
-          temperature: this.options.temperature,
-          abortSignal: AbortSignal.timeout(timeout),
-        })
+      const result = await this.callGenerateText(prompt, systemPrompt, Output.object({ schema }))
 
-        const inputTokens = result.usage?.inputTokens ?? 0
-        const outputTokens = result.usage?.outputTokens ?? 0
-        this.usageStats.totalPromptTokens += inputTokens
-        this.usageStats.totalCompletionTokens += outputTokens
-        this.usageStats.totalTokens += inputTokens + outputTokens
-        this.usageStats.requestCount++
-
-        if (result.output == null) {
-          throw new Error('No structured output returned from model')
-        }
-
-        return result.output
+      if (result.output == null) {
+        throw new Error('No structured output returned from model')
       }
-      catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error))
-        console.error(`[LLMClient] generateText+Output.object ${modelId} error: ${err.message}`)
-        this.options.onError?.(err, { model: modelId, promptLength: prompt.length })
-        throw err
-      }
+
+      return result.output as T
     }
 
     // Fallback: regex-based JSON extraction for callers without schema
