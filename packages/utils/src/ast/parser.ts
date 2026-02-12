@@ -68,12 +68,12 @@ export class ASTParser {
       result.errors.push(`Unsupported language: ${language}`)
       return result
     }
-    const config = LANGUAGE_CONFIGS[language]!
+    const config = LANGUAGE_CONFIGS[language]
 
     try {
       // Set language parser
       this.parser.setLanguage(
-        config.parser as unknown as Parameters<typeof this.parser.setLanguage>[0],
+        config.parser as Parameters<typeof this.parser.setLanguage>[0],
       )
 
       // Parse the source
@@ -274,18 +274,7 @@ export class ASTParser {
   private extractParentClass(node: Parser.SyntaxNode): string | undefined {
     // For Go methods, extract receiver type
     if (node.type === 'method_declaration') {
-      const receiver = node.childForFieldName('receiver')
-      if (receiver) {
-        for (const child of receiver.children) {
-          if (child.type === 'parameter_declaration') {
-            const typeNode = child.childForFieldName('type')
-            if (typeNode) {
-              // Strip pointer prefix (*User -> User)
-              return typeNode.text.replace(/^\*/, '')
-            }
-          }
-        }
-      }
+      return this.extractGoReceiverType(node)
     }
 
     let current = node.parent
@@ -295,6 +284,25 @@ export class ASTParser {
         return nameNode?.text
       }
       current = current.parent
+    }
+    return undefined
+  }
+
+  /**
+   * Extract Go method receiver type (e.g., *User -> User)
+   */
+  private extractGoReceiverType(node: Parser.SyntaxNode): string | undefined {
+    const receiver = node.childForFieldName('receiver')
+    if (!receiver)
+      return undefined
+
+    for (const child of receiver.children) {
+      if (child.type === 'parameter_declaration') {
+        const typeNode = child.childForFieldName('type')
+        if (typeNode) {
+          return typeNode.text.replace(/^\*/, '')
+        }
+      }
     }
     return undefined
   }
@@ -330,7 +338,7 @@ export class ASTParser {
     if (!sourceNode)
       return null
 
-    const module = sourceNode.text.replace(/['"]/g, '')
+    const module = sourceNode.text.replaceAll('\'', '').replaceAll('"', '')
     const names: string[] = []
 
     for (const child of node.children) {
@@ -462,7 +470,7 @@ export class ASTParser {
     if (node.type === 'import_spec') {
       const pathNode = node.childForFieldName('path')
       if (pathNode) {
-        return { module: pathNode.text.replace(/"/g, ''), names: [] }
+        return { module: pathNode.text.replaceAll('"', ''), names: [] }
       }
       return null
     }
