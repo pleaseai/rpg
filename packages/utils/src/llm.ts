@@ -5,6 +5,9 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateText, Output } from 'ai'
 import { createClaudeCode } from 'ai-sdk-provider-claude-code'
+import { createLogger } from './logger'
+
+const log = createLogger('LLMClient')
 
 /**
  * LLM provider type
@@ -218,7 +221,7 @@ export class LLMClient {
     }
     catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      console.error(`[LLMClient] ${modelId} error: ${err.message}`)
+      log.error(`${modelId} error: ${err.message}`)
       this.options.onError?.(err, { model: modelId, promptLength: prompt.length })
       throw err
     }

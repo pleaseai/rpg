@@ -4,7 +4,10 @@ import type { LLMClient } from '@pleaseai/rpg-utils/llm'
 import type { Embedding } from '../embedding'
 import type { SemanticRoutingResponse } from './prompts'
 import { isHighLevelNode } from '@pleaseai/rpg-graph/node'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { buildSemanticRoutingPrompt, SemanticRoutingResponseSchema } from './prompts'
+
+const log = createLogger('SemanticRouter')
 
 /**
  * FindBestParent — LLM-based recursive top-down semantic routing
@@ -108,8 +111,8 @@ export class SemanticRouter {
     // No LLM or embedding — return first candidate as deterministic fallback
     const fallbackId = candidates[0]?.id ?? null
     if (fallbackId) {
-      console.warn(
-        `[SemanticRouter] No LLM or embedding configured — falling back to first candidate "${fallbackId}" for entity: "${entityFeature.slice(0, 80)}"`,
+      log.warn(
+        `No LLM or embedding configured — falling back to first candidate "${fallbackId}" for entity: "${entityFeature.slice(0, 80)}"`,
       )
     }
     return fallbackId
@@ -146,8 +149,8 @@ export class SemanticRouter {
     }
     catch (error) {
       this.llmCalls++ // API was called even if it failed
-      console.warn(
-        '[SemanticRouter] LLM call failed, falling back to embedding-based routing:',
+      log.warn(
+        'LLM call failed, falling back to embedding-based routing:',
         error instanceof Error ? error.message : String(error),
       )
       if (this.embedding) {

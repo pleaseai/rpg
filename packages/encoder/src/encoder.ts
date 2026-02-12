@@ -15,12 +15,16 @@ import { RepositoryPlanningGraph } from '@pleaseai/rpg-graph'
 import { ASTParser } from '@pleaseai/rpg-utils/ast'
 import { resolveGitBinary } from '@pleaseai/rpg-utils/git-path'
 import { LLMClient } from '@pleaseai/rpg-utils/llm'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { SemanticCache } from './cache'
 import { DataFlowDetector } from './data-flow'
 import { RPGEvolver } from './evolution/evolve'
 import { ArtifactGrounder } from './grounding'
 import { DomainDiscovery, HierarchyBuilder } from './reorganization'
 import { SemanticExtractor } from './semantic'
+
+const log = createLogger('RPGEncoder')
+const logDiscover = createLogger('discoverFiles')
 
 /**
  * Options for encoding a repository
@@ -84,9 +88,9 @@ function gitListFiles(repoPath: string): string[] {
     gitBinary = resolveGitBinary()
   }
   catch {
-    console.warn(
-      `[discoverFiles] git binary not found on PATH. `
-      + `Cannot check .gitignore rules; falling back to directory walk.`,
+    logDiscover.warn(
+      'git binary not found on PATH. '
+      + 'Cannot check .gitignore rules; falling back to directory walk.',
     )
     return []
   }
@@ -111,8 +115,8 @@ function gitListFiles(repoPath: string): string[] {
       // Normal "not a git repo" response — no warning needed
     }
     else {
-      console.warn(
-        `[discoverFiles] git ls-files failed`
+      logDiscover.warn(
+        `git ls-files failed`
         + ` (exit ${err.status ?? '?'}, code=${err.code ?? 'unknown'}): `
         + `${stderr || (error instanceof Error ? error.message : String(error))}. `
         + `Falling back to directory walk (gitignore rules will NOT be applied).`,
@@ -171,10 +175,10 @@ export async function discoverFiles(
     if (gitFiles.length > 0) {
       const filtered = filterGitFiles(repoPath, gitFiles, includePatterns, excludePatterns, maxDepth)
       if (filtered.length === 0) {
-        console.warn(
-          `[discoverFiles] git ls-files found ${gitFiles.length} files, `
+        logDiscover.warn(
+          `git ls-files found ${gitFiles.length} files, `
           + `but 0 matched the configured filters (include/exclude/maxDepth). `
-          + `Please check your configuration.`,
+          + 'Please check your configuration.',
         )
       }
       return filtered.sort((a, b) => a.localeCompare(b))
@@ -214,7 +218,7 @@ async function readDirSafe(dir: string): Promise<string[] | null> {
   }
   catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    console.warn(`[discoverFiles] Skipping directory ${dir}: ${msg}`)
+    logDiscover.warn(`Skipping directory ${dir}: ${msg}`)
     return null
   }
 }
@@ -241,7 +245,7 @@ async function processEntry(
   }
   catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    console.warn(`[discoverFiles] Skipping ${fullPath}: ${msg}`)
+    logDiscover.warn(`Skipping ${fullPath}: ${msg}`)
     return
   }
 
@@ -387,7 +391,7 @@ export async function extractEntitiesFromFile(
   }
   catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    console.warn(`[extractEntitiesFromFile] Cannot read ${filePath}: ${msg}`)
+    logDiscover.warn(`Cannot read ${filePath}: ${msg}`)
   }
 
   const parseResult = await astParser.parseFile(filePath)
@@ -598,10 +602,10 @@ export class RPGEncoder {
     const provider = this.llmClient?.getProvider()
     const model = this.llmClient?.getModel()
     if (provider) {
-      console.log(`[RPGEncoder] LLM: ${provider} (${model})`)
+      log.info(`LLM: ${provider} (${model})`)
     }
     else {
-      console.log(`[RPGEncoder] LLM: disabled (heuristic mode)`)
+      log.info('LLM: disabled (heuristic mode)')
     }
   }
 
@@ -660,14 +664,14 @@ export class RPGEncoder {
     }
     catch (error) {
       const msg = `File discovery failed: ${error instanceof Error ? error.message : String(error)}`
-      console.error(`[RPGEncoder] ${msg}`)
+      log.error(msg)
       warnings.push(msg)
       files = []
     }
 
     if (files.length === 0 && warnings.length > 0) {
-      const emptyMsg = `Proceeding with empty file list. The resulting graph will have no nodes.`
-      console.warn(`[RPGEncoder] ${emptyMsg}`)
+      const emptyMsg = 'Proceeding with empty file list. The resulting graph will have no nodes.'
+      log.warn(emptyMsg)
       warnings.push(emptyMsg)
     }
     let entitiesExtracted = 0
@@ -676,14 +680,14 @@ export class RPGEncoder {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]!
       const displayPath = path.relative(this.repoPath, file)
-      console.log(`[RPGEncoder] [${i + 1}/${files.length}] ${displayPath}`)
+      log.info(`[${i + 1}/${files.length}] ${displayPath}`)
       let extraction: Awaited<ReturnType<typeof this.extractEntities>>
       try {
         extraction = await this.extractEntities(file)
       }
       catch (error) {
         const msg = `Failed to extract ${displayPath}: ${error instanceof Error ? error.message : String(error)}`
-        console.error(`[RPGEncoder] ${msg}`)
+        log.error(msg)
         warnings.push(msg)
         continue
       }
@@ -721,38 +725,38 @@ export class RPGEncoder {
       await this.cache.save()
     }
 
-    console.log(`[RPGEncoder] Phase 1 done: ${this.cacheHits} cache hits, ${this.cacheMisses} cache misses`)
+    log.info(`Phase 1 done: ${this.cacheHits} cache hits, ${this.cacheMisses} cache misses`)
 
     // Phase 2: Structural Reorganization
-    console.log(`[RPGEncoder] Phase 2: Structural Reorganization...`)
+    log.info('Phase 2: Structural Reorganization...')
     await this.buildFunctionalHierarchy(rpg)
 
     // Phase 3: Artifact Grounding
-    console.log(`[RPGEncoder] Phase 3.1: Metadata propagation...`)
+    log.info('Phase 3.1: Metadata propagation...')
     try {
       const grounder = new ArtifactGrounder(rpg)
       await grounder.ground()
     }
     catch (error) {
-      const msg = `Artifact grounding failed, continuing without path metadata: `
+      const msg = 'Artifact grounding failed, continuing without path metadata: '
         + `${error instanceof Error ? error.message : String(error)}`
-      console.warn(`[RPGEncoder] ${msg}`)
+      log.warn(msg)
       warnings.push(msg)
     }
 
     // Phase 3b: Artifact Grounding — dependency injection
-    console.log(`[RPGEncoder] Phase 3.2: Dependency injection...`)
+    log.info('Phase 3.2: Dependency injection...')
     await injectDependencies(rpg, this.repoPath, this.astParser)
 
     // Phase 3c: Data flow edge creation (§3.2 inter-module + intra-module flows)
-    console.log(`[RPGEncoder] Phase 3.3: Data flow detection...`)
+    log.info('Phase 3.3: Data flow detection...')
     try {
       await this.injectDataFlows(rpg, fileParseInfos)
     }
     catch (error) {
-      const msg = `Data flow detection failed, continuing without data flow edges: `
+      const msg = 'Data flow detection failed, continuing without data flow edges: '
         + `${error instanceof Error ? error.message : String(error)}`
-      console.warn(`[RPGEncoder] ${msg}`)
+      log.warn(msg)
       warnings.push(msg)
     }
 
@@ -773,7 +777,7 @@ export class RPGEncoder {
       const cost = costClient?.estimateCost(combinedStats)
       const costStr = cost && cost.totalCost > 0 ? ` (~$${cost.totalCost.toFixed(4)})` : ''
 
-      console.log(`[RPGEncoder] LLM usage: ${totalRequests} requests, ${totalInput.toLocaleString()} input + ${totalOutput.toLocaleString()} output = ${totalTokens.toLocaleString()} total tokens${costStr}`)
+      log.info(`LLM usage: ${totalRequests} requests, ${totalInput.toLocaleString()} input + ${totalOutput.toLocaleString()} output = ${totalTokens.toLocaleString()} total tokens${costStr}`)
     }
 
     return {
@@ -939,7 +943,7 @@ export class RPGEncoder {
     }
 
     // Step 1: Domain Discovery — identify functional areas
-    console.log(`[RPGEncoder] Phase 2.1: Domain Discovery (${fileGroups.length} file groups)...`)
+    log.info(`Phase 2.1: Domain Discovery (${fileGroups.length} file groups)...`)
     const domainDiscovery = new DomainDiscovery(this.llmClient)
     let functionalAreas: string[]
     try {
@@ -947,22 +951,22 @@ export class RPGEncoder {
       functionalAreas = result.functionalAreas
     }
     catch (error) {
-      console.error(`[RPGEncoder] Phase 2.1 failed: ${error instanceof Error ? error.message : String(error)}`)
+      log.error(`Phase 2.1 failed: ${error instanceof Error ? error.message : String(error)}`)
       return
     }
-    console.log(`[RPGEncoder] Phase 2.1: Found ${functionalAreas.length} functional areas: ${functionalAreas.join(', ')}`)
+    log.info(`Phase 2.1: Found ${functionalAreas.length} functional areas: ${functionalAreas.join(', ')}`)
 
     // Step 2: Hierarchical Construction — build 3-level paths and link nodes
-    console.log(`[RPGEncoder] Phase 2.2: Hierarchical Construction...`)
+    log.info('Phase 2.2: Hierarchical Construction...')
     const hierarchyBuilder = new HierarchyBuilder(rpg, this.llmClient)
     try {
       await hierarchyBuilder.build(functionalAreas, fileGroups)
     }
     catch (error) {
-      console.error(`[RPGEncoder] Phase 2.2 failed: ${error instanceof Error ? error.message : String(error)}`)
+      log.error(`Phase 2.2 failed: ${error instanceof Error ? error.message : String(error)}`)
       return
     }
-    console.log(`[RPGEncoder] Phase 2.2: Done`)
+    log.info('Phase 2.2: Done')
   }
 
   /**

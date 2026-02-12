@@ -1,6 +1,9 @@
 import type { EmbeddingModel } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { embed, embedMany } from 'ai'
+
+const log = createLogger('HuggingFace')
 
 // Lazy-loaded types to avoid immediate import
 type TransformersModule = typeof import('@huggingface/transformers')
@@ -478,7 +481,7 @@ export class HuggingFaceEmbedding extends Embedding {
       const transformers = await this.getTransformersModule()
       const modelId = this.config.model ?? 'MongoDB/mdbr-leaf-ir'
 
-      console.log(`[HuggingFace] Loading model: ${modelId} (dtype: ${this.config.dtype})`)
+      log.info(`Loading model: ${modelId} (dtype: ${this.config.dtype})`)
 
       const [tokenizer, model] = await Promise.all([
         transformers.AutoTokenizer.from_pretrained(modelId),
@@ -490,7 +493,7 @@ export class HuggingFaceEmbedding extends Embedding {
       this.tokenizer = tokenizer
       this.model = model
 
-      console.log(`[HuggingFace] Model loaded successfully: ${modelId}`)
+      log.info(`Model loaded successfully: ${modelId}`)
     }
     catch (error) {
       this.modelLoading = null
@@ -589,8 +592,8 @@ export class HuggingFaceEmbedding extends Embedding {
     catch (error) {
       // Fallback: process individually in parallel if batch fails
       const batchErrorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.warn(
-        `[HuggingFace] Batch embedding failed: ${batchErrorMessage}, falling back to parallel individual processing`,
+      log.warn(
+        `Batch embedding failed: ${batchErrorMessage}, falling back to parallel individual processing`,
       )
 
       try {

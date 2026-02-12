@@ -6,11 +6,14 @@ import { RPGEncoder } from '@pleaseai/rpg-encoder'
 import { RepositoryPlanningGraph } from '@pleaseai/rpg-graph'
 import { ExploreRPG, FetchNode, SearchNode } from '@pleaseai/rpg-tools'
 import { parseModelString } from '@pleaseai/rpg-utils/llm'
+import { createLogger, LogLevels, setLogLevel } from '@pleaseai/rpg-utils/logger'
 import { ZeroRepo } from '@pleaseai/rpg-zerorepo'
 import { program } from 'commander'
 import { config } from 'dotenv'
 
 import pkg from '../package.json'
+
+const log = createLogger('CLI')
 
 config({ path: ['.env.local', '.env'] })
 
@@ -51,18 +54,20 @@ program
         verbose?: boolean
       },
     ) => {
-      console.log(`Encoding repository: ${repoPath}`)
       if (options.verbose) {
-        console.log(
-          `  Include patterns: ${options.include?.join(', ') || '**/*.ts,**/*.js,**/*.py'}`,
-        )
-        console.log(
-          `  Exclude patterns: ${options.exclude?.join(', ') || '**/node_modules/**,**/dist/**'}`,
-        )
-        console.log(`  Max depth: ${options.maxDepth}`)
+        setLogLevel(LogLevels.debug)
       }
 
       const semantic = buildSemanticOptions(options.model, options.llm)
+
+      log.info(`Encoding repository: ${repoPath}`)
+      log.debug(
+        `  Include patterns: ${options.include?.join(', ') || '**/*.ts,**/*.js,**/*.py'}`,
+      )
+      log.debug(
+        `  Exclude patterns: ${options.exclude?.join(', ') || '**/node_modules/**,**/dist/**'}`,
+      )
+      log.debug(`  Max depth: ${options.maxDepth}`)
 
       const encoder = new RPGEncoder(repoPath, {
         includeSource: options.includeSource,
@@ -113,12 +118,12 @@ program
     }
 
     if (!spec) {
-      console.error('Error: Either --spec or --spec-file is required')
+      log.error('Either --spec or --spec-file is required')
       process.exit(1)
     }
 
-    console.log('Generating repository...')
-    console.log(`Specification: ${spec.substring(0, 100)}...`)
+    log.info('Generating repository...')
+    log.info(`Specification: ${spec.substring(0, 100)}...`)
 
     const zerorepo = new ZeroRepo({
       spec,
@@ -239,7 +244,7 @@ program
   .option('-m, --model <provider/model>', 'LLM provider/model (e.g., claude-code/haiku, openai/gpt-5.2, google)')
   .option('--no-llm', 'Disable LLM (use heuristic extraction)')
   .action(async (options: { rpg: string, commits: string, model?: string, llm?: boolean }) => {
-    console.log(`Evolving RPG with commits: ${options.commits}`)
+    log.info(`Evolving RPG with commits: ${options.commits}`)
 
     const json = await readFile(options.rpg, 'utf-8')
     const rpg = await RepositoryPlanningGraph.fromJSON(json)
@@ -259,9 +264,9 @@ program
     console.log(`  Rerouted: ${result.rerouted}`)
     console.log(`  Duration: ${result.duration}ms`)
     if (result.errors.length > 0) {
-      console.warn(`\n  Errors (${result.errors.length}):`)
+      log.warn(`Errors (${result.errors.length}):`)
       for (const err of result.errors) {
-        console.warn(`    - [${err.phase}] ${err.entity}: ${err.error}`)
+        log.warn(`  [${err.phase}] ${err.entity}: ${err.error}`)
       }
     }
   })

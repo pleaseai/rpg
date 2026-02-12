@@ -275,7 +275,7 @@ describe('RPGEncoder.discoverFiles', () => {
   })
 
   it('warns and falls back when git ls-files fails', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     const tmpDir = path.join(os.tmpdir(), `rpg-gitfail-${Date.now()}`)
     fs.mkdirSync(tmpDir, { recursive: true })
     // Init git repo but corrupt the index to trigger git ls-files failure
@@ -291,13 +291,12 @@ describe('RPGEncoder.discoverFiles', () => {
       // Should fall back to walkDirectory and still find the file
       expect(files).toHaveLength(1)
       expect(files[0]).toContain('hello.ts')
-      // Should have logged a warning about git failure
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('git ls-files failed'),
-      )
+      // Should have logged a warning about git failure via consola (writes to stderr)
+      const stderrOutput = stderrSpy.mock.calls.map(c => String(c[0])).join('')
+      expect(stderrOutput).toContain('git ls-files failed')
     }
     finally {
-      warnSpy.mockRestore()
+      stderrSpy.mockRestore()
       fs.rmSync(tmpDir, { recursive: true, force: true })
     }
   })
