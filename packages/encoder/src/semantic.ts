@@ -9,6 +9,8 @@ import { z } from 'zod/v4'
 export interface SemanticOptions {
   /** LLM provider to use */
   provider?: LLMProvider
+  /** Model name (e.g., 'gpt-5.2', 'haiku', 'gemini-3-flash-preview') */
+  model?: string
   /** API key (defaults to environment variable) */
   apiKey?: string
   /** Whether to use LLM for semantic extraction (if false, uses heuristic) */
@@ -69,6 +71,7 @@ export class SemanticExtractor {
       if (provider) {
         this.llmClient = new LLMClient({
           provider,
+          model: this.options.model,
           apiKey: this.options.apiKey,
           maxTokens: this.options.maxTokens,
           claudeCodeSettings: this.options.claudeCodeSettings,

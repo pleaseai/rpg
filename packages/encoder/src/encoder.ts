@@ -624,6 +624,7 @@ export class RPGEncoder {
 
     return new LLMClient({
       provider,
+      model: semantic?.model,
       apiKey: semantic?.apiKey,
       maxTokens: semantic?.maxTokens,
       claudeCodeSettings: semantic?.claudeCodeSettings,

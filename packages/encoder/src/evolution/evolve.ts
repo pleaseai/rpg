@@ -151,6 +151,7 @@ export class RPGEvolver {
 
     return new LLMClient({
       provider,
+      model: this.options.semantic?.model,
       apiKey: this.options.semantic?.apiKey,
       maxTokens: this.options.semantic?.maxTokens,
       claudeCodeSettings: this.options.semantic?.claudeCodeSettings,

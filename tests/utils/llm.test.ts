@@ -1,4 +1,4 @@
-import { LLMClient } from '@pleaseai/rpg-utils/llm'
+import { LLMClient, parseModelString } from '@pleaseai/rpg-utils/llm'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod/v4'
 
@@ -24,6 +24,36 @@ vi.mock('ai', () => ({
     object: vi.fn(({ schema }: any) => ({ type: 'object', schema })),
   },
 }))
+
+describe('parseModelString', () => {
+  it('should parse provider/model format', () => {
+    expect(parseModelString('openai/gpt-5.2')).toEqual({ provider: 'openai', model: 'gpt-5.2' })
+  })
+
+  it('should parse claude-code/haiku', () => {
+    expect(parseModelString('claude-code/haiku')).toEqual({ provider: 'claude-code', model: 'haiku' })
+  })
+
+  it('should parse claude-code/sonnet', () => {
+    expect(parseModelString('claude-code/sonnet')).toEqual({ provider: 'claude-code', model: 'sonnet' })
+  })
+
+  it('should parse provider-only string (no slash)', () => {
+    expect(parseModelString('google')).toEqual({ provider: 'google', model: undefined })
+  })
+
+  it('should throw for unknown provider', () => {
+    expect(() => parseModelString('invalid/model')).toThrow('Unknown LLM provider: "invalid"')
+  })
+
+  it('should treat trailing slash as provider-only', () => {
+    expect(parseModelString('openai/')).toEqual({ provider: 'openai', model: undefined })
+  })
+
+  it('should handle model with slashes (e.g., org/model)', () => {
+    expect(parseModelString('openai/org/model-name')).toEqual({ provider: 'openai', model: 'org/model-name' })
+  })
+})
 
 describe('LLMClient', () => {
   describe('constructor', () => {
