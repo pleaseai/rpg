@@ -37,8 +37,6 @@ This document compares the current implementation against the papers, categorizi
 | SurrealGraphStore + BM25 | `src/store/surreal/` | ✅ Complete |
 | LanceDBVectorStore | `src/store/lancedb/` | ✅ Complete |
 | ContextStore (composite) | `src/store/context-store.ts` | ✅ Complete |
-| Legacy SQLiteStore | `src/graph/sqlite-store.ts` | ✅ Backward-compatible |
-| Legacy SurrealStore | `src/graph/surreal-store.ts` | ✅ Backward-compatible |
 
 ### 1.4 Encoder — Phase 1: Semantic Lifting
 

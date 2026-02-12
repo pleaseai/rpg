@@ -118,7 +118,7 @@ import { DataFlowDetector } from './data-flow'
 |---------|---------|
 | `@pleaseai/rpg-utils` | AST parser (tree-sitter), LLM interface (OpenAI/Anthropic/Google), Vector DB (LanceDB) |
 | `@pleaseai/rpg-store` | Storage interfaces (GraphStore, VectorStore, TextSearchStore) & implementations (SQLite, SurrealDB, LanceDB) |
-| `@pleaseai/rpg-graph` | RPG data structures (Node, Edge, RPG class, legacy SQLiteStore/SurrealStore) |
+| `@pleaseai/rpg-graph` | RPG data structures (Node, Edge, RPG class) |
 | `@pleaseai/rpg-encoder` | Code → RPG extraction (semantic lifting, structural reorganization, artifact grounding, evolution) |
 | `@pleaseai/rpg-tools` | Agentic tools (SearchNode, FetchNode, ExploreRPG) for graph navigation |
 | `@pleaseai/rpg-zerorepo` | Intent → Code generation (proposal construction, implementation planning, code generation) |
@@ -137,24 +137,22 @@ import { DataFlowDetector } from './data-flow'
 2. Evolution: Commit-level incremental updates (add/modify/delete)
 3. Operation: SearchNode, FetchNode, ExploreRPG tools
 
-### GraphStore Implementations
+### Store Implementations
 
-The `GraphStore` interface (`packages/graph/src/store.ts`) defines the storage API for RPG graphs. Two legacy implementations exist in the graph package:
+The `@pleaseai/rpg-store` package provides the storage layer with decomposed interfaces:
 
 | Store | Module | Engine | Search |
 |-------|--------|--------|--------|
-| `SQLiteStore` | `packages/graph/src/sqlite-store.ts` | `better-sqlite3` (WAL mode) | FTS5 full-text search |
-| `SurrealStore` | `packages/graph/src/surreal-store.ts` | `surrealdb` + `@surrealdb/node` embedded | BM25 search |
+| `SQLiteGraphStore` | `packages/store/src/sqlite/` | `better-sqlite3` (WAL mode) | FTS5 full-text search |
+| `SurrealGraphStore` | `packages/store/src/surreal/` | `surrealdb` + `@surrealdb/node` embedded | BM25 search |
+| `LanceDBVectorStore` | `packages/store/src/lancedb/` | LanceDB | Vector similarity search |
+| `DefaultContextStore` | `packages/store/src/default-context-store.ts` | Composite (SQLite + LanceDB) | Graph + Text + Vector |
 
 **Import pattern** — store implementations are NOT re-exported from the barrel to avoid transitive native module loading:
 ```typescript
-// Correct: import directly
-import { SQLiteStore } from '@pleaseai/rpg-graph/sqlite-store'
-import { SurrealStore } from '@pleaseai/rpg-graph/surreal-store'
-
-// New store implementations:
 import { SQLiteGraphStore } from '@pleaseai/rpg-store/sqlite'
 import { SurrealGraphStore } from '@pleaseai/rpg-store/surreal'
+import { DefaultContextStore } from '@pleaseai/rpg-store/default-context-store'
 ```
 
 ### Key Libraries
@@ -237,7 +235,7 @@ All git commit messages, code comments, GitHub issues, pull request titles/descr
 - **Vitest over Bun Test**: Jest compatibility for planned MCP server development
 - **LanceDB over ChromaDB**: No external server required, Bun-native, disk-based persistence
 - **Paper-based implementation**: Original implementation based on research papers, not forked from Microsoft code
-- **Dual GraphStore backends**: SQLiteStore (better-sqlite3) and SurrealStore (native graph relations) for evaluation
+- **Dual GraphStore backends**: SQLiteGraphStore (better-sqlite3) and SurrealGraphStore (native graph relations) in `@pleaseai/rpg-store` for evaluation
 
 ## Known Gotchas
 
