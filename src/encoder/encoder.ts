@@ -131,7 +131,7 @@ function filterGitFiles(
 ): string[] {
   return gitFiles
     .filter((relativePath) => {
-      const normalizedPath = relativePath.replace(/\\/g, '/')
+      const normalizedPath = relativePath.replaceAll('\\', '/')
       const depth = normalizedPath.split('/').length - 1
       return depth <= maxDepth
         && !matchesPattern(normalizedPath, excludePatterns)
@@ -258,8 +258,8 @@ function matchesPattern(filePath: string, patterns: string[]): boolean {
 }
 
 function globMatch(filePath: string, pattern: string): boolean {
-  const normalizedPath = filePath.replace(/\\/g, '/')
-  const normalizedPattern = pattern.replace(/\\/g, '/')
+  const normalizedPath = filePath.replaceAll('\\', '/')
+  const normalizedPattern = pattern.replaceAll('\\', '/')
   const pathSegments = normalizedPath.split('/')
   const patternSegments = normalizedPattern.split('/')
   return matchSegments(pathSegments, patternSegments, 0, 0)
@@ -305,9 +305,9 @@ function matchSegments(
 
 function matchSegment(pathSeg: string, patternSeg: string): boolean {
   const regexPattern = patternSeg
-    .replace(/\./g, '\\.') // Escape dots
-    .replace(/\*/g, '.*') // * matches anything
-    .replace(/\?/g, '.') // ? matches single char
+    .replaceAll('.', '\\.') // Escape dots
+    .replaceAll('*', '.*') // * matches anything
+    .replaceAll('?', '.') // ? matches single char
   const regex = new RegExp(`^${regexPattern}$`)
   return regex.test(pathSeg)
 }
@@ -449,11 +449,11 @@ export function resolveImportPath(
   const candidates: string[] = []
 
   for (const ext of extensions) {
-    candidates.push((resolvedPath + ext).replace(/\\/g, '/'))
+    candidates.push((resolvedPath + ext).replaceAll('\\', '/'))
   }
 
   for (const ext of extensions) {
-    candidates.push(path.join(resolvedPath, `index${ext}`).replace(/\\/g, '/'))
+    candidates.push(path.join(resolvedPath, `index${ext}`).replaceAll('\\', '/'))
   }
 
   if (knownFiles) {
@@ -461,7 +461,7 @@ export function resolveImportPath(
   }
 
   // Fallback: return first non-absolute path candidate
-  return candidates.find(c => !c.startsWith('/')) ?? resolvedPath.replace(/\\/g, '/')
+  return candidates.find(c => !c.startsWith('/')) ?? resolvedPath.replaceAll('\\', '/')
 }
 
 /**
