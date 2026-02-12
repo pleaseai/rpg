@@ -4,19 +4,9 @@ import type { CodeEntity, LanguageConfig } from '../types'
 const TypeScript = require('tree-sitter-typescript').typescript
 
 /**
- * Entity node types for TypeScript
+ * Entity node types for TypeScript and JavaScript
  */
-const TYPESCRIPT_ENTITY_TYPES: Record<string, CodeEntity['type']> = {
-  function_declaration: 'function',
-  arrow_function: 'function',
-  class_declaration: 'class',
-  method_definition: 'method',
-}
-
-/**
- * Entity node types for JavaScript (same as TypeScript)
- */
-const JAVASCRIPT_ENTITY_TYPES: Record<string, CodeEntity['type']> = {
+const TS_JS_ENTITY_TYPES: Record<string, CodeEntity['type']> = {
   function_declaration: 'function',
   arrow_function: 'function',
   class_declaration: 'class',
@@ -33,7 +23,7 @@ const TYPESCRIPT_IMPORT_TYPES = ['import_statement']
  */
 export const typescriptConfig: LanguageConfig = {
   parser: TypeScript,
-  entityTypes: TYPESCRIPT_ENTITY_TYPES,
+  entityTypes: TS_JS_ENTITY_TYPES,
   importTypes: TYPESCRIPT_IMPORT_TYPES,
 }
 
@@ -43,6 +33,6 @@ export const typescriptConfig: LanguageConfig = {
  */
 export const javascriptConfig: LanguageConfig = {
   parser: TypeScript,
-  entityTypes: JAVASCRIPT_ENTITY_TYPES,
+  entityTypes: TS_JS_ENTITY_TYPES,
   importTypes: TYPESCRIPT_IMPORT_TYPES,
 }

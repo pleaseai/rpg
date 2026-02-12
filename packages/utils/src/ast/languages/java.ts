@@ -6,6 +6,7 @@ const JAVA_ENTITY_TYPES: Record<string, CodeEntity['type']> = {
   method_declaration: 'method',
   class_declaration: 'class',
   interface_declaration: 'class',
+  enum_declaration: 'class',
   constructor_declaration: 'method',
 }
 

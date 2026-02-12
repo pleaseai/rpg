@@ -54,6 +54,7 @@ describe('ASTParser - Rust', () => {
       expect(implEntity).toBeDefined()
       const fnEntity = result.entities.find(e => e.name === 'new')
       expect(fnEntity).toBeDefined()
+      expect(fnEntity!.type).toBe('function')
     })
 
     it('extracts trait_item', async () => {
@@ -64,6 +65,7 @@ describe('ASTParser - Rust', () => {
 
       const traitEntity = result.entities.find(e => e.name === 'Greetable')
       expect(traitEntity).toBeDefined()
+      expect(traitEntity!.type).toBe('class')
     })
 
     it('extracts enum_item', async () => {
@@ -76,6 +78,7 @@ describe('ASTParser - Rust', () => {
 
       const enumEntity = result.entities.find(e => e.name === 'Color')
       expect(enumEntity).toBeDefined()
+      expect(enumEntity!.type).toBe('class')
     })
   })
 

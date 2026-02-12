@@ -43,6 +43,7 @@ describe('ASTParser - Java', () => {
 
       const ifaceEntity = result.entities.find(e => e.name === 'Greeter')
       expect(ifaceEntity).toBeDefined()
+      expect(ifaceEntity!.type).toBe('class')
     })
 
     it('extracts constructor_declaration', async () => {
