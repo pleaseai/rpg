@@ -8,6 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./ast": "./src/ast.ts",
+    "./ast/languages": "./src/ast/languages/index.ts",
+    "./ast/types": "./src/ast/types.ts",
     "./llm": "./src/llm.ts",
     "./vector": "./src/vector.ts",
     "./git-path": "./src/git-path.ts",
