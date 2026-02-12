@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises'
 
+import { createRequire } from 'node:module'
 import { RPGEncoder } from '@pleaseai/rpg-encoder'
 import { RepositoryPlanningGraph } from '@pleaseai/rpg-graph'
 import { ExploreRPG, FetchNode, SearchNode } from '@pleaseai/rpg-tools'
@@ -10,10 +11,13 @@ import { config } from 'dotenv'
 
 config({ path: ['.env.local', '.env'] })
 
+const require = createRequire(import.meta.url)
+const { version } = require('../package.json') as { version: string }
+
 program
   .name('rpg')
   .description('Repository Planning Graph - Code understanding and generation')
-  .version('0.1.0')
+  .version(version)
 
 // Encode command
 program

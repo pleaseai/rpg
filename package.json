@@ -39,8 +39,7 @@
     "@pleaseai/rpg-tools": "workspace:*",
     "@pleaseai/rpg-zerorepo": "workspace:*",
     "@pleaseai/rpg-mcp": "workspace:*",
-    "@pleaseai/rpg-cli": "workspace:*",
-    "@anthropic-ai/sdk": "^0.30.1"
+    "@pleaseai/rpg-cli": "workspace:*"
   },
   "peerDependencies": {
     "zod": "^3.25.0 || ^4.0.0"

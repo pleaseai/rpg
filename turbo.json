@@ -3,7 +3,7 @@
   "tasks": {
     "typecheck": {
       "dependsOn": ["^typecheck"],
-      "inputs": ["src/**/*.ts", "tsconfig.json"],
+      "inputs": ["src/**/*.ts", "packages/*/src/**/*.ts", "tsconfig.json"],
       "outputs": []
     },
     "lint": {
