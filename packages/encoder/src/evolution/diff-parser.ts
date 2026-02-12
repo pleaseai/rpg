@@ -14,8 +14,8 @@ import { resolveGitBinary } from '@pleaseai/rpg-utils/git-path'
  * 3. Match entities by qualified name to categorize into (U+, U-, U~)
  */
 export class DiffParser {
-  private repoPath: string
-  private astParser: ASTParser
+  private readonly repoPath: string
+  private readonly astParser: ASTParser
 
   constructor(repoPath: string, astParser?: ASTParser) {
     this.repoPath = repoPath
@@ -37,7 +37,7 @@ export class DiffParser {
     // Step 1: Get file-level changes
     let fileChanges: FileChange[]
     try {
-      fileChanges = await this.getFileChanges(commitRange)
+      fileChanges = this.getFileChanges(commitRange)
     }
     catch (error) {
       throw new Error(
@@ -89,8 +89,8 @@ export class DiffParser {
   /**
    * Get file-level changes from git diff --name-status
    */
-  async getFileChanges(commitRange: string): Promise<FileChange[]> {
-    const output = await this.execGit([
+  getFileChanges(commitRange: string): FileChange[] {
+    const output = this.execGit([
       'diff',
       '--name-status',
       '--no-renames', // Treat renames as delete + add
@@ -164,7 +164,7 @@ export class DiffParser {
   async extractEntitiesFromRevision(revision: string, filePath: string): Promise<ChangedEntity[]> {
     let source: string
     try {
-      source = await this.execGit(['show', `${revision}:${filePath}`])
+      source = this.execGit(['show', `${revision}:${filePath}`])
     }
     catch (error) {
       const msg = error instanceof Error ? error.message : String(error)

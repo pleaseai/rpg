@@ -83,10 +83,10 @@ export type SerializedRPG = z.infer<typeof SerializedRPGSchema>
  * Also supports legacy GraphStore for backward compatibility.
  */
 export class RepositoryPlanningGraph {
-  private context: ContextStore | null = null
-  private legacyStore: GraphStore | null = null
-  private config: RPGConfig
-  private dataFlowEdges: DataFlowEdge[] = []
+  private readonly context: ContextStore | null = null
+  private readonly legacyStore: GraphStore | null = null
+  private readonly config: RPGConfig
+  private readonly dataFlowEdges: DataFlowEdge[] = []
 
   constructor(config: RPGConfig, storeOrContext: GraphStore | ContextStore) {
     this.config = config

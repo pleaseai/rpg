@@ -14,7 +14,7 @@ class TrieNode {
 // Prefix trie implementing COMPUTE_LCA from RPG-Encoder Algorithm 1 (Appendix A.1.3).
 // Post-order traversal identifies branching/terminal nodes and prunes consolidated subtrees.
 class PathTrie {
-  private root = new TrieNode()
+  private readonly root = new TrieNode()
 
   insert(dirPath: string): void {
     const segments = dirPath.split('/').filter(s => s.length > 0)
@@ -61,7 +61,7 @@ class PathTrie {
 // Assigns metadata.path by computing the LCA of leaf descendants' directory paths.
 // Single-LCA: metadata.path only. Multi-LCA: first path + metadata.extra.paths.
 export class ArtifactGrounder {
-  constructor(private rpg: RepositoryPlanningGraph) {}
+  constructor(private readonly rpg: RepositoryPlanningGraph) {}
 
   async ground(): Promise<void> {
     const highLevelNodes = await this.rpg.getHighLevelNodes()
@@ -116,7 +116,7 @@ export class ArtifactGrounder {
       const lcaPaths = computeLCA(dirSet)
       if (lcaPaths.length === 0)
         return dirSet
-      const sorted = lcaPaths.length > 1 ? [...lcaPaths].sort() : lcaPaths
+      const sorted = lcaPaths.length > 1 ? [...lcaPaths].sort((a, b) => a.localeCompare(b)) : lcaPaths
       const isMulti = sorted.length > 1
 
       await this.rpg.updateNode(nodeId, {

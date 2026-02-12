@@ -237,15 +237,19 @@ export class SQLiteStore implements GraphStore {
       INSERT INTO edges (source, target, type, level, sibling_order, dep_type, is_runtime, dep_line, weight)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
+    const isDep = edge.type === 'dependency'
+    const isFn = edge.type === 'functional'
+    const depEdge = isDep ? (edge as DependencyEdge) : null
+    const fnEdge = isFn ? (edge as FunctionalEdge) : null
     stmt.run(
       edge.source,
       edge.target,
       edge.type,
-      edge.type === 'functional' ? ((edge as FunctionalEdge).level ?? null) : null,
-      edge.type === 'functional' ? ((edge as FunctionalEdge).siblingOrder ?? null) : null,
-      edge.type === 'dependency' ? ((edge as DependencyEdge).dependencyType ?? null) : null,
-      edge.type === 'dependency' ? ((edge as DependencyEdge).isRuntime ? 1 : 0) : null,
-      edge.type === 'dependency' ? ((edge as DependencyEdge).line ?? null) : null,
+      fnEdge?.level ?? null,
+      fnEdge?.siblingOrder ?? null,
+      depEdge?.dependencyType ?? null,
+      depEdge ? (depEdge.isRuntime ? 1 : 0) : null,
+      depEdge?.line ?? null,
       edge.weight ?? null,
     )
   }
@@ -367,12 +371,12 @@ export class SQLiteStore implements GraphStore {
       directionClause = '(e.source = t.node_id OR e.target = t.node_id)'
     }
 
-    const nextNodeExpr
-      = direction === 'in'
-        ? 'e.source'
-        : direction === 'out'
-          ? 'e.target'
-          : 'CASE WHEN e.source = t.node_id THEN e.target ELSE e.source END'
+    let nextNodeExpr: string
+    if (direction === 'in')
+      nextNodeExpr = 'e.source'
+    else if (direction === 'out')
+      nextNodeExpr = 'e.target'
+    else nextNodeExpr = 'CASE WHEN e.source = t.node_id THEN e.target ELSE e.source END'
 
     const depTypeFilter = options.depTypeFilter ? `AND e.dep_type = '${options.depTypeFilter}'` : ''
     const entityFilter = options.entityTypeFilter
@@ -621,15 +625,19 @@ export class SQLiteStore implements GraphStore {
 
       for (const edgeData of data.edges) {
         const edge = edgeData as Edge
+        const isDep = edge.type === 'dependency'
+        const isFn = edge.type === 'functional'
+        const depEdge = isDep ? (edge as DependencyEdge) : null
+        const fnEdge = isFn ? (edge as FunctionalEdge) : null
         insertEdge.run(
           edge.source,
           edge.target,
           edge.type,
-          edge.type === 'functional' ? ((edge as FunctionalEdge).level ?? null) : null,
-          edge.type === 'functional' ? ((edge as FunctionalEdge).siblingOrder ?? null) : null,
-          edge.type === 'dependency' ? ((edge as DependencyEdge).dependencyType ?? null) : null,
-          edge.type === 'dependency' ? ((edge as DependencyEdge).isRuntime ? 1 : 0) : null,
-          edge.type === 'dependency' ? ((edge as DependencyEdge).line ?? null) : null,
+          fnEdge?.level ?? null,
+          fnEdge?.siblingOrder ?? null,
+          depEdge?.dependencyType ?? null,
+          depEdge ? (depEdge.isRuntime ? 1 : 0) : null,
+          depEdge?.line ?? null,
           edge.weight ?? null,
         )
       }

@@ -51,8 +51,8 @@ export interface EntityInput {
  * Semantic extractor using LLM or heuristics
  */
 export class SemanticExtractor {
-  private llmClient?: LLMClient
-  private options: SemanticOptions
+  private readonly llmClient?: LLMClient
+  private readonly options: SemanticOptions
 
   constructor(options: SemanticOptions = {}) {
     this.options = {
@@ -176,10 +176,10 @@ export class SemanticExtractor {
     filePath: string,
   ): Promise<SemanticFeature> {
     const featureList = childFeatures
-      .map(
-        f =>
-          `- ${f.description}${f.subFeatures?.length ? ` (also: ${f.subFeatures.join(', ')})` : ''}`,
-      )
+      .map((f) => {
+        const subFeatureSuffix = f.subFeatures?.length ? ` (also: ${f.subFeatures.join(', ')})` : ''
+        return `- ${f.description}${subFeatureSuffix}`
+      })
       .join('\n')
 
     const prompt = `Synthesize a file-level semantic summary for "${fileName}" (${filePath}).

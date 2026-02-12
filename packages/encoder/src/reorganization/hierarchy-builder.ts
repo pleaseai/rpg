@@ -14,8 +14,8 @@ import { buildHierarchicalConstructionPrompt, HierarchicalConstructionResponseSc
  */
 export class HierarchyBuilder {
   constructor(
-    private rpg: RepositoryPlanningGraph,
-    private llmClient: LLMClient,
+    private readonly rpg: RepositoryPlanningGraph,
+    private readonly llmClient: LLMClient,
   ) {}
 
   async build(functionalAreas: string[], fileGroups: FileFeatureGroup[]): Promise<void> {

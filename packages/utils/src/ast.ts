@@ -115,7 +115,7 @@ const LANGUAGE_CONFIGS: Record<SupportedLanguage, LanguageConfig> = {
  * Extracts code structure for dependency analysis and semantic lifting.
  */
 export class ASTParser {
-  private parser: Parser
+  private readonly parser: Parser
 
   constructor() {
     this.parser = new Parser()

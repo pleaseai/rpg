@@ -11,7 +11,7 @@ import { buildDomainDiscoveryPrompt, DomainDiscoveryResponseSchema } from './pro
  * - Returns abstract functional centroids (PascalCase names)
  */
 export class DomainDiscovery {
-  constructor(private llmClient: LLMClient) {}
+  constructor(private readonly llmClient: LLMClient) {}
 
   async discover(fileGroups: FileFeatureGroup[]): Promise<DomainDiscoveryResult> {
     const { system, user } = buildDomainDiscoveryPrompt(fileGroups)

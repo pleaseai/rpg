@@ -61,10 +61,10 @@ export interface FetchNodeConfig {
  * - embedded: reads from node.sourceCode field (offline, bundled RPG)
  */
 export class FetchNode {
-  private rpg: RepositoryPlanningGraph
-  private mode: SourceMode
-  private rootPath: string | null
-  private github: GitHubSource | null
+  private readonly rpg: RepositoryPlanningGraph
+  private readonly mode: SourceMode
+  private readonly rootPath: string | null
+  private readonly github: GitHubSource | null
 
   constructor(rpg: RepositoryPlanningGraph, config?: FetchNodeConfig) {
     this.rpg = rpg

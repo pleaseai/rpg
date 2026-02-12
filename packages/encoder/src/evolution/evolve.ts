@@ -19,12 +19,12 @@ import { DEFAULT_DRIFT_THRESHOLD } from './types'
  * 4. Return statistics
  */
 export class RPGEvolver {
-  private rpg: RepositoryPlanningGraph
-  private options: EvolutionOptions
-  private diffParser: DiffParser
-  private semanticExtractor: SemanticExtractor
-  private semanticRouter: SemanticRouter
-  private astParser: ASTParser
+  private readonly rpg: RepositoryPlanningGraph
+  private readonly options: EvolutionOptions
+  private readonly diffParser: DiffParser
+  private readonly semanticExtractor: SemanticExtractor
+  private readonly semanticRouter: SemanticRouter
+  private readonly astParser: ASTParser
 
   constructor(rpg: RepositoryPlanningGraph, options: EvolutionOptions) {
     this.rpg = rpg

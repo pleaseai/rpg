@@ -85,7 +85,7 @@ interface VectorDocument {
  * - Node clustering
  */
 export class VectorStore {
-  private options: VectorStoreOptions
+  private readonly options: VectorStoreOptions
   private db: lancedb.Connection | null = null
   private table: lancedb.Table | null = null
   private ftsIndexCreated = false

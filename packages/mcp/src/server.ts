@@ -262,24 +262,24 @@ async function initSemanticSearch(
   const existingCount = existsSync(dbPath) ? await semanticSearch.count() : 0
   if (existingCount > 0) {
     console.error(`Semantic search ready (${existingCount} nodes already indexed)`)
-    return semanticSearch
   }
+  else {
+    // Index all RPG nodes
+    const nodes = await rpg.getNodes()
+    console.error(`Indexing ${nodes.length} nodes for semantic search...`)
 
-  // Index all RPG nodes
-  const nodes = await rpg.getNodes()
-  console.error(`Indexing ${nodes.length} nodes for semantic search...`)
+    const documents = nodes.map(node => ({
+      id: node.id,
+      content: `${node.feature.description} ${(node.feature.keywords ?? []).join(' ')} ${node.metadata?.path ?? ''}`,
+      metadata: {
+        entityType: node.metadata?.entityType,
+        path: node.metadata?.path,
+      },
+    }))
 
-  const documents = nodes.map(node => ({
-    id: node.id,
-    content: `${node.feature.description} ${(node.feature.keywords ?? []).join(' ')} ${node.metadata?.path ?? ''}`,
-    metadata: {
-      entityType: node.metadata?.entityType,
-      path: node.metadata?.path,
-    },
-  }))
-
-  await semanticSearch.indexBatch(documents)
-  console.error(`Semantic search ready (${documents.length} nodes indexed)`)
+    await semanticSearch.indexBatch(documents)
+    console.error(`Semantic search ready (${documents.length} nodes indexed)`)
+  }
 
   return semanticSearch
 }

@@ -35,7 +35,7 @@ export interface GenerationResult {
  * 3. Code Generation: Generate code with test-driven validation
  */
 export class ZeroRepo {
-  private options: ZeroRepoOptions
+  private readonly options: ZeroRepoOptions
 
   constructor(options: ZeroRepoOptions) {
     this.options = {

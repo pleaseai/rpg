@@ -408,8 +408,8 @@ export class HuggingFaceEmbedding extends Embedding {
   protected maxTokens = 512
   private model: AutoModelType | null = null
   private tokenizer: AutoTokenizerType | null = null
-  private dimension = 768
-  private config: HuggingFaceEmbeddingConfig
+  private readonly dimension: number = 768
+  private readonly config: HuggingFaceEmbeddingConfig
   private modelLoading: Promise<void> | null = null
   private transformersModule: TransformersModule | null = null
 

@@ -45,7 +45,7 @@ const DEFAULT_TTL = 7 * 24 * 60 * 60 * 1000 // 7 days
  * WAL mode for crash-safe incremental writes.
  */
 export class SemanticCache {
-  private options: Required<CacheOptions>
+  private readonly options: Required<CacheOptions>
   private db: Database.Database | null = null
   private _stmts: Statements | null = null
 

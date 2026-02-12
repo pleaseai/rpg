@@ -1,7 +1,7 @@
 import type { RPGConfig } from '@pleaseai/rpg-graph'
 import type { LowLevelNode } from '@pleaseai/rpg-graph/node'
 import type { CodeEntity, ParseResult } from '@pleaseai/rpg-utils/ast'
-import type { TokenUsageStats } from '@pleaseai/rpg-utils/llm'
+import type { LLMProvider, TokenUsageStats } from '@pleaseai/rpg-utils/llm'
 import type { CacheOptions } from './cache'
 import type { FileParseInfo } from './data-flow'
 import type { EvolutionResult } from './evolution/types'
@@ -563,12 +563,12 @@ interface ExtractionResult {
 }
 
 export class RPGEncoder {
-  private repoPath: string
-  private options: EncoderOptions
-  private astParser: ASTParser
-  private semanticExtractor: SemanticExtractor
-  private llmClient: LLMClient | null = null
-  private cache: SemanticCache
+  private readonly repoPath: string
+  private readonly options: EncoderOptions
+  private readonly astParser: ASTParser
+  private readonly semanticExtractor: SemanticExtractor
+  private readonly llmClient: LLMClient | null = null
+  private readonly cache: SemanticCache
   private cacheHits = 0
   private cacheMisses = 0
 
@@ -610,15 +610,14 @@ export class RPGEncoder {
     if (semantic?.useLLM === false)
       return null
 
-    const provider
-      = semantic?.provider
-        ?? (process.env.GOOGLE_API_KEY
-          ? 'google'
-          : process.env.ANTHROPIC_API_KEY
-            ? 'anthropic'
-            : process.env.OPENAI_API_KEY
-              ? 'openai'
-              : null)
+    let detectedProvider: LLMProvider | null = null
+    if (process.env.GOOGLE_API_KEY)
+      detectedProvider = 'google'
+    else if (process.env.ANTHROPIC_API_KEY)
+      detectedProvider = 'anthropic'
+    else if (process.env.OPENAI_API_KEY)
+      detectedProvider = 'openai'
+    const provider = semantic?.provider ?? detectedProvider
 
     if (!provider)
       return null

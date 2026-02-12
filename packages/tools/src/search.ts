@@ -53,8 +53,8 @@ export interface SearchResult {
  * hybrid (vector + BM25) search for better quality results.
  */
 export class SearchNode {
-  private rpg: RepositoryPlanningGraph
-  private semanticSearch: SemanticSearch | null
+  private readonly rpg: RepositoryPlanningGraph
+  private readonly semanticSearch: SemanticSearch | null
 
   constructor(rpg: RepositoryPlanningGraph, semanticSearch?: SemanticSearch | null) {
     this.rpg = rpg

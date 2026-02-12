@@ -49,7 +49,7 @@ interface ExploreState {
  * to discover related modules and interactions.
  */
 export class ExploreRPG {
-  private rpg: RepositoryPlanningGraph
+  private readonly rpg: RepositoryPlanningGraph
 
   constructor(rpg: RepositoryPlanningGraph) {
     this.rpg = rpg

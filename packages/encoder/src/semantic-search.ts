@@ -51,9 +51,9 @@ export interface SemanticSearchResult {
  * - Batch indexing for efficiency
  */
 export class SemanticSearch {
-  private options: SemanticSearchOptions
-  private vectorStore: VectorStore
-  private embedding: Embedding
+  private readonly options: SemanticSearchOptions
+  private readonly vectorStore: VectorStore
+  private readonly embedding: Embedding
 
   constructor(options: SemanticSearchOptions) {
     this.options = {

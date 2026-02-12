@@ -133,8 +133,8 @@ const INITIAL_USAGE_STATS: TokenUsageStats = {
  * LLM Client for semantic operations using Vercel AI SDK
  */
 export class LLMClient {
-  private options: LLMOptions
-  private providerInstance: ReturnType<typeof createProvider>
+  private readonly options: LLMOptions
+  private readonly providerInstance: ReturnType<typeof createProvider>
   private usageStats: TokenUsageStats = { ...INITIAL_USAGE_STATS }
 
   constructor(options: LLMOptions) {

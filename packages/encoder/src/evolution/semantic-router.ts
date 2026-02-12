@@ -15,9 +15,9 @@ import { buildSemanticRoutingPrompt, SemanticRoutingResponseSchema } from './pro
  * asking the LLM which child is the best semantic parent for a new entity.
  */
 export class SemanticRouter {
-  private rpg: RepositoryPlanningGraph
-  private llmClient?: LLMClient
-  private embedding?: Embedding
+  private readonly rpg: RepositoryPlanningGraph
+  private readonly llmClient?: LLMClient
+  private readonly embedding?: Embedding
   private llmCalls = 0
 
   constructor(
