@@ -163,6 +163,7 @@ import { DefaultContextStore } from '@pleaseai/rpg-store/default-context-store'
 - **@huggingface/transformers**: Local embedding with MongoDB LEAF models
 - **zod**: Schema validation for graph data
 - **commander**: CLI framework
+- **consola**: Structured logging with log levels and tagged output
 - **vitest**: Testing framework (Jest-compatible, for MCP compatibility)
 
 ## Reference Papers
@@ -236,6 +237,51 @@ All git commit messages, code comments, GitHub issues, pull request titles/descr
 - **LanceDB over ChromaDB**: No external server required, Bun-native, disk-based persistence
 - **Paper-based implementation**: Original implementation based on research papers, not forked from Microsoft code
 - **Dual GraphStore backends**: SQLiteGraphStore (better-sqlite3) and SurrealGraphStore (native graph relations) in `@pleaseai/rpg-store` for evaluation
+
+## Logging
+
+The project uses [`consola`](https://github.com/unjs/consola) for structured logging via `@pleaseai/rpg-utils/logger`.
+
+### Usage
+
+```typescript
+// In library packages — use createLogger with a tag
+import { createLogger } from '@pleaseai/rpg-utils/logger'
+const log = createLogger('MyModule')
+log.info('Processing...')       // [MyModule] Processing...
+log.warn('Fallback used')       // [MyModule] Fallback used
+log.error('Operation failed')   // [MyModule] Operation failed
+log.debug('Verbose details')    // Hidden unless log level >= 4
+
+// In MCP server — use createStderrLogger (stdout reserved for JSON-RPC)
+import { createStderrLogger } from '@pleaseai/rpg-utils/logger'
+const log = createStderrLogger('MCP')
+
+// Set global log level (affects all loggers: createLogger children + createStderrLogger instances)
+import { setLogLevel, LogLevels } from '@pleaseai/rpg-utils/logger'
+setLogLevel(LogLevels.debug)    // Enable debug output
+```
+
+### Log Levels
+
+| Level | Value | Methods |
+|-------|-------|---------|
+| Fatal | 0 | `log.fatal()` |
+| Error | 0 | `log.error()` |
+| Warn | 1 | `log.warn()` |
+| Log | 2 | `log.log()` |
+| Info | 3 | `log.info()`, `log.success()`, `log.fail()`, `log.ready()`, `log.start()`, `log.box()` |
+| Debug | 4 | `log.debug()` |
+| Trace | 5 | `log.trace()` |
+
+### CLI `--verbose` Flag
+
+The CLI `encode` command accepts `--verbose` which sets the global log level to `debug` (4), making `log.debug()` calls visible across all packages (both `createLogger` and `createStderrLogger` instances).
+
+### Logging vs Output in CLI
+
+- **Logging** (use consola): progress info, phase transitions, verbose details
+- **Output** (keep `console.log`): user-facing results, statistics, search results
 
 ## Known Gotchas
 

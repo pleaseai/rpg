@@ -1,6 +1,7 @@
 import type { ContextStore } from '@pleaseai/rpg-store/context-store'
 import type { DataFlowEdge, DependencyEdge, Edge, EdgeType, FunctionalEdge } from './edge'
 import type { HighLevelNode, LowLevelNode, Node, SemanticFeature, StructuralMetadata } from './node'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { z } from 'zod/v4'
 import { attrsToEdge, attrsToNode, edgeToAttrs, nodeToAttrs, nodeToSearchFields } from './adapters'
 import {
@@ -20,6 +21,8 @@ import {
   isLowLevelNode,
 
 } from './node'
+
+const log = createLogger('RPG')
 
 /**
  * Graph statistics
@@ -489,7 +492,7 @@ export class RepositoryPlanningGraph {
           rpg.dataFlowEdges.push(result.data)
         }
         else {
-          console.warn(`[RPG] Skipping invalid dataFlowEdge during deserialization: ${result.error.message}`)
+          log.warn(`Skipping invalid dataFlowEdge during deserialization: ${result.error.message}`)
         }
       }
     }

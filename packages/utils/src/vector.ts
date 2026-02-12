@@ -1,5 +1,8 @@
 import * as lancedb from '@lancedb/lancedb'
 import { Index } from '@lancedb/lancedb'
+import { createLogger } from './logger'
+
+const log = createLogger('VectorStore')
 
 /**
  * Vector store options
@@ -226,7 +229,7 @@ export class VectorStore {
     catch (error) {
       // If FTS index creation fails (e.g., empty table), log but don't throw
       const message = error instanceof Error ? error.message : String(error)
-      console.warn(`[VectorStore] FTS index creation failed: ${message}`)
+      log.warn(`FTS index creation failed: ${message}`)
     }
   }
 

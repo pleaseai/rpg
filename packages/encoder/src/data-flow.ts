@@ -2,6 +2,9 @@ import type { DataFlowEdge } from '@pleaseai/rpg-graph/edge'
 import type { ParseResult } from '@pleaseai/rpg-utils/ast'
 import path from 'node:path'
 import { DataFlowEdgeSchema } from '@pleaseai/rpg-graph/edge'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
+
+const log = createLogger('DataFlowDetector')
 
 /**
  * Options for DataFlowDetector
@@ -262,8 +265,8 @@ export class DataFlowDetector {
     if (result.success) {
       return result.data
     }
-    console.warn(
-      `[DataFlowDetector] Invalid DataFlowEdge (from=${edge.from}, to=${edge.to}, `
+    log.warn(
+      `Invalid DataFlowEdge (from=${edge.from}, to=${edge.to}, `
       + `dataId=${edge.dataId}): ${result.error.message}`,
     )
     return null

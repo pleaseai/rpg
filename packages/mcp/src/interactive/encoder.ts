@@ -10,6 +10,7 @@ import {
 import { ArtifactGrounder } from '@pleaseai/rpg-encoder/grounding'
 import { RepositoryPlanningGraph } from '@pleaseai/rpg-graph'
 import { ASTParser } from '@pleaseai/rpg-utils/ast'
+import { createStderrLogger } from '@pleaseai/rpg-utils/logger'
 import {
   DOMAIN_DISCOVERY_INSTRUCTIONS,
   FILE_SYNTHESIS_INSTRUCTIONS,
@@ -17,6 +18,8 @@ import {
   ROUTING_INSTRUCTIONS,
   SEMANTIC_PARSING_INSTRUCTIONS,
 } from './prompt-texts'
+
+const log = createStderrLogger('InteractiveEncoder')
 
 /**
  * Result returned by mutation operations
@@ -656,7 +659,7 @@ export class InteractiveEncoder {
       }
       catch (error) {
         const msg = `Artifact grounding failed: ${error instanceof Error ? error.message : String(error)}`
-        console.warn(`[InteractiveEncoder] ${msg}`)
+        log.warn(msg)
         warnings.push(msg)
       }
     }
@@ -893,7 +896,7 @@ export class InteractiveEncoder {
 
   private async persistGraph(): Promise<void> {
     if (!this.state.rpg || !this.state.repoPath) {
-      console.warn('[InteractiveEncoder] Cannot persist graph: RPG or repoPath not set')
+      log.warn('Cannot persist graph: RPG or repoPath not set')
       return
     }
 

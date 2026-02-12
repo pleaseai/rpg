@@ -1,6 +1,9 @@
 import type { RepositoryPlanningGraph } from '@pleaseai/rpg-graph'
 import path from 'node:path'
 import { isHighLevelNode, isLowLevelNode } from '@pleaseai/rpg-graph/node'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
+
+const log = createLogger('ArtifactGrounder')
 
 class TrieNode {
   children = new Map<string, TrieNode>()
@@ -74,8 +77,8 @@ export class ArtifactGrounder {
           await this.propagate(node.id, visited)
         }
         catch (error) {
-          console.warn(
-            `[ArtifactGrounder] Failed to ground subtree rooted at "${node.id}": `
+          log.warn(
+            `Failed to ground subtree rooted at "${node.id}": `
             + `${error instanceof Error ? error.message : String(error)}`,
           )
         }
@@ -89,14 +92,14 @@ export class ArtifactGrounder {
     visited.add(nodeId)
     const node = await this.rpg.getNode(nodeId)
     if (!node) {
-      console.warn(`[ArtifactGrounder] Node "${nodeId}" not found, skipping subtree.`)
+      log.warn(`Node "${nodeId}" not found, skipping subtree.`)
       return new Set()
     }
 
     if (isLowLevelNode(node)) {
       const filePath = node.metadata?.path
       if (!filePath) {
-        console.warn(`[ArtifactGrounder] LowLevelNode "${nodeId}" has no metadata.path, skipping.`)
+        log.warn(`LowLevelNode "${nodeId}" has no metadata.path, skipping.`)
         return new Set()
       }
       return new Set([path.dirname(filePath).replace(/\\/g, '/')])

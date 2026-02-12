@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@pleaseai/rpg-store": "workspace:*",
+    "@pleaseai/rpg-utils": "workspace:*",
     "graphology": "^0.25.4",
     "graphology-types": "^0.24.8"
   },

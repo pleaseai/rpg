@@ -6,8 +6,11 @@ import type { SemanticExtractor } from '../semantic'
 import type { SemanticRouter } from './semantic-router'
 import type { ChangedEntity } from './types'
 import path from 'node:path'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { cosineSimilarity } from './semantic-router'
 import { DEFAULT_DRIFT_THRESHOLD } from './types'
+
+const log = createLogger('evolution')
 
 /**
  * DeleteNode — Algorithm 2 from RPG-Encoder §3 (Appendix A.2, deletion.tex)
@@ -179,8 +182,8 @@ async function injectDependencyEdges(
         const msg = error instanceof Error ? error.message : String(error)
         // Duplicate edge is expected (skip), but other errors should surface
         if (!msg.includes('already exists') && !msg.includes('not found')) {
-          console.warn(
-            `[evolution] Failed to add dependency edge ${entity.id} → ${targetId}: ${msg}`,
+          log.warn(
+            `Failed to add dependency edge ${entity.id} → ${targetId}: ${msg}`,
           )
         }
       }
@@ -273,8 +276,8 @@ export async function processModification(
       await insertNode(rpg, newEntity, ctx)
     }
     catch (error) {
-      console.error(
-        `[evolution] Node "${existingNodeId}" was deleted during re-route but re-insert failed. Graph may be inconsistent.`,
+      log.error(
+        `Node "${existingNodeId}" was deleted during re-route but re-insert failed. Graph may be inconsistent.`,
         error,
       )
       throw error
@@ -322,8 +325,8 @@ async function computeDrift(
       return 1 - cosineSimilarity(oldEmbed.vector, newEmbed.vector)
     }
     catch (error) {
-      console.warn(
-        '[computeDrift] Embedding failed, falling back to keyword-based drift:',
+      log.warn(
+        'Embedding failed, falling back to keyword-based drift:',
         error instanceof Error ? error.message : String(error),
       )
     }
