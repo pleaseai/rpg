@@ -100,13 +100,13 @@ export interface AISDKEmbeddingConfig {
  */
 export class AISDKEmbedding extends Embedding {
   protected maxTokens: number
-  private model: EmbeddingModel
+  private readonly embeddingModel: EmbeddingModel
   private dimension: number
-  private providerName: string
+  private readonly providerName: string
 
   constructor(config: AISDKEmbeddingConfig) {
     super()
-    this.model = config.model
+    this.embeddingModel = config.model
     this.dimension = config.dimension ?? 0
     this.providerName = config.providerName ?? 'AISDK'
     this.maxTokens = config.maxTokens ?? 8192
@@ -116,7 +116,7 @@ export class AISDKEmbedding extends Embedding {
     const processedText = this.preprocessText(text)
 
     try {
-      const result = await embed({ model: this.model, value: processedText })
+      const result = await embed({ model: this.embeddingModel, value: processedText })
 
       if (this.dimension === 0) {
         this.dimension = result.embedding.length
@@ -141,7 +141,7 @@ export class AISDKEmbedding extends Embedding {
     const processedTexts = this.preprocessTexts(texts)
 
     try {
-      const result = await embedMany({ model: this.model, values: processedTexts })
+      const result = await embedMany({ model: this.embeddingModel, values: processedTexts })
 
       if (this.dimension === 0 && result.embeddings.length > 0) {
         this.dimension = result.embeddings[0]!.length
@@ -204,27 +204,27 @@ const OPENAI_MODELS: Record<string, { dimension: number, description: string }> 
  * Supports text-embedding-3-small (default), text-embedding-3-large, and ada-002.
  */
 export class OpenAIEmbedding extends Embedding {
-  private model: EmbeddingModel
-  private modelName: string
+  private readonly embeddingModel: EmbeddingModel
+  private readonly model: string
   private dimension: number
   protected maxTokens = 8192
 
   constructor(config: OpenAIEmbeddingConfig) {
     super()
-    this.modelName = config.model ?? 'text-embedding-3-small'
-    this.dimension = OPENAI_MODELS[this.modelName]?.dimension ?? 1536
+    this.model = config.model ?? 'text-embedding-3-small'
+    this.dimension = OPENAI_MODELS[this.model]?.dimension ?? 1536
     const provider = createOpenAI({
       apiKey: config.apiKey,
       baseURL: config.baseURL,
     })
-    this.model = provider.embedding(this.modelName)
+    this.embeddingModel = provider.embedding(this.model)
   }
 
   async embed(text: string): Promise<EmbeddingVector> {
     const processedText = this.preprocessText(text)
 
     try {
-      const result = await embed({ model: this.model, value: processedText })
+      const result = await embed({ model: this.embeddingModel, value: processedText })
 
       this.dimension = result.embedding.length
 
@@ -247,7 +247,7 @@ export class OpenAIEmbedding extends Embedding {
     const processedTexts = this.preprocessTexts(texts)
 
     try {
-      const result = await embedMany({ model: this.model, values: processedTexts })
+      const result = await embedMany({ model: this.embeddingModel, values: processedTexts })
 
       if (result.embeddings.length > 0) {
         this.dimension = result.embeddings[0]!.length
@@ -273,7 +273,7 @@ export class OpenAIEmbedding extends Embedding {
   }
 
   getModel(): string {
-    return this.modelName
+    return this.model
   }
 
   static getSupportedModels(): Record<string, { dimension: number, description: string }> {
