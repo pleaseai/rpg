@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
   typecheck:
     runs-on: ubuntu-latest
@@ -13,7 +17,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run typecheck
+      - run: bunx turbo run typecheck
 
   lint:
     runs-on: ubuntu-latest
@@ -21,7 +25,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run lint
+      - run: bunx turbo run lint
 
   test:
     runs-on: ubuntu-latest
@@ -31,7 +35,7 @@ jobs:
           fetch-depth: 2
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run test:unit -- --coverage
+      - run: bunx turbo run test:unit -- --coverage
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -49,7 +53,7 @@ jobs:
           submodules: true
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bun run test:integration -- --coverage
+      - run: bunx turbo run test:integration -- --coverage
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -12,11 +12,11 @@
     },
     "test:unit": {
       "inputs": ["packages/*/src/**/*.ts", "tests/**/*.test.ts", "vitest.config.ts", "vitest.workspace.ts"],
-      "outputs": []
+      "outputs": ["coverage/**"]
     },
     "test:integration": {
       "inputs": ["packages/*/src/**/*.ts", "tests/**/*.integration.test.ts", "vitest.config.ts", "vitest.workspace.ts"],
-      "outputs": []
+      "outputs": ["coverage/**"]
     },
     "build": {
       "dependsOn": ["typecheck"],
