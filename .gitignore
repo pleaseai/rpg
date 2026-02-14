@@ -45,3 +45,6 @@ bun.lockb
 .please/memory/
 .please/tasklist.json
 /rpg.json
+
+# Turborepo
+.turbo

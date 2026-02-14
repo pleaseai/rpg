@@ -28,6 +28,9 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
     permissions:
       contents: read
       id-token: write # Required for npm OIDC trusted publishing
@@ -39,7 +42,7 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
       - run: bun install --frozen-lockfile
-      - run: bun run build
+      - run: bunx turbo run build
       # Trusted publishing - no token needed, provenance auto-generated
       # Enable after configuring trusted publisher on npmjs.com
       # - run: npm publish --access public
