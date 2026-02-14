@@ -1,5 +1,7 @@
 export { createCachedExtractor, SemanticCache } from './cache'
 export type { CacheOptions } from './cache'
+export { DependencyGraph } from './dependency-graph'
+export type { CallSite, DependencyGraphResult, InheritanceRelation } from './dependency-graph'
 export { AISDKEmbedding, Embedding, MockEmbedding, OpenAIEmbedding } from './embedding'
 export type { AISDKEmbeddingConfig, EmbeddingVector, OpenAIEmbeddingConfig } from './embedding'
 export { discoverFiles, RPGEncoder } from './encoder'

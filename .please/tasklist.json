@@ -1,114 +1,111 @@
 {
-  "feature": "Token-Aware Batch Semantic Extraction",
-  "issue_number": 81,
-  "plan_path": null,
+  "feature": "Implement DependencyGraph with invocation and inheritance tracking",
+  "issue_number": 80,
+  "plan_path": ".please/plans/2026-02-15-dependency-graph.md",
   "spec": null,
-  "stage": 1,
-  "pr_number": null,
+  "stage": 2,
+  "pr_number": 83,
   "created_at": "2026-02-15T00:00:00.000Z",
   "updated_at": "2026-02-15T00:00:00.000Z",
   "tasks": [
     {
       "id": "T001",
-      "title": "Implement token counting utility",
-      "phase": 2,
+      "title": "Extend DependencyEdge with new dependency types",
+      "phase": 1,
       "status": "pending",
       "parallel": true,
       "dependencies": [],
       "files_affected": [
-        "packages/encoder/src/token-counter.ts"
+        "packages/graph/src/edge.ts"
       ]
     },
     {
       "id": "T002",
-      "title": "Refactor SemanticExtractor batching strategy with token budget parameters",
-      "phase": 2,
+      "title": "Design and create DependencyGraph class",
+      "phase": 1,
       "status": "pending",
       "parallel": false,
       "dependencies": [
         "T001"
       ],
       "files_affected": [
-        "packages/encoder/src/semantic.ts"
+        "packages/encoder/src/dependency-graph.ts"
       ]
     },
     {
       "id": "T003",
-      "title": "Add configurable batch parameters to SemanticOptions",
+      "title": "Implement invocation tracking via tree-sitter queries",
       "phase": 2,
       "status": "pending",
-      "parallel": true,
-      "dependencies": [],
+      "parallel": false,
+      "dependencies": ["T001", "T002"],
       "files_affected": [
-        "packages/encoder/src/semantic.ts"
+        "packages/encoder/src/dependency-graph.ts"
       ]
     },
     {
       "id": "T004",
-      "title": "Implement multi-iteration extraction (optional P2 follow-up)",
+      "title": "Implement inheritance tracking via tree-sitter queries",
       "phase": 2,
       "status": "pending",
       "parallel": false,
-      "dependencies": [
-        "T002"
-      ],
+      "dependencies": ["T001", "T002"],
       "files_affected": [
-        "packages/encoder/src/semantic.ts"
+        "packages/encoder/src/dependency-graph.ts"
       ]
     },
     {
       "id": "T005",
-      "title": "Update CLI encode command to expose batch parameters",
-      "phase": 2,
+      "title": "Add tree-sitter queries for all supported languages",
+      "phase": 3,
       "status": "pending",
       "parallel": false,
-      "dependencies": [
-        "T003",
-        "T002"
-      ],
+      "dependencies": ["T003", "T004"],
       "files_affected": [
-        "packages/cli/src/commands/encode.ts"
+        "packages/utils/src/ast/parser.ts",
+        "packages/utils/src/ast/languages/"
       ]
     },
     {
       "id": "T006",
-      "title": "Write tests for token counting, batch grouping, and edge cases",
-      "phase": 2,
+      "title": "Implement symbol resolution with cross-file inference",
+      "phase": 3,
       "status": "pending",
       "parallel": false,
-      "dependencies": [
-        "T001",
-        "T002",
-        "T003"
-      ],
+      "dependencies": ["T003"],
       "files_affected": [
-        "tests/token-counter.test.ts",
-        "tests/semantic-batching.test.ts"
+        "packages/encoder/src/symbol-resolver.ts"
+      ]
+    },
+    {
+      "id": "T007",
+      "title": "Integrate with RPGEncoder.injectDependencies()",
+      "phase": 4,
+      "status": "pending",
+      "parallel": false,
+      "dependencies": ["T002", "T005", "T006"],
+      "files_affected": [
+        "packages/encoder/src/encoder.ts"
       ]
     }
   ],
   "verification": {
     "automated_tests": [
-      "Token counting accuracy tests",
-      "Batch grouping correctness (small entities grouped, large entities isolated)",
-      "Edge cases: single entity exceeding budget, empty entity list",
-      "Integration test with real LLM call verifying batching behavior",
-      "Backward compatibility: fixed batch size fallback works",
-      "Full test suite passes (bun run test)",
-      "Lint passes (bun run lint)",
-      "Type check passes (bun run typecheck)"
+      "Unit tests pass: bun run test tests/dependency-graph.test.ts",
+      "Unit tests pass: bun run test tests/symbol-resolver.test.ts",
+      "Integration tests pass: bun run test tests/encoder.test.ts",
+      "All tests pass: bun run test",
+      "Type checking: bun run typecheck",
+      "Linting: bun run lint"
     ],
-    "manual_tests": [
-      "Encode a repository and verify fewer LLM calls with token-aware batching",
-      "Verify large entities are isolated into single-entity batches",
-      "Verify small entities are grouped efficiently"
-    ],
+    "manual_tests": [],
     "acceptance_criteria": [
-      "Token-aware batching replaces fixed batch size of 5",
-      "Configurable minBatchTokens (default 10000) and maxBatchTokens (default 50000)",
-      "At least one entity per batch even if it exceeds budget",
-      "Backward compatible: fixed batch size as fallback",
-      "CLI exposes --min-batch-tokens and --max-batch-tokens flags"
+      "AC-1: DependencyEdge supports call, inherit, implement, use dependency types",
+      "AC-2: Function/method calls extracted via tree-sitter for all 6 languages",
+      "AC-3: Class hierarchy (extends/implements) extracted for all applicable languages",
+      "AC-4: Cross-file symbol resolution resolves call targets using import graph",
+      "AC-5: Existing import edges still work (no compatibility shims needed)",
+      "AC-6: RPGEncoder.injectDependencies() produces richer dependency graph"
     ]
   }
 }

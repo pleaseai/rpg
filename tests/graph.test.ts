@@ -108,6 +108,49 @@ describe('edge', () => {
     expect(isDependencyEdge(functional)).toBe(false)
     expect(isDependencyEdge(dependency)).toBe(true)
   })
+
+  it('createDependencyEdge works with call dependency and symbol', () => {
+    const edge = createDependencyEdge({
+      source: 'module-a',
+      target: 'module-b',
+      dependencyType: 'call',
+      symbol: 'myFunction',
+    })
+
+    expect(edge.source).toBe('module-a')
+    expect(edge.target).toBe('module-b')
+    expect(edge.dependencyType).toBe('call')
+    expect(edge.symbol).toBe('myFunction')
+  })
+
+  it('createDependencyEdge works with inherit dependency and symbol', () => {
+    const edge = createDependencyEdge({
+      source: 'child-class',
+      target: 'base-class',
+      dependencyType: 'inherit',
+      symbol: 'BaseClass',
+      targetSymbol: 'ParentClass',
+    })
+
+    expect(edge.source).toBe('child-class')
+    expect(edge.target).toBe('base-class')
+    expect(edge.dependencyType).toBe('inherit')
+    expect(edge.symbol).toBe('BaseClass')
+    expect(edge.targetSymbol).toBe('ParentClass')
+  })
+
+  it('createDependencyEdge symbol and targetSymbol are optional', () => {
+    const edge = createDependencyEdge({
+      source: 'a',
+      target: 'b',
+      dependencyType: 'import',
+    })
+
+    expect(edge.symbol).toBeUndefined()
+    expect(edge.targetSymbol).toBeUndefined()
+    expect(edge.source).toBe('a')
+    expect(edge.target).toBe('b')
+  })
 })
 
 describe('repositoryPlanningGraph', () => {
