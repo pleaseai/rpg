@@ -35,12 +35,12 @@ jobs:
           fetch-depth: 2
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bunx turbo run test:unit -- --coverage
+      - run: bunx turbo run test:unit -- --coverage --coverage.reportsDirectory=./coverage/unit
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: pleaseai/rpg
-          files: coverage/coverage-final.json
+          files: coverage/unit/coverage-final.json
           flags: unit
           fail_ci_if_error: false
 
@@ -53,11 +53,11 @@ jobs:
           submodules: true
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - run: bunx turbo run test:integration -- --coverage
+      - run: bunx turbo run test:integration -- --coverage --coverage.reportsDirectory=./coverage/integration
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: pleaseai/rpg
-          files: coverage/coverage-final.json
+          files: coverage/integration/coverage-final.json
           flags: integration
           fail_ci_if_error: false
