@@ -1,5 +1,5 @@
 import { chmodSync, existsSync } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createLogger } from '@pleaseai/rpg-utils/logger'
 
@@ -10,9 +10,9 @@ const HOOK_CONTENT = `#!/bin/sh
 # Runs rpg sync after git operations. Failures do not block git.
 
 if command -v rpg >/dev/null 2>&1; then
-  rpg sync 2>/dev/null || true
+  rpg sync || echo "rpg sync failed (exit $?), run 'rpg sync' manually to debug" >&2
 elif command -v bunx >/dev/null 2>&1; then
-  bunx rpg sync 2>/dev/null || true
+  bunx rpg sync || echo "rpg sync failed (exit $?), run 'rpg sync' manually to debug" >&2
 fi
 `
 
@@ -30,6 +30,7 @@ export async function installHooks(repoPath: string): Promise<void> {
   }
 
   const hooksDir = path.join(gitDir, 'hooks')
+  await mkdir(hooksDir, { recursive: true })
 
   for (const hookName of HOOK_NAMES) {
     const hookPath = path.join(hooksDir, hookName)

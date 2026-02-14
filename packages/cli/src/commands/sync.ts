@@ -56,16 +56,18 @@ export function registerSyncCommand(program: Command): void {
           try {
             localState = JSON.parse(await readFile(localStatePath, 'utf-8')) as LocalState
           }
-          catch {
-            log.warn('Could not parse local state, will rebuild')
+          catch (error) {
+            const msg = error instanceof Error ? error.message : String(error)
+            log.warn(`Could not read/parse local state: ${msg}. Will rebuild.`)
           }
         }
 
         const isOnDefaultBranch = currentBranch === defaultBranch || currentBranch === ''
         const needsEvolve = !isOnDefaultBranch && canonicalCommit
 
-        if (options.force || !existsSync(localGraphPath) || !localState) {
-          // Full copy from canonical
+        // Copy canonical to local if needed
+        const needsCopy = options.force || !existsSync(localGraphPath) || !localState
+        if (needsCopy) {
           await copyFile(canonicalPath, localGraphPath)
           log.info('Copied canonical graph → local')
         }
@@ -76,8 +78,10 @@ export function registerSyncCommand(program: Command): void {
           try {
             mergeBase = getMergeBase(repoPath, defaultBranch, 'HEAD')
           }
-          catch {
+          catch (error) {
+            const msg = error instanceof Error ? error.message : String(error)
             log.warn(`Could not compute merge-base with ${defaultBranch}, using canonical commit`)
+            log.debug(`merge-base error: ${msg}`)
             mergeBase = canonicalCommit
           }
 
@@ -98,8 +102,8 @@ export function registerSyncCommand(program: Command): void {
               )
             }
             catch (error) {
-              log.warn(`Local evolve failed: ${error instanceof Error ? error.message : String(error)}`)
-              log.info('Falling back to canonical copy')
+              log.error(`Local evolve failed: ${error instanceof Error ? error.message : String(error)}`)
+              log.warn('Falling back to canonical graph copy. Local branch changes are NOT reflected in the local graph.')
               await copyFile(canonicalPath, localGraphPath)
             }
           }
@@ -107,8 +111,8 @@ export function registerSyncCommand(program: Command): void {
             log.info('Local graph is up to date')
           }
         }
-        else if (!needsEvolve) {
-          // On default branch, just copy
+        else if (!needsEvolve && !needsCopy) {
+          // On default branch and not yet copied
           await copyFile(canonicalPath, localGraphPath)
           log.info('On default branch — synced canonical graph to local')
         }

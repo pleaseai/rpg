@@ -91,17 +91,7 @@ program
       const result = await encoder.encode()
 
       if (options.stamp) {
-        const absRepoPath = path.resolve(repoPath)
-        const headSha = getHeadCommitSha(absRepoPath)
-        const currentConfig = result.rpg.getConfig()
-        result.rpg.updateConfig({
-          github: {
-            owner: currentConfig.github?.owner ?? '',
-            repo: currentConfig.github?.repo ?? currentConfig.name,
-            commit: headSha,
-            pathPrefix: currentConfig.github?.pathPrefix,
-          },
-        })
+        const headSha = stampRpgWithHead(result.rpg, repoPath)
         log.info(`Stamped commit: ${headSha}`)
       }
 
@@ -268,7 +258,7 @@ program
   .option('-c, --commits <range>', 'Commit range', 'HEAD~1..HEAD')
   .option('-m, --model <provider/model>', 'LLM provider/model (e.g., claude-code/haiku, openai/gpt-5.2, google)')
   .option('--no-llm', 'Disable LLM (use heuristic extraction)')
-  .option('--stamp', 'Stamp config.github.commit with last commit in range')
+  .option('--stamp', 'Stamp config.github.commit with HEAD SHA')
   .action(async (options: { rpg: string, commits: string, model?: string, llm?: boolean, stamp?: boolean }) => {
     log.info(`Evolving RPG with commits: ${options.commits}`)
 
@@ -282,17 +272,7 @@ program
     const result = await encoder.evolve(rpg, { commitRange: options.commits })
 
     if (options.stamp) {
-      const absRepoPath = path.resolve(repoPath)
-      const headSha = getHeadCommitSha(absRepoPath)
-      const currentConfig = rpg.getConfig()
-      rpg.updateConfig({
-        github: {
-          owner: currentConfig.github?.owner ?? '',
-          repo: currentConfig.github?.repo ?? currentConfig.name,
-          commit: headSha,
-          pathPrefix: currentConfig.github?.pathPrefix,
-        },
-      })
+      const headSha = stampRpgWithHead(rpg, repoPath)
       log.info(`Stamped commit: ${headSha}`)
     }
 
@@ -341,17 +321,7 @@ program
     const json = await readFile(filePath, 'utf-8')
     const rpg = await RepositoryPlanningGraph.fromJSON(json)
     const repoPath = rpg.getConfig().rootPath ?? '.'
-    const absRepoPath = path.resolve(repoPath)
-    const headSha = getHeadCommitSha(absRepoPath)
-    const currentConfig = rpg.getConfig()
-    rpg.updateConfig({
-      github: {
-        owner: currentConfig.github?.owner ?? '',
-        repo: currentConfig.github?.repo ?? currentConfig.name,
-        commit: headSha,
-        pathPrefix: currentConfig.github?.pathPrefix,
-      },
-    })
+    const headSha = stampRpgWithHead(rpg, repoPath)
     await writeFile(filePath, await rpg.toJSON())
     console.log(headSha)
   })
@@ -371,6 +341,25 @@ program
     }
     console.log(commit)
   })
+
+/**
+ * Stamp RPG config with the current HEAD commit SHA.
+ * Returns the stamped SHA.
+ */
+function stampRpgWithHead(rpg: RepositoryPlanningGraph, repoPath: string): string {
+  const absRepoPath = path.resolve(repoPath)
+  const headSha = getHeadCommitSha(absRepoPath)
+  const currentConfig = rpg.getConfig()
+  rpg.updateConfig({
+    github: {
+      owner: currentConfig.github?.owner ?? '',
+      repo: currentConfig.github?.repo ?? currentConfig.name,
+      commit: headSha,
+      pathPrefix: currentConfig.github?.pathPrefix,
+    },
+  })
+  return headSha
+}
 
 /**
  * Build SemanticOptions from CLI --model and --no-llm flags

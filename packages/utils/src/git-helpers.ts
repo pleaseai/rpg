@@ -1,5 +1,8 @@
 import { execFileSync } from 'node:child_process'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { resolveGitBinary } from './git-path'
+
+const log = createLogger('git-helpers')
 
 /**
  * Execute a git command and return trimmed stdout.
@@ -29,13 +32,18 @@ export function getMergeBase(repoPath: string, branch1: string, branch2: string)
 
 /**
  * Get the current branch name (empty string if detached HEAD).
+ * Re-throws non-detached-HEAD errors to avoid masking real failures.
  */
 export function getCurrentBranch(repoPath: string): string {
   try {
     return git(repoPath, ['symbolic-ref', '--short', 'HEAD'])
   }
-  catch {
-    return ''
+  catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    if (msg.includes('not a symbolic ref')) {
+      return ''
+    }
+    throw error
   }
 }
 
@@ -60,6 +68,7 @@ export function getDefaultBranch(repoPath: string): string {
         return 'master'
       }
       catch {
+        log.warn('Could not detect default branch (no remote HEAD, no local main/master). Defaulting to "main".')
         return 'main'
       }
     }
