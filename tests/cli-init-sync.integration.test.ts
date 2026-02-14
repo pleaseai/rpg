@@ -212,6 +212,50 @@ describe('rpg init command', () => {
     const content = await readFile(workflowPath, 'utf-8')
     expect(content).toContain('name: RPG Encode')
   })
+
+  it('should run initial encode with --encode flag', async () => {
+    // Need a committed file for encode to process
+    await writeFile(path.join(tempDir, 'index.ts'), 'export function hello(): string { return "hello" }')
+    git(tempDir, ['add', '.'])
+    git(tempDir, ['commit', '-m', 'add source'])
+
+    const program = new Command()
+    program.exitOverride()
+    registerInitCommand(program)
+    await program.parseAsync(['node', 'rpg', 'init', tempDir, '--encode'])
+
+    // graph.json should be created with commit stamp
+    const graphPath = path.join(tempDir, '.rpg', 'graph.json')
+    expect(existsSync(graphPath)).toBe(true)
+
+    const graph = JSON.parse(await readFile(graphPath, 'utf-8'))
+    expect(graph.config.github.commit).toMatch(/^[0-9a-f]{40}$/)
+  })
+
+  it('should show hint when --encode fails on repo with no commits', async () => {
+    const noCommitDir = mkdtempSync(path.join(tmpdir(), 'rpg-no-commit-'))
+    git(noCommitDir, ['init', '-b', 'main'])
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit called')
+    }) as never)
+
+    try {
+      const program = new Command()
+      program.exitOverride()
+      registerInitCommand(program)
+
+      await expect(
+        program.parseAsync(['node', 'rpg', 'init', noCommitDir, '--encode']),
+      ).rejects.toThrow('process.exit called')
+
+      expect(exitSpy).toHaveBeenCalledWith(1)
+    }
+    finally {
+      exitSpy.mockRestore()
+      rmSync(noCommitDir, { recursive: true, force: true })
+    }
+  })
 })
 
 describe('installHooks', () => {
@@ -393,6 +437,125 @@ describe('rpg sync command', () => {
     await program.parseAsync(['node', 'rpg', 'sync'])
 
     expect(existsSync(path.join(rpgDir, 'local', 'vectors'))).toBe(true)
+  })
+
+  it('should handle corrupt local state gracefully', async () => {
+    const rpg = await RepositoryPlanningGraph.create({
+      name: 'test',
+      rootPath: tempDir,
+      github: { owner: '', repo: 'test', commit: getHeadCommitSha(tempDir) },
+    })
+    const rpgDir = path.join(tempDir, '.rpg')
+    const localDir = path.join(rpgDir, 'local')
+    mkdirSync(localDir, { recursive: true })
+    await writeFile(path.join(rpgDir, 'graph.json'), await rpg.toJSON())
+
+    // Create corrupt state.json
+    await writeFile(path.join(localDir, 'state.json'), 'not valid json{{{')
+
+    const program = new Command()
+    program.exitOverride()
+    registerSyncCommand(program)
+    await program.parseAsync(['node', 'rpg', 'sync'])
+
+    // Should still sync successfully (falls back to rebuild)
+    const state = JSON.parse(await readFile(path.join(localDir, 'state.json'), 'utf-8'))
+    expect(state.baseCommit).toMatch(/^[0-9a-f]{40}$/)
+  })
+
+  it('should re-copy when local state baseCommit differs from canonical', async () => {
+    const headSha = getHeadCommitSha(tempDir)
+    const rpg = await RepositoryPlanningGraph.create({
+      name: 'test',
+      rootPath: tempDir,
+      github: { owner: '', repo: 'test', commit: headSha },
+    })
+    const rpgDir = path.join(tempDir, '.rpg')
+    const localDir = path.join(rpgDir, 'local')
+    mkdirSync(localDir, { recursive: true })
+    await writeFile(path.join(rpgDir, 'graph.json'), await rpg.toJSON())
+
+    // Pre-create local graph and state with stale baseCommit
+    await writeFile(path.join(localDir, 'graph.json'), '{"stale": true}')
+    await writeFile(
+      path.join(localDir, 'state.json'),
+      JSON.stringify({ baseCommit: 'aaaa'.repeat(10), branch: 'main', lastSync: '2024-01-01T00:00:00Z' }),
+    )
+
+    const program = new Command()
+    program.exitOverride()
+    registerSyncCommand(program)
+    await program.parseAsync(['node', 'rpg', 'sync'])
+
+    // Should re-copy canonical since baseCommit differs
+    const localJson = await readFile(path.join(localDir, 'graph.json'), 'utf-8')
+    const canonicalJson = await readFile(path.join(rpgDir, 'graph.json'), 'utf-8')
+    expect(localJson).toBe(canonicalJson)
+
+    const state = JSON.parse(await readFile(path.join(localDir, 'state.json'), 'utf-8'))
+    expect(state.baseCommit).toBe(headSha)
+  })
+
+  it('should sync canonical on default branch when local is up-to-date', async () => {
+    const headSha = getHeadCommitSha(tempDir)
+    const rpg = await RepositoryPlanningGraph.create({
+      name: 'test',
+      rootPath: tempDir,
+      github: { owner: '', repo: 'test', commit: headSha },
+    })
+    const rpgDir = path.join(tempDir, '.rpg')
+    const localDir = path.join(rpgDir, 'local')
+    mkdirSync(localDir, { recursive: true })
+    await writeFile(path.join(rpgDir, 'graph.json'), await rpg.toJSON())
+
+    // Pre-create local graph and matching state (needsCopy = false)
+    await writeFile(path.join(localDir, 'graph.json'), await rpg.toJSON())
+    await writeFile(
+      path.join(localDir, 'state.json'),
+      JSON.stringify({ baseCommit: headSha, branch: 'main', lastSync: '2024-01-01T00:00:00Z' }),
+    )
+
+    const program = new Command()
+    program.exitOverride()
+    registerSyncCommand(program)
+    await program.parseAsync(['node', 'rpg', 'sync'])
+
+    // Should still complete and update lastSync
+    const state = JSON.parse(await readFile(path.join(localDir, 'state.json'), 'utf-8'))
+    expect(state.baseCommit).toBe(headSha)
+    expect(state.lastSync).not.toBe('2024-01-01T00:00:00Z')
+  })
+
+  it('should attempt evolve on feature branch', async () => {
+    const headSha = getHeadCommitSha(tempDir)
+    const rpg = await RepositoryPlanningGraph.create({
+      name: 'test',
+      rootPath: tempDir,
+      github: { owner: '', repo: 'test', commit: headSha },
+    })
+    const rpgDir = path.join(tempDir, '.rpg')
+    mkdirSync(rpgDir, { recursive: true })
+    await writeFile(path.join(rpgDir, 'graph.json'), await rpg.toJSON())
+
+    // Create and switch to feature branch
+    git(tempDir, ['checkout', '-b', 'feature/test'])
+
+    // Make a commit on feature branch
+    await writeFile(path.join(tempDir, 'feature.ts'), 'export const y = 2')
+    git(tempDir, ['add', '.'])
+    git(tempDir, ['commit', '-m', 'add feature'])
+
+    const program = new Command()
+    program.exitOverride()
+    registerSyncCommand(program)
+    await program.parseAsync(['node', 'rpg', 'sync'])
+
+    // Sync should complete (evolve succeeds or falls back to copy)
+    const localGraphPath = path.join(rpgDir, 'local', 'graph.json')
+    expect(existsSync(localGraphPath)).toBe(true)
+
+    const state = JSON.parse(await readFile(path.join(rpgDir, 'local', 'state.json'), 'utf-8'))
+    expect(state.branch).toBe('feature/test')
   })
 
   it('should re-copy canonical when --force is used', async () => {
