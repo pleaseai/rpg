@@ -546,6 +546,25 @@ export class RepositoryPlanningGraph {
     return { ...this.config }
   }
 
+  /**
+   * Update mutable config fields (e.g., github.commit after encode/evolve).
+   * The config reference is readonly but internal fields are mutable.
+   */
+  updateConfig(updates: Partial<RPGConfig>): void {
+    if (updates.name !== undefined) {
+      this.config.name = updates.name
+    }
+    if (updates.rootPath !== undefined) {
+      this.config.rootPath = updates.rootPath
+    }
+    if (updates.description !== undefined) {
+      this.config.description = updates.description
+    }
+    if (updates.github !== undefined) {
+      this.config.github = updates.github
+    }
+  }
+
   async close(): Promise<void> {
     await this.context.close()
   }
