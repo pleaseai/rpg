@@ -1,7 +1,11 @@
 import type { ClaudeCodeSettings, CodexCliSettings, LLMProvider } from '@pleaseai/rpg-utils/llm'
 import { SemanticFeatureSchema as NodeSemanticFeatureSchema } from '@pleaseai/rpg-graph/node'
 import { LLMClient } from '@pleaseai/rpg-utils/llm'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { z } from 'zod/v4'
+import { estimateEntityTokens } from './token-counter'
+
+const log = createLogger('SemanticExtractor')
 
 /**
  * Options for semantic extraction
@@ -143,20 +147,93 @@ export class SemanticExtractor {
   }
 
   /**
-   * Extract batch of entities (with batching for efficiency)
+   * Extract batch of entities (with token-aware batching for efficiency)
    */
   async extractBatch(inputs: EntityInput[]): Promise<SemanticFeature[]> {
     const results: SemanticFeature[] = []
 
-    // Process in batches to avoid rate limits
-    const batchSize = 5
-    for (let i = 0; i < inputs.length; i += batchSize) {
-      const batch = inputs.slice(i, i + batchSize)
+    // Create token-aware batches
+    const batches = this.createTokenAwareBatches(inputs)
+
+    // Log batch information at debug level
+    log.debug(`Splitting ${inputs.length} entities into ${batches.length} token-aware batches`)
+
+    // Process each batch in parallel
+    for (const batch of batches) {
       const batchResults = await Promise.all(batch.map(input => this.extract(input)))
       results.push(...batchResults)
     }
 
     return results
+  }
+
+  /**
+   * Create token-aware batches from entities.
+   *
+   * Groups entities greedily until maxBatchTokens is reached.
+   * If a single entity exceeds maxBatchTokens, it gets its own batch.
+   * If the last batch has fewer tokens than minBatchTokens, it's merged with the previous batch.
+   *
+   * @param inputs - Array of entities to batch
+   * @returns Array of batches, where each batch is an array of entities
+   */
+  private createTokenAwareBatches(inputs: EntityInput[]): EntityInput[][] {
+    if (inputs.length === 0) {
+      return []
+    }
+
+    const batches: EntityInput[][] = []
+    let currentBatch: EntityInput[] = []
+    let currentTokens = 0
+
+    const maxBatchTokens = this.options.maxBatchTokens!
+    const minBatchTokens = this.options.minBatchTokens!
+
+    // Greedy grouping: fit entities into batches up to maxBatchTokens
+    for (const entity of inputs) {
+      const entityTokens = estimateEntityTokens(entity)
+
+      // If single entity exceeds max, isolate it
+      if (entityTokens > maxBatchTokens) {
+        if (currentBatch.length > 0) {
+          batches.push(currentBatch)
+          currentBatch = []
+          currentTokens = 0
+        }
+        batches.push([entity])
+        continue
+      }
+
+      // If adding this entity exceeds max, start new batch
+      if (currentBatch.length > 0 && currentTokens + entityTokens > maxBatchTokens) {
+        batches.push(currentBatch)
+        currentBatch = [entity]
+        currentTokens = entityTokens
+      }
+      else {
+        currentBatch.push(entity)
+        currentTokens += entityTokens
+      }
+    }
+
+    // Append remaining batch
+    if (currentBatch.length > 0) {
+      batches.push(currentBatch)
+    }
+
+    // Merge small last batch with previous batch if below minBatchTokens
+    if (batches.length > 1) {
+      const lastBatch = batches[batches.length - 1]!
+      const lastBatchTokens = lastBatch.reduce((total, entity) => total + estimateEntityTokens(entity), 0)
+
+      if (lastBatchTokens < minBatchTokens) {
+        const previousBatch = batches[batches.length - 2]!
+        previousBatch.push(...lastBatch)
+        batches.pop()
+      }
+    }
+
+    return batches
   }
 
   /**
