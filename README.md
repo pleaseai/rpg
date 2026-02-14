@@ -191,7 +191,7 @@ The `-m, --model` option uses `provider/model` format. If the model is omitted, 
 |----------|--------|---------------|-----------------|
 | `openai` | `openai/gpt-5.2` | `gpt-4o` | `OPENAI_API_KEY` |
 | `anthropic` | `anthropic/claude-haiku-4.5` | `claude-sonnet-4.5` | `ANTHROPIC_API_KEY` |
-| `google` | `google/gemini-3-pro-preview` | `gemini-3-flash-preview` | `GOOGLE_GENERATIVE_AI_API_KEY` |
+| `google` | `google/gemini-3-pro-preview` | `gemini-3-flash-preview` | `GOOGLE_API_KEY` |
 | `claude-code` | `claude-code/haiku` | `sonnet` | Not required (uses subscription) |
 
 ## Project Structure
