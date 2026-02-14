@@ -11,7 +11,7 @@ This document compares the Microsoft RPG-ZeroRepo reference implementation (Pyth
 | **Language** | Python 3.10+ monolithic package | TypeScript 5.x, Bun workspaces (8 packages) |
 | **Source lines** | ~60,600 lines (.py) | ~13,200 lines (.ts, excluding tests) |
 | **Encoder pipeline** | Fully implemented (rebuild, parse, refactor, evolve) | Fully implemented (3-phase encode, evolution) |
-| **ZeroRepo pipeline** | Fully implemented (prop → impl → code gen) | Skeleton only (98 lines, all TODO) |
+| **ZeroRepo pipeline** | Fully implemented (prop → impl → code gen) | Skeleton only (97 lines, all TODO) |
 | **AST parsing** | Python `ast` module (Python-only) | tree-sitter (6 languages) |
 | **Storage** | JSON files + FAISS (in-memory) | SQLite/SurrealDB + LanceDB (persistent) |
 | **LLM providers** | 10 providers + Pydantic structured output | 5 providers + Zod structured output |
@@ -53,7 +53,7 @@ graph LR
         DP[DiffParser<br/>Git commit range] --> OPS[Delete → Modify → Insert<br/>Semantic routing]
     end
     subgraph ZeroRepo["ZeroRepo (Skeleton)"]
-        ZR[ZeroRepo class<br/>98 lines, all TODO]
+        ZR[ZeroRepo class<br/>97 lines, all TODO]
     end
     Encoder --> Evolution
 ```
@@ -240,13 +240,13 @@ This is a generation-pipeline concept with no equivalent in our encoder-focused 
 
 ## 5. ZeroRepo Generation Pipeline (Gap Analysis)
 
-The entire generation pipeline (~30,777 lines) exists in the vendor but is absent from our codebase (98-line skeleton).
+The entire generation pipeline (~30,777 lines) exists in the vendor but is absent from our codebase (97-line skeleton).
 
 ### 5.1 Stage 1: Proposal Level (`prop_level/`, 3,137 lines)
 
 | Component | Vendor File | Lines | Key Classes | Our Status |
 |-----------|-------------|-------|-------------|------------|
-| **PropBuilder** | `prop_builder.py` | 272 | `PropBuilder` | Not implemented |
+| **PropBuilder** | `prop_builder.py` | 242 | `PropBuilder` | Not implemented |
 | **Feature Selection** | `select_feature/select_agent.py` | 1,050 | `FeatureSelectAgent` | Not implemented |
 | **FAISS Explore-Exploit** | `select_feature/faiss_db.py` | ~200 | `FAISSDatabase` | Not implemented |
 | **Feature Refactoring** | `refactor_feature/refactor_agent.py` | ~800 | `FeatureRefactorAgent` | Not implemented |
@@ -378,7 +378,7 @@ The entire generation pipeline (~30,777 lines) exists in the vendor but is absen
 
 | Vendor File | Lines | Our Equivalent | Notes |
 |-------------|-------|----------------|-------|
-| `rpg_gen/base/rpg/rpg.py` | 1,760 | `packages/graph/src/rpg.ts` (572 lines) | Core RPG class |
+| `rpg_gen/base/rpg/rpg.py` | 1,760 | `packages/graph/src/rpg.ts` (571 lines) | Core RPG class |
 | `rpg_gen/base/rpg/dep_graph.py` | 1,023 | `packages/encoder/src/encoder.ts` (import analysis only) | **Gap**: No call/inheritance graph |
 | `rpg_gen/base/rpg/util.py` | 257 | `packages/graph/src/node.ts`, `edge.ts` | Enums + utilities |
 | `rpg_gen/base/unit/code_unit.py` | 577 | `packages/utils/src/ast/types.ts` | `CodeEntity` interface |
@@ -389,11 +389,11 @@ The entire generation pipeline (~30,777 lines) exists in the vendor but is absen
 | `rpg_encoder/rpg_encoding.py` | 796 | `packages/encoder/src/semantic.ts` | Semantic lifting |
 | `rpg_encoder/semantic_parsing.py` | 824 | `packages/encoder/src/semantic.ts` | Entity feature extraction |
 | `rpg_encoder/refactor_tree.py` | 1,042 | `packages/encoder/src/reorganization/` | Structural reorganization |
-| `rpg_encoder/rebuild.py` | 1,761 | `packages/encoder/src/encoder.ts` (1,049 lines) | Main encoder orchestration |
+| `rpg_encoder/rebuild.py` | 1,761 | `packages/encoder/src/encoder.ts` (1,048 lines) | Main encoder orchestration |
 | `rpg_encoder/rpg_agent/ops/search_node_by_meta.py` | 946 | `packages/tools/src/search.ts` | SearchNode tool |
 | `rpg_encoder/rpg_agent/ops/fetch_node.py` | 700 | `packages/tools/src/fetch.ts` | FetchNode tool |
 | `rpg_encoder/rpg_agent/ops/explore_rpg.py` | 1,071 | `packages/tools/src/explore.ts` | ExploreRPG tool |
-| `rpg_gen/prop_level/prop_builder.py` | 272 | — | **Gap**: Proposal builder |
+| `rpg_gen/prop_level/prop_builder.py` | 242 | — | **Gap**: Proposal builder |
 | `rpg_gen/prop_level/select_feature/select_agent.py` | 1,050 | — | **Gap**: Feature selection |
 | `rpg_gen/prop_level/select_feature/faiss_db.py` | ~200 | — | **Gap**: FAISS explore-exploit |
 | `rpg_gen/prop_level/refactor_feature/refactor_agent.py` | ~800 | — | **Gap**: Feature refactoring |
