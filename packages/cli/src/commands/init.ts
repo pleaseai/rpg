@@ -112,7 +112,7 @@ export function registerInitCommand(program: Command): void {
     )
 }
 
-async function ensureGitignoreEntry(repoPath: string, pattern: string): Promise<void> {
+export async function ensureGitignoreEntry(repoPath: string, pattern: string): Promise<void> {
   const gitignorePath = path.join(repoPath, '.gitignore')
   let content = ''
 
@@ -131,7 +131,7 @@ async function ensureGitignoreEntry(repoPath: string, pattern: string): Promise<
   log.success(`Added "${pattern}" to .gitignore`)
 }
 
-async function generateCIWorkflow(repoPath: string): Promise<void> {
+export async function generateCIWorkflow(repoPath: string): Promise<void> {
   const workflowDir = path.join(repoPath, '.github', 'workflows')
   const workflowPath = path.join(workflowDir, 'rpg-encode.yml')
 
