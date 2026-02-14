@@ -67,7 +67,7 @@ export function registerSyncCommand(program: Command): void {
 
         // Copy canonical to local if needed
         const needsCopy = options.force || !existsSync(localGraphPath) || !localState
-          || (localState && canonicalCommit && localState.baseCommit !== canonicalCommit)
+          || (canonicalCommit && localState.baseCommit !== canonicalCommit)
         if (needsCopy) {
           await copyFile(canonicalPath, localGraphPath)
           log.info('Copied canonical graph → local')
