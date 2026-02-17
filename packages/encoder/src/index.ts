@@ -18,3 +18,5 @@ export type {
   SemanticSearchOptions,
   SemanticSearchResult,
 } from './semantic-search'
+export { SymbolResolver } from './symbol-resolver'
+export type { ResolvedCall, ResolvedInheritance, SymbolTable } from './symbol-resolver'

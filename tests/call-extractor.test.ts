@@ -207,6 +207,80 @@ bar()`
     })
   })
 
+  describe('Python support', () => {
+    it('extracts direct Python calls', () => {
+      const code = `def foo():\n    pass\nfoo()`
+      const calls = extractor.extract(code, 'python', 'test.py')
+      expect(calls.some(c => c.calleeSymbol === 'foo')).toBe(true)
+    })
+
+    it('extracts Python method calls', () => {
+      const code = `obj.method()`
+      const calls = extractor.extract(code, 'python', 'test.py')
+      expect(calls.some(c => c.calleeSymbol === 'method')).toBe(true)
+    })
+
+    it('extracts Python constructor calls', () => {
+      const code = `x = MyClass()`
+      const calls = extractor.extract(code, 'python', 'test.py')
+      expect(calls.some(c => c.calleeSymbol === 'MyClass')).toBe(true)
+    })
+  })
+
+  describe('Java support', () => {
+    it('extracts Java method invocations', () => {
+      const code = `class A { void m() { foo(); } }`
+      const calls = extractor.extract(code, 'java', 'test.java')
+      expect(calls.some(c => c.calleeSymbol === 'foo')).toBe(true)
+    })
+
+    it('extracts Java method calls on objects', () => {
+      const code = `class A { void m() { obj.bar(); } }`
+      const calls = extractor.extract(code, 'java', 'test.java')
+      expect(calls.some(c => c.calleeSymbol === 'bar')).toBe(true)
+    })
+
+    it('extracts Java constructor calls', () => {
+      const code = `class A { void m() { B b = new B(); } }`
+      const calls = extractor.extract(code, 'java', 'test.java')
+      expect(calls.some(c => c.calleeSymbol === 'B')).toBe(true)
+    })
+  })
+
+  describe('Rust support', () => {
+    it('extracts Rust function calls', () => {
+      const code = `fn main() { foo(); }`
+      const calls = extractor.extract(code, 'rust', 'test.rs')
+      expect(calls.some(c => c.calleeSymbol === 'foo')).toBe(true)
+    })
+
+    it('extracts Rust method calls', () => {
+      const code = `fn main() { obj.bar(); }`
+      const calls = extractor.extract(code, 'rust', 'test.rs')
+      expect(calls.some(c => c.calleeSymbol === 'bar')).toBe(true)
+    })
+
+    it('extracts Rust scoped calls (Foo::new)', () => {
+      const code = `fn main() { let x = Foo::new(); }`
+      const calls = extractor.extract(code, 'rust', 'test.rs')
+      expect(calls.some(c => c.calleeSymbol === 'new')).toBe(true)
+    })
+  })
+
+  describe('Go support', () => {
+    it('extracts Go function calls', () => {
+      const code = `package main\nfunc main() { foo() }`
+      const calls = extractor.extract(code, 'go', 'test.go')
+      expect(calls.some(c => c.calleeSymbol === 'foo')).toBe(true)
+    })
+
+    it('extracts Go method calls', () => {
+      const code = `package main\nfunc main() { obj.Bar() }`
+      const calls = extractor.extract(code, 'go', 'test.go')
+      expect(calls.some(c => c.calleeSymbol === 'Bar')).toBe(true)
+    })
+  })
+
   describe('edge cases', () => {
     it('handles empty code', () => {
       const calls = extractor.extract('', 'typescript', 'test.ts')
