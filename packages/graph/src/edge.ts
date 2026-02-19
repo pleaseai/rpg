@@ -67,6 +67,10 @@ export const DependencyEdgeSchema = BaseEdgeSchema.extend({
   isRuntime: z.boolean().optional(),
   /** Line number where the dependency occurs */
   line: z.number().optional(),
+  /** The symbol name being referenced (function name, class name, etc.) */
+  symbol: z.string().optional(),
+  /** The target symbol name when different from the source (e.g., aliased imports) */
+  targetSymbol: z.string().optional(),
 })
 
 export type DependencyEdge = z.infer<typeof DependencyEdgeSchema>
@@ -135,6 +139,8 @@ export function createDependencyEdge(params: {
   isRuntime?: boolean
   line?: number
   weight?: number
+  symbol?: string
+  targetSymbol?: string
 }): DependencyEdge {
   return DependencyEdgeSchema.parse({
     ...params,

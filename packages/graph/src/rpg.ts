@@ -226,6 +226,8 @@ export class RepositoryPlanningGraph {
     dependencyType: 'import' | 'call' | 'inherit' | 'implement' | 'use'
     isRuntime?: boolean
     line?: number
+    symbol?: string
+    targetSymbol?: string
   }): Promise<DependencyEdge> {
     const edge = createDependencyEdge(params)
     await this.addEdge(edge)
