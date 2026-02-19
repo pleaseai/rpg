@@ -2,6 +2,9 @@ import type { SupportedLanguage } from '@pleaseai/rpg-utils/ast'
 import type Parser from 'tree-sitter'
 import type { InheritanceRelation } from './dependency-graph'
 import { LANGUAGE_CONFIGS } from '@pleaseai/rpg-utils/ast'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
+
+const log = createLogger('InheritanceExtractor')
 
 /**
  * Extracts class inheritance and interface implementation relationships
@@ -56,7 +59,8 @@ export class InheritanceExtractor {
       this.extractFromNode(tree.rootNode, filePath, normalizedLanguage, relations)
       return relations
     }
-    catch {
+    catch (err) {
+      log.warn(`Failed to extract inheritance relations from ${filePath}: ${err}`)
       return []
     }
   }

@@ -2,9 +2,12 @@ import type { RepositoryPlanningGraph } from '@pleaseai/rpg-graph'
 import type { ASTParser, ParseResult } from '@pleaseai/rpg-utils/ast'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { CallExtractor } from './call-extractor'
 import { InheritanceExtractor } from './inheritance-extractor'
 import { SymbolResolver } from './symbol-resolver'
+
+const log = createLogger('DependencyInjection')
 
 /**
  * Resolve an import module path to an actual file path relative to repo root.
@@ -92,7 +95,8 @@ export async function injectDependencies(
     try {
       sourceCode = await readFile(fullPath, 'utf-8')
     }
-    catch {
+    catch (err) {
+      log.warn(`Failed to read file ${fullPath}: ${err}`)
       sourceCode = ''
     }
 

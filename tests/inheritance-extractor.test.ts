@@ -182,6 +182,7 @@ describe('InheritanceExtractor', () => {
       const extractor = new InheritanceExtractor()
       const filePath = 'src/models/index.ts'
       const relations = extractor.extract(code, 'typescript', filePath)
+      expect(relations.length).toBeGreaterThan(0)
       expect(relations.every(r => r.childFile === filePath)).toBe(true)
     })
 
