@@ -68,14 +68,13 @@ describe('SemanticOptions batch parameters', () => {
     it('applies default minBatchTokens when not provided', () => {
       const extractor = new SemanticExtractor({ useLLM: false })
 
-      // Access via a public method or verify through behavior
-      expect(extractor).toBeDefined()
+      expect((extractor as any).options.minBatchTokens).toBe(10000)
     })
 
     it('applies default maxBatchTokens when not provided', () => {
       const extractor = new SemanticExtractor({ useLLM: false })
 
-      expect(extractor).toBeDefined()
+      expect((extractor as any).options.maxBatchTokens).toBe(50000)
     })
 
     it('preserves provided minBatchTokens instead of using default', () => {
@@ -85,7 +84,7 @@ describe('SemanticOptions batch parameters', () => {
         minBatchTokens: customMin,
       })
 
-      expect(extractor).toBeDefined()
+      expect((extractor as any).options.minBatchTokens).toBe(customMin)
     })
 
     it('preserves provided maxBatchTokens instead of using default', () => {
@@ -95,7 +94,7 @@ describe('SemanticOptions batch parameters', () => {
         maxBatchTokens: customMax,
       })
 
-      expect(extractor).toBeDefined()
+      expect((extractor as any).options.maxBatchTokens).toBe(customMax)
     })
   })
 

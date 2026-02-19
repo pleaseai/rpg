@@ -139,13 +139,24 @@ describe('semantic batching', () => {
     })
 
     it('preserves entity order across batches', () => {
+      // Force multiple batches: each entity ~200 tokens, maxBatchTokens=300 → 1 entity per batch
+      const customExtractor = new SemanticExtractor({
+        useLLM: false,
+        minBatchTokens: 0,
+        maxBatchTokens: 300,
+      })
+
       const entities: EntityInput[] = Array.from({ length: 10 }, (_, i) => ({
         type: 'function',
         name: `func${i}`,
         filePath: `src/file${i}.ts`,
       }))
 
-      const batches = (extractor as any).createTokenAwareBatches(entities)
+      const batches = (customExtractor as any).createTokenAwareBatches(entities)
+
+      // Verify multiple batches were created (precondition for the test)
+      expect(batches.length).toBeGreaterThan(1)
+
       const flattened = batches.flat()
 
       // Verify order is preserved

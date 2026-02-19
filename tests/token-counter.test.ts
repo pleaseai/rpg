@@ -182,7 +182,7 @@ describe('token counter', () => {
 
       // Entity 1: 0 (no source) + 200 = 200
       // Entity 2: ceil(16/4) + 200 = 4 + 200 = 204
-      // Entity 3: ceil(53/4) + ceil(20/4) + 200 = 14 + 5 + 200 = 219
+      // Entity 3: ceil(55/4) + ceil(18/4) + 200 = 14 + 5 + 200 = 219
       // Total: 200 + 204 + 219 = 623
       expect(count).toBe(623)
     })
@@ -219,8 +219,8 @@ describe('token counter', () => {
       ]
 
       const count = estimateBatchTokens(entities)
-      // Entity 1: ceil(27/4) + ceil(22/4) + 200 = 7 + 6 + 200 = 213
-      // Entity 2: ceil(47/4) + 200 = 12 + 200 = 212
+      // Entity 1: ceil(25/4) + ceil(19/4) + 200 = 7 + 5 + 200 = 212
+      // Entity 2: ceil(49/4) + 200 = 13 + 200 = 213
       // Total: 425
       expect(count).toBe(425)
     })

@@ -239,12 +239,15 @@ export class SemanticExtractor {
     // Merge small last batch with previous batch if below minBatchTokens
     if (batches.length > 1) {
       const lastBatchTokens = batchTokenCounts[batchTokenCounts.length - 1]!
+      const prevBatchTokens = batchTokenCounts[batchTokenCounts.length - 2]!
 
-      if (lastBatchTokens < minBatchTokens) {
+      if (lastBatchTokens < minBatchTokens && prevBatchTokens + lastBatchTokens <= maxBatchTokens) {
         const lastBatch = batches[batches.length - 1]!
         const previousBatch = batches[batches.length - 2]!
         previousBatch.push(...lastBatch)
+        batchTokenCounts[batchTokenCounts.length - 2]! += lastBatchTokens
         batches.pop()
+        batchTokenCounts.pop()
       }
     }
 

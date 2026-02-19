@@ -392,6 +392,10 @@ function buildSemanticOptions(
     log.error(`Invalid --max-batch-tokens value: ${maxBatchTokens}`)
     process.exit(1)
   }
+  if (parsedMin !== undefined && parsedMax !== undefined && parsedMin > parsedMax) {
+    log.error(`--min-batch-tokens (${parsedMin}) cannot be greater than --max-batch-tokens (${parsedMax})`)
+    process.exit(1)
+  }
 
   return {
     ...(model ? parseModelString(model) : {}),

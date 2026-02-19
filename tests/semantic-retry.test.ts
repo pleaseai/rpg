@@ -219,13 +219,23 @@ describe('SemanticExtractor multi-iteration extraction', () => {
         sourceCode: 'function func1() { }',
       }
 
+      const input2: EntityInput = {
+        type: 'function',
+        name: 'func2',
+        filePath: 'src/file2.ts',
+        sourceCode: 'function func2() { }',
+      }
+
       const extractWithLLMSpy = vi.spyOn(extractor as any, 'extractWithLLM')
       extractWithLLMSpy.mockRejectedValue(new Error('API error'))
 
       await extractor.extract(input1)
       const warningsAfterFirst = extractor.getWarnings().length
-
       expect(warningsAfterFirst).toBeGreaterThan(0)
+
+      await extractor.extract(input2)
+      const warningsAfterSecond = extractor.getWarnings().length
+      expect(warningsAfterSecond).toBeGreaterThan(warningsAfterFirst)
 
       extractWithLLMSpy.mockRestore()
     })
