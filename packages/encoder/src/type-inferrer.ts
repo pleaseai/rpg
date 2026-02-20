@@ -252,13 +252,19 @@ export class TypeInferrer {
         if (tree) {
           // Try local variable type inference first: x = Foo(); x.method()
           const localTypeName = this.findLocalVarType(tree.rootNode, language, receiver)
-          if (localTypeName)
-            return this.findMethodInMRO(localTypeName, calleeSymbol)
+          if (localTypeName) {
+            const result = this.findMethodInMRO(localTypeName, calleeSymbol)
+            if (result)
+              return result
+          }
 
           // Try attribute type inference: self.helper = Bar(); self.helper.method()
           const attrTypeName = this.findAttributeType(tree.rootNode, language, receiver)
-          if (attrTypeName)
-            return this.findMethodInMRO(attrTypeName, calleeSymbol)
+          if (attrTypeName) {
+            const result = this.findMethodInMRO(attrTypeName, calleeSymbol)
+            if (result)
+              return result
+          }
         }
       }
       // Fuzzy fallback
