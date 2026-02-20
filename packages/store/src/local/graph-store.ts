@@ -8,7 +8,7 @@ import type {
   TraverseOpts,
   TraverseResult,
 } from '../types'
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -37,6 +37,7 @@ export class LocalGraphStore implements GraphStore {
   private nodes: Map<string, NodeAttrs> = new Map()
   private edges: StoredEdge[] = []
   private filePath: string | null = null
+  private _tempDir: string | undefined = undefined
 
   async open(config: unknown): Promise<void> {
     if (
@@ -53,6 +54,7 @@ export class LocalGraphStore implements GraphStore {
 
     if (dir === 'memory') {
       dir = mkdtempSync(join(tmpdir(), 'rpg-local-graph-'))
+      this._tempDir = dir
     }
     else {
       mkdirSync(dir, { recursive: true })
@@ -87,6 +89,10 @@ export class LocalGraphStore implements GraphStore {
       this.nodes = new Map()
       this.edges = []
       this.filePath = null
+      if (this._tempDir) {
+        rmSync(this._tempDir, { recursive: true, force: true })
+        this._tempDir = undefined
+      }
     }
   }
 

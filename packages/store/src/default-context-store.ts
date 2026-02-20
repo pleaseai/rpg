@@ -40,7 +40,11 @@ export class DefaultContextStore implements ContextStore {
       textStore = new SQLiteTextSearchStore(sqliteGraph.getDatabase())
       await textStore.open(config.path)
     }
-    catch {
+    catch (err) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (code !== 'MODULE_NOT_FOUND' && code !== 'ERR_MODULE_NOT_FOUND') {
+        throw err
+      }
       const { LocalGraphStore } = await import('./local/graph-store')
       const { LocalTextSearchStore } = await import('./local/text-search-store')
       const localGraph = new LocalGraphStore()
