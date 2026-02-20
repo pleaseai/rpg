@@ -28,16 +28,30 @@ export class DefaultContextStore implements ContextStore {
   }
 
   async open(config: ContextStoreConfig): Promise<void> {
-    const { SQLiteGraphStore } = await import('./sqlite/graph-store')
-    const { SQLiteTextSearchStore } = await import('./sqlite/text-search-store')
+    let graphStore: GraphStore
+    let textStore: TextSearchStore
+
+    try {
+      const { SQLiteGraphStore } = await import('./sqlite/graph-store')
+      const { SQLiteTextSearchStore } = await import('./sqlite/text-search-store')
+      const sqliteGraph = new SQLiteGraphStore()
+      await sqliteGraph.open(config.path)
+      graphStore = sqliteGraph
+      textStore = new SQLiteTextSearchStore(sqliteGraph.getDatabase())
+      await textStore.open(config.path)
+    }
+    catch {
+      const { LocalGraphStore } = await import('./local/graph-store')
+      const { LocalTextSearchStore } = await import('./local/text-search-store')
+      const localGraph = new LocalGraphStore()
+      await localGraph.open({ path: config.path === 'memory' ? 'memory' : config.path })
+      graphStore = localGraph
+      const localText = new LocalTextSearchStore()
+      await localText.open({})
+      textStore = localText
+    }
+
     const { LocalVectorStore } = await import('./local/vector-store')
-
-    const graphStore = new SQLiteGraphStore()
-    await graphStore.open(config.path)
-
-    const textStore = new SQLiteTextSearchStore(graphStore.getDatabase())
-    await textStore.open(config.path)
-
     const vectorStore = new LocalVectorStore()
     const isMemory = config.path === 'memory' && !config.vectorPath
     const vectorPath = config.vectorPath ?? (isMemory ? 'memory' : `${config.path}-vectors`)
