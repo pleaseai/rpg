@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.5](https://github.com/pleaseai/RPG/compare/v0.1.4...v0.1.5) (2026-02-20)
+
+
+### Features
+
+* **encoder:** implement DependencyGraph with invocation and inheritance tracking ([#83](https://github.com/pleaseai/RPG/issues/83)) ([3e21441](https://github.com/pleaseai/RPG/commit/3e21441e8f4301886886997381573030eae85603))
+* **encoder:** implement token-aware batch semantic extraction ([#82](https://github.com/pleaseai/RPG/issues/82)) ([b1f8ad2](https://github.com/pleaseai/RPG/commit/b1f8ad25b5d8ccad3940eca2c4014c2ce33e7237))
+* **encoder:** implement type-aware call resolution in DependencyGraph ([#90](https://github.com/pleaseai/RPG/issues/90)) ([5da75f7](https://github.com/pleaseai/RPG/commit/5da75f74a23c91d87aaff29d9d10a066b2ea2bf7))
+* **submodule:** add Microsoft RPG-ZeroRepo as vendor submodule ([#75](https://github.com/pleaseai/RPG/issues/75)) ([7e0aa00](https://github.com/pleaseai/RPG/commit/7e0aa005f5adb4a07ed65cd451d23752a8dea5b6))
+
 ## [0.1.4](https://github.com/pleaseai/RPG/compare/v0.1.3...v0.1.4) (2026-02-14)
 
 
