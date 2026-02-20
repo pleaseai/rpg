@@ -260,4 +260,24 @@ describe('TypeInferrer', () => {
       expect(inferrer.inferAttributeType(code, 'python', 'unknown')).toBeNull()
     })
   })
+
+  describe('language coverage', () => {
+    it('returns null for Rust (no traversal branch yet)', () => {
+      // Rust has an INFERENCE_PATTERNS entry but no manual traversal implementation
+      expect(inferrer.inferLocalVarType('let x = Foo::new()', 'rust', 'x')).toBeNull()
+    })
+
+    it('returns null for Go (no traversal branch yet)', () => {
+      // Go has an INFERENCE_PATTERNS entry but no manual traversal implementation
+      expect(inferrer.inferLocalVarType('x := Foo{}', 'go', 'x')).toBeNull()
+    })
+
+    it('returns null for unsupported language', () => {
+      expect(inferrer.inferLocalVarType('x = 1', 'ruby', 'x')).toBeNull()
+    })
+
+    it('attribute inference returns null for Rust', () => {
+      expect(inferrer.inferAttributeType('self.x = Foo::new()', 'rust', 'x')).toBeNull()
+    })
+  })
 })

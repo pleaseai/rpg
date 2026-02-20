@@ -164,11 +164,15 @@ async function addCallEdges(
     for (const call of calls) {
       let targetFile: string | null = null
       let targetSymbol = call.calleeSymbol
+      // When type-aware resolution succeeds (even for same-file calls), skip SymbolResolver
+      // to avoid incorrect cross-file routing based on the bare method name.
+      let typeAwareHandled = false
 
-      // Phase 4: Type-aware resolution via TypeInferrer (receiver-based calls only)
+      // Phase 5 (type-aware): Type-aware resolution via TypeInferrer (receiver-based calls only)
       if (call.receiverKind && call.receiverKind !== 'none') {
         const qualifiedName = typeInferrer.resolveQualifiedCall(call, file.sourceCode, file.parseResult.language)
         if (qualifiedName) {
+          typeAwareHandled = true
           // Resolve the class name to find its defining file
           const className = qualifiedName.split('.')[0] ?? qualifiedName
           const classCall = { ...call, calleeSymbol: className }
@@ -180,8 +184,8 @@ async function addCallEdges(
         }
       }
 
-      // Fallback: existing SymbolResolver logic
-      if (!targetFile) {
+      // Fallback: existing SymbolResolver logic (skipped when type-aware resolution succeeded)
+      if (!targetFile && !typeAwareHandled) {
         const resolved = symbolResolver.resolveCall(call, knownFiles)
         if (resolved && resolved.targetFile !== file.filePath) {
           targetFile = resolved.targetFile

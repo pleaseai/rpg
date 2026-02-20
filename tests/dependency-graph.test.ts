@@ -303,19 +303,7 @@ describe('DependencyGraph', () => {
       expect(calls[0].receiverKind).toBe('self')
     })
 
-    it('should allow qualifiedName field to be set on a CallSite', () => {
-      const graph = new DependencyGraph()
-      const call: CallSite = {
-        callerFile: 'src/module.ts',
-        calleeSymbol: 'doWork',
-        qualifiedName: 'MyClass.doWork',
-      }
-      graph.addCall(call)
-      const calls = graph.getCalls()
-      expect(calls[0].qualifiedName).toBe('MyClass.doWork')
-    })
-
-    it('should allow all three new fields together on a CallSite', () => {
+    it('should allow both receiver fields together on a CallSite', () => {
       const graph = new DependencyGraph()
       const call: CallSite = {
         callerFile: 'src/module.ts',
@@ -324,16 +312,14 @@ describe('DependencyGraph', () => {
         line: 10,
         receiver: 'self.helper',
         receiverKind: 'variable',
-        qualifiedName: 'MyClass.helper',
       }
       graph.addCall(call)
       const calls = graph.getCalls()
       expect(calls[0].receiver).toBe('self.helper')
       expect(calls[0].receiverKind).toBe('variable')
-      expect(calls[0].qualifiedName).toBe('MyClass.helper')
     })
 
-    it('should have receiver, receiverKind, and qualifiedName undefined by default', () => {
+    it('should have receiver and receiverKind undefined by default', () => {
       const graph = new DependencyGraph()
       const call: CallSite = {
         callerFile: 'src/module.ts',
@@ -343,7 +329,6 @@ describe('DependencyGraph', () => {
       const calls = graph.getCalls()
       expect(calls[0].receiver).toBeUndefined()
       expect(calls[0].receiverKind).toBeUndefined()
-      expect(calls[0].qualifiedName).toBeUndefined()
     })
 
     it('should support all receiverKind values', () => {

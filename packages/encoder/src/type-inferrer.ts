@@ -2,7 +2,7 @@ import type { SupportedLanguage } from '@pleaseai/rpg-utils/ast'
 import type Parser from 'tree-sitter'
 import type { CallSite, EntityNode, InheritanceRelation } from './dependency-graph'
 import { LANGUAGE_CONFIGS } from '@pleaseai/rpg-utils/ast'
-import { COMMON_METHOD_BLOCKLIST, INFERENCE_PATTERNS } from './type-inference-patterns'
+import { COMMON_METHOD_BLOCKLIST } from './type-inference-patterns'
 
 /**
  * TypeInferrer resolves receiver types in CallSite objects to produce
@@ -12,6 +12,12 @@ import { COMMON_METHOD_BLOCKLIST, INFERENCE_PATTERNS } from './type-inference-pa
  * supports depth-first MRO traversal with cycle detection, and falls back
  * to fuzzy global matching for unresolved receivers (rejecting common names).
  */
+/**
+ * Languages with manual AST traversal implementations in findLocalVarType / findAttributeType.
+ * Rust and Go have INFERENCE_PATTERNS entries but no traversal branches yet.
+ */
+const INFERENCE_SUPPORTED_LANGUAGES = new Set(['python', 'typescript', 'javascript', 'java'])
+
 export class TypeInferrer {
   private readonly classIndex: Map<string, EntityNode>
   private readonly parentIndex: Map<string, string[]>
@@ -66,9 +72,12 @@ export class TypeInferrer {
   /**
    * Infer the type of a local variable from constructor assignments in source code.
    * e.g. `x = Foo()` → 'Foo', `const x = new Bar()` → 'Bar'
+   *
+   * Supported languages: python, typescript, javascript, java.
+   * Rust and Go have INFERENCE_PATTERNS entries but no traversal branches yet.
    */
   inferLocalVarType(source: string, language: string, varName: string): string | null {
-    if (!INFERENCE_PATTERNS[language])
+    if (!INFERENCE_SUPPORTED_LANGUAGES.has(language))
       return null
     const parser = this.getParser(language)
     if (!parser)
@@ -131,9 +140,12 @@ export class TypeInferrer {
   /**
    * Infer the type of an instance attribute from constructor assignments.
    * e.g. `self.field = Bar()` → 'Bar', `this.field = new Bar()` → 'Bar'
+   *
+   * Supported languages: python, typescript, javascript.
+   * Java, Rust and Go are not yet supported for attribute type inference.
    */
   inferAttributeType(source: string, language: string, attrName: string): string | null {
-    if (!INFERENCE_PATTERNS[language])
+    if (!INFERENCE_SUPPORTED_LANGUAGES.has(language))
       return null
     const parser = this.getParser(language)
     if (!parser)
@@ -203,6 +215,7 @@ export class TypeInferrer {
       return null
 
     if (receiverKind === 'self' || receiverKind === 'super') {
+      // callerEntity format is "ClassName.methodName" (set by CallExtractor.updateContext)
       const className = callerEntity?.split('.')[0]
       if (!className)
         return null
@@ -220,31 +233,37 @@ export class TypeInferrer {
     }
 
     if (receiverKind === 'variable') {
-      if (receiver) {
-        // Try local variable type inference first: x = Foo(); x.method()
-        const localTypeName = this.inferLocalVarType(source, language, receiver)
-        if (localTypeName) {
-          const mro = this.getMROChain(localTypeName)
-          for (const cls of mro) {
-            const entity = this.classIndex.get(cls)
-            if (entity?.methods.includes(calleeSymbol)) {
-              return `${cls}.${calleeSymbol}`
-            }
-          }
-          return null
-        }
+      if (receiver && INFERENCE_SUPPORTED_LANGUAGES.has(language)) {
+        // Parse the source once and reuse the tree for both inference attempts
+        const parser = this.getParser(language)
+        const tree = parser ? (() => { try { return parser.parse(source) } catch { return null } })() : null
 
-        // Try attribute type inference: self.helper = Bar(); self.helper.method()
-        const attrTypeName = this.inferAttributeType(source, language, receiver)
-        if (attrTypeName) {
-          const mro = this.getMROChain(attrTypeName)
-          for (const cls of mro) {
-            const entity = this.classIndex.get(cls)
-            if (entity?.methods.includes(calleeSymbol)) {
-              return `${cls}.${calleeSymbol}`
+        if (tree) {
+          // Try local variable type inference first: x = Foo(); x.method()
+          const localTypeName = this.findLocalVarType(tree.rootNode, language, receiver)
+          if (localTypeName) {
+            const mro = this.getMROChain(localTypeName)
+            for (const cls of mro) {
+              const entity = this.classIndex.get(cls)
+              if (entity?.methods.includes(calleeSymbol)) {
+                return `${cls}.${calleeSymbol}`
+              }
             }
+            return null
           }
-          return null
+
+          // Try attribute type inference: self.helper = Bar(); self.helper.method()
+          const attrTypeName = this.findAttributeType(tree.rootNode, language, receiver)
+          if (attrTypeName) {
+            const mro = this.getMROChain(attrTypeName)
+            for (const cls of mro) {
+              const entity = this.classIndex.get(cls)
+              if (entity?.methods.includes(calleeSymbol)) {
+                return `${cls}.${calleeSymbol}`
+              }
+            }
+            return null
+          }
         }
       }
       // Fuzzy fallback

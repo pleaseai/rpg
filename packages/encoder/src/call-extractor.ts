@@ -1,9 +1,7 @@
 import type { SupportedLanguage } from '@pleaseai/rpg-utils/ast'
 import type Parser from 'tree-sitter'
-import type { CallSite } from './dependency-graph'
+import type { CallSite, ReceiverKind } from './dependency-graph'
 import { LANGUAGE_CONFIGS } from '@pleaseai/rpg-utils/ast'
-
-type ReceiverKind = 'self' | 'super' | 'variable' | 'none'
 
 interface CallInfo {
   symbol: string | null
@@ -151,9 +149,7 @@ export class CallExtractor {
         const propNode = fn.childForFieldName('property')
         if (!propNode)
           return { symbol: null }
-        let symbol = propNode.text
-        if (symbol.startsWith('?.'))
-          symbol = symbol.slice(2)
+        const symbol = propNode.text
         if (!objNode)
           return { symbol, receiverKind: 'none' }
         return { symbol, ...this.classifyReceiver(objNode) }
