@@ -209,9 +209,11 @@ export class TypeInferrer {
       const mro = this.getMROChain(className)
       const startIdx = receiverKind === 'super' ? 1 : 0
       for (let i = startIdx; i < mro.length; i++) {
-        const entity = this.classIndex.get(mro[i])
+        const cls = mro[i]
+        if (!cls) continue
+        const entity = this.classIndex.get(cls)
         if (entity?.methods.includes(calleeSymbol)) {
-          return `${mro[i]}.${calleeSymbol}`
+          return `${cls}.${calleeSymbol}`
         }
       }
       return null

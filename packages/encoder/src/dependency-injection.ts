@@ -4,8 +4,10 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createLogger } from '@pleaseai/rpg-utils/logger'
 import { CallExtractor } from './call-extractor'
+import type { EntityNode, InheritanceRelation } from './dependency-graph'
 import { InheritanceExtractor } from './inheritance-extractor'
 import { SymbolResolver } from './symbol-resolver'
+import { TypeInferrer } from './type-inferrer'
 
 const log = createLogger('DependencyInjection')
 
@@ -115,14 +117,35 @@ export async function injectDependencies(
     })),
   )
 
-  // Phase 3: Extract and resolve call edges
+  // Phase 3: Extract inheritances (needed by both TypeInferrer and inheritance edge creation)
+  const allInheritances: InheritanceRelation[] = []
+  for (const file of fileData) {
+    const rels = inheritanceExtractor.extract(file.sourceCode, file.parseResult.language, file.filePath)
+    allInheritances.push(...rels)
+  }
+
+  // Phase 4: Build TypeInferrer for type-aware call resolution
+  const entityNodes: EntityNode[] = []
+  for (const file of fileData) {
+    for (const cls of file.parseResult.entities.filter(e => e.type === 'class')) {
+      entityNodes.push({
+        className: cls.name,
+        methods: file.parseResult.entities
+          .filter(e => e.type === 'method' && e.parent === cls.name)
+          .map(e => e.name),
+      })
+    }
+  }
+  const typeInferrer = new TypeInferrer(entityNodes, allInheritances)
+
+  // Phase 5: Extract and resolve call edges (type-aware first, then fallback)
   // Note: createdEdges uses `${source}->${target}` as key to match the DB
   // UNIQUE(source, target, type) constraint (all dependency edges share type='dependency').
   // Import edges are created first and take priority over call/inherit edges.
-  await addCallEdges(rpg, fileData, callExtractor, symbolResolver, filePathToNodeId, knownFiles, createdEdges)
+  await addCallEdges(rpg, fileData, callExtractor, symbolResolver, filePathToNodeId, knownFiles, createdEdges, typeInferrer)
 
-  // Phase 4: Extract and resolve inheritance/implementation edges
-  await addInheritanceEdges(rpg, fileData, inheritanceExtractor, symbolResolver, filePathToNodeId, knownFiles, createdEdges)
+  // Phase 6: Create inheritance/implementation edges from pre-extracted relations
+  await addInheritanceEdgesFromRelations(rpg, allInheritances, fileData, symbolResolver, filePathToNodeId, knownFiles, createdEdges)
 }
 
 async function addCallEdges(
@@ -133,16 +156,43 @@ async function addCallEdges(
   filePathToNodeId: Map<string, string>,
   knownFiles: Set<string>,
   createdEdges: Set<string>,
+  typeInferrer: TypeInferrer,
 ): Promise<void> {
   for (const file of fileData) {
     const calls = callExtractor.extract(file.sourceCode, file.parseResult.language, file.filePath)
 
     for (const call of calls) {
-      const resolved = symbolResolver.resolveCall(call, knownFiles)
-      if (!resolved || resolved.targetFile === file.filePath)
+      let targetFile: string | null = null
+      let targetSymbol = call.calleeSymbol
+
+      // Phase 4: Type-aware resolution via TypeInferrer (receiver-based calls only)
+      if (call.receiverKind && call.receiverKind !== 'none') {
+        const qualifiedName = typeInferrer.resolveQualifiedCall(call, file.sourceCode, file.parseResult.language)
+        if (qualifiedName) {
+          // Resolve the class name to find its defining file
+          const className = qualifiedName.split('.')[0] ?? qualifiedName
+          const classCall = { ...call, calleeSymbol: className }
+          const classResolved = symbolResolver.resolveCall(classCall, knownFiles)
+          if (classResolved && classResolved.targetFile !== file.filePath) {
+            targetFile = classResolved.targetFile
+            targetSymbol = qualifiedName
+          }
+        }
+      }
+
+      // Fallback: existing SymbolResolver logic
+      if (!targetFile) {
+        const resolved = symbolResolver.resolveCall(call, knownFiles)
+        if (resolved && resolved.targetFile !== file.filePath) {
+          targetFile = resolved.targetFile
+          targetSymbol = resolved.targetSymbol
+        }
+      }
+
+      if (!targetFile)
         continue
 
-      const targetNodeId = filePathToNodeId.get(resolved.targetFile)
+      const targetNodeId = filePathToNodeId.get(targetFile)
       if (!targetNodeId)
         continue
 
@@ -155,47 +205,47 @@ async function addCallEdges(
         source: file.nodeId,
         target: targetNodeId,
         dependencyType: 'call',
-        symbol: resolved.targetSymbol,
-        line: resolved.line,
+        symbol: targetSymbol,
+        line: call.line,
       })
     }
   }
 }
 
-async function addInheritanceEdges(
+async function addInheritanceEdgesFromRelations(
   rpg: RepositoryPlanningGraph,
+  relations: InheritanceRelation[],
   fileData: Array<{ filePath: string, nodeId: string, parseResult: ParseResult, sourceCode: string }>,
-  inheritanceExtractor: InheritanceExtractor,
   symbolResolver: SymbolResolver,
   filePathToNodeId: Map<string, string>,
   knownFiles: Set<string>,
   createdEdges: Set<string>,
 ): Promise<void> {
-  for (const file of fileData) {
-    const relations = inheritanceExtractor.extract(file.sourceCode, file.parseResult.language, file.filePath)
+  // Build a quick lookup of filePath → nodeId for source resolution
+  const fileNodeIdMap = new Map(fileData.map(f => [f.filePath, f.nodeId]))
 
-    for (const relation of relations) {
-      const resolved = symbolResolver.resolveInheritance(relation, knownFiles)
-      if (!resolved || resolved.parentFile === file.filePath)
-        continue
+  for (const relation of relations) {
+    const resolved = symbolResolver.resolveInheritance(relation, knownFiles)
+    if (!resolved || resolved.parentFile === relation.childFile)
+      continue
 
-      const targetNodeId = filePathToNodeId.get(resolved.parentFile)
-      if (!targetNodeId)
-        continue
+    const sourceNodeId = fileNodeIdMap.get(relation.childFile)
+    const targetNodeId = filePathToNodeId.get(resolved.parentFile)
+    if (!sourceNodeId || !targetNodeId)
+      continue
 
-      const edgeKey = `${file.nodeId}->${targetNodeId}`
-      if (createdEdges.has(edgeKey))
-        continue
-      createdEdges.add(edgeKey)
+    const edgeKey = `${sourceNodeId}->${targetNodeId}`
+    if (createdEdges.has(edgeKey))
+      continue
+    createdEdges.add(edgeKey)
 
-      await rpg.addDependencyEdge({
-        source: file.nodeId,
-        target: targetNodeId,
-        dependencyType: relation.kind,
-        symbol: relation.childClass,
-        targetSymbol: resolved.parentClass,
-      })
-    }
+    await rpg.addDependencyEdge({
+      source: sourceNodeId,
+      target: targetNodeId,
+      dependencyType: relation.kind,
+      symbol: relation.childClass,
+      targetSymbol: resolved.parentClass,
+    })
   }
 }
 
