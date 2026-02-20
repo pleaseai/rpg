@@ -135,7 +135,7 @@ export const LowLevelNodeSchema = BaseNodeSchema.extend({
 
 ### 3.3 DependencyGraph
 
-The vendor has a dedicated `DependencyGraph` class (`dep_graph.py`, 1,023 lines) built on `networkx.MultiDiGraph`. Our implementation is now equivalent (~1,322 lines across 5 files, PR #83):
+The vendor has a dedicated `DependencyGraph` class (`dep_graph.py`, 1,023 lines) built on `networkx.MultiDiGraph`. Our implementation now covers the same core capabilities (~1,322 lines across 5 files, PR #83):
 
 ```python
 # Vendor: Python-only, networkx MultiDiGraph
@@ -148,7 +148,7 @@ class DependencyGraph:
 ```
 
 ```typescript
-// Ours: multi-language (tree-sitter), plain Map-based
+// Ours: multi-language (tree-sitter), array-based (calls[], inheritances[])
 class DependencyGraph          // packages/encoder/src/dependency-graph.ts (176 lines)
 class CallExtractor            // packages/encoder/src/call-extractor.ts (282 lines)
 class InheritanceExtractor     // packages/encoder/src/inheritance-extractor.ts (393 lines)
@@ -233,9 +233,9 @@ This is a generation-pipeline concept with no equivalent in our encoder-focused 
 | Aspect | Vendor (`dep_graph.py`, 1,023 lines) | Ours (`DependencyGraph`, ~1,322 lines, PR #83) |
 |--------|--------------------------------------|------------------------------------------------|
 | **Scope** | Imports + invocations + inheritance | Imports + invocations + inheritance |
-| **Graph engine** | networkx `MultiDiGraph` with subgraph views | Plain `Map`-based with `DependencyEdge` records |
+| **Graph engine** | networkx `MultiDiGraph` with subgraph views | Array-based (`calls[]`, `inheritances[]`) with `DependencyEdge` records |
 | **Language** | Python-only (uses `ast` module) | Multi-language (tree-sitter: 6 languages) |
-| **Resolution** | Full symbol resolution with fuzzy matching | `SymbolResolver` (syntactic, no type inference) |
+| **Resolution** | Full symbol resolution with fuzzy matching | `SymbolResolver` (syntactic + case-insensitive fuzzy match; no type inference) |
 | **Type inference** | `_infer_local_var_type()`, attribute tracking | Not implemented |
 | **Call graph** | `G_invokes` subgraph view | `CallExtractor` → `DependencyEdge { dependencyType: 'call' }` |
 | **Class hierarchy** | `G_inherits` with MRO traversal | `InheritanceExtractor` → `DependencyEdge { dependencyType: 'inherit' }` |
@@ -421,7 +421,7 @@ The entire generation pipeline (~30,777 lines) exists in the vendor but is absen
 | — | — | `packages/encoder/src/call-extractor.ts` (282 lines) | **Our addition**: Call/invocation extraction (PR #83) |
 | — | — | `packages/encoder/src/inheritance-extractor.ts` (393 lines) | **Our addition**: Class hierarchy extraction (PR #83) |
 | — | — | `packages/encoder/src/symbol-resolver.ts` (240 lines) | **Our addition**: Symbol resolution (PR #83) |
-| — | — | `packages/encoder/src/dependency-injection.ts` (231 lines) | **Our addition**: DI wiring for dependency analysis (PR #83) |
+| — | — | `packages/encoder/src/dependency-injection.ts` (231 lines) | **Our addition**: Import path resolution + graph edge injection orchestration (PR #83) |
 | — | — | `packages/encoder/src/token-counter.ts` (57 lines) | **Our addition**: Token counting for batch sizing (PR #82) |
 | — | — | `packages/mcp/src/` | **Our addition**: MCP server |
 
