@@ -1,7 +1,13 @@
 import type { SupportedLanguage } from '@pleaseai/rpg-utils/ast'
 import type Parser from 'tree-sitter'
-import type { CallSite } from './dependency-graph'
+import type { CallSite, ReceiverKind } from './dependency-graph'
 import { LANGUAGE_CONFIGS } from '@pleaseai/rpg-utils/ast'
+
+interface CallInfo {
+  symbol: string | null
+  receiver?: string
+  receiverKind?: ReceiverKind
+}
 
 /**
  * Extracts function/method call sites from source code using tree-sitter AST parsing.
@@ -80,134 +86,199 @@ export class CallExtractor {
     calls: CallSite[],
     currentContext?: string,
   ): void {
-    let symbol: string | null = null
+    let callInfo: CallInfo = { symbol: null }
 
     if (language === 'typescript' || language === 'javascript') {
-      symbol = this.extractTSCall(node)
+      callInfo = this.extractTSCall(node)
     }
     else if (language === 'python') {
-      symbol = this.extractPythonCall(node)
+      callInfo = this.extractPythonCall(node)
     }
     else if (language === 'java') {
-      symbol = this.extractJavaCall(node)
+      callInfo = this.extractJavaCall(node)
     }
     else if (language === 'rust') {
-      symbol = this.extractRustCall(node)
+      callInfo = this.extractRustCall(node)
     }
     else if (language === 'go') {
-      symbol = this.extractGoCall(node)
+      callInfo = this.extractGoCall(node)
     }
 
-    if (symbol) {
+    if (callInfo.symbol) {
       calls.push({
-        calleeSymbol: symbol,
+        calleeSymbol: callInfo.symbol,
         callerFile: filePath,
         callerEntity: currentContext,
         line: node.startPosition.row + 1,
+        receiver: callInfo.receiver,
+        receiverKind: callInfo.receiverKind,
       })
     }
   }
 
+  /**
+   * Classify a receiver node into self/super/variable
+   */
+  private classifyReceiver(obj: Parser.SyntaxNode): { receiver: string, receiverKind: 'self' | 'super' | 'variable' } {
+    const type = obj.type
+    const text = obj.text
+
+    if (type === 'super' || text === 'super') {
+      return { receiver: 'super', receiverKind: 'super' }
+    }
+    // Python: super() call as receiver
+    if (type === 'call' && obj.childForFieldName('function')?.text === 'super') {
+      return { receiver: 'super', receiverKind: 'super' }
+    }
+    if (type === 'this' || text === 'this' || text === 'self') {
+      return { receiver: text, receiverKind: 'self' }
+    }
+    return { receiver: text, receiverKind: 'variable' }
+  }
+
   // ===================== TypeScript / JavaScript =====================
 
-  private extractTSCall(node: Parser.SyntaxNode): string | null {
+  private extractTSMemberCall(fn: Parser.SyntaxNode): CallInfo {
+    const objNode = fn.childForFieldName('object')
+    const propNode = fn.childForFieldName('property')
+    if (!propNode)
+      return { symbol: null }
+    const symbol = propNode.text
+    if (!objNode)
+      return { symbol, receiverKind: 'none' }
+    return { symbol, ...this.classifyReceiver(objNode) }
+  }
+
+  private extractTSCall(node: Parser.SyntaxNode): CallInfo {
     if (node.type === 'call_expression') {
       const fn = node.childForFieldName('function')
       if (!fn)
-        return null
-      return this.resolveSymbol(fn)
+        return { symbol: null }
+
+      if (fn.type === 'member_expression')
+        return this.extractTSMemberCall(fn)
+
+      const symbol = this.resolveSymbol(fn)
+      return symbol ? { symbol, receiverKind: 'none' } : { symbol: null }
     }
     if (node.type === 'new_expression') {
       const ctor = node.childForFieldName('constructor')
       if (!ctor)
-        return null
-      return this.resolveSymbol(ctor)
+        return { symbol: null }
+      const symbol = this.resolveSymbol(ctor)
+      return symbol ? { symbol, receiverKind: 'none' } : { symbol: null }
     }
-    return null
+    return { symbol: null }
   }
 
   // ===================== Python =====================
 
-  private extractPythonCall(node: Parser.SyntaxNode): string | null {
+  private extractPythonCall(node: Parser.SyntaxNode): CallInfo {
     if (node.type !== 'call')
-      return null
+      return { symbol: null }
     const fn = node.childForFieldName('function')
     if (!fn)
-      return null
+      return { symbol: null }
 
-    // attribute: obj.method → extract method name
+    // attribute: obj.method → extract method name + receiver
     if (fn.type === 'attribute') {
+      const objNode = fn.childForFieldName('object')
       const attr = fn.childForFieldName('attribute')
-      return attr?.text ?? null
+      const symbol = attr?.text ?? null
+      if (!symbol)
+        return { symbol: null }
+      if (!objNode)
+        return { symbol, receiverKind: 'none' }
+      return { symbol, ...this.classifyReceiver(objNode) }
     }
 
     // identifier: direct call
     if (fn.type === 'identifier') {
-      return fn.text
+      return { symbol: fn.text, receiverKind: 'none' }
     }
 
-    return null
+    return { symbol: null }
   }
 
   // ===================== Java =====================
 
-  private extractJavaCall(node: Parser.SyntaxNode): string | null {
+  private extractJavaCall(node: Parser.SyntaxNode): CallInfo {
     if (node.type === 'method_invocation') {
       const name = node.childForFieldName('name')
-      return name?.text ?? null
+      const symbol = name?.text ?? null
+      if (!symbol)
+        return { symbol: null }
+      const objNode = node.childForFieldName('object')
+      if (!objNode)
+        return { symbol, receiverKind: 'none' }
+      return { symbol, ...this.classifyReceiver(objNode) }
     }
     if (node.type === 'object_creation_expression') {
       const type = node.childForFieldName('type')
-      return type?.text ?? null
+      const symbol = type?.text ?? null
+      return symbol ? { symbol, receiverKind: 'none' } : { symbol: null }
     }
-    return null
+    return { symbol: null }
   }
 
   // ===================== Rust =====================
 
-  private extractRustCall(node: Parser.SyntaxNode): string | null {
+  private extractRustCall(node: Parser.SyntaxNode): CallInfo {
     if (node.type !== 'call_expression')
-      return null
+      return { symbol: null }
     const fn = node.childForFieldName('function')
     if (!fn)
-      return null
+      return { symbol: null }
 
     if (fn.type === 'identifier') {
-      return fn.text
+      return { symbol: fn.text, receiverKind: 'none' }
     }
     // field_expression: obj.method
     if (fn.type === 'field_expression') {
+      const valueNode = fn.childForFieldName('value')
       const field = fn.childForFieldName('field')
-      return field?.text ?? null
+      const symbol = field?.text ?? null
+      if (!symbol)
+        return { symbol: null }
+      if (!valueNode)
+        return { symbol, receiverKind: 'none' }
+      return { symbol, ...this.classifyReceiver(valueNode) }
     }
     // scoped_identifier: Foo::new
     if (fn.type === 'scoped_identifier') {
       const name = fn.childForFieldName('name')
-      return name?.text ?? null
+      const symbol = name?.text ?? null
+      return symbol ? { symbol, receiverKind: 'none' } : { symbol: null }
     }
 
-    return null
+    return { symbol: null }
   }
 
   // ===================== Go =====================
 
-  private extractGoCall(node: Parser.SyntaxNode): string | null {
+  private extractGoCall(node: Parser.SyntaxNode): CallInfo {
     if (node.type !== 'call_expression')
-      return null
+      return { symbol: null }
     const fn = node.childForFieldName('function')
     if (!fn)
-      return null
+      return { symbol: null }
 
     if (fn.type === 'identifier') {
-      return fn.text
+      return { symbol: fn.text, receiverKind: 'none' }
     }
     // selector_expression: obj.Method
     if (fn.type === 'selector_expression') {
+      const operandNode = fn.childForFieldName('operand')
       const field = fn.childForFieldName('field')
-      return field?.text ?? null
+      const symbol = field?.text ?? null
+      if (!symbol)
+        return { symbol: null }
+      if (!operandNode)
+        return { symbol, receiverKind: 'none' }
+      return { symbol, ...this.classifyReceiver(operandNode) }
     }
 
-    return null
+    return { symbol: null }
   }
 
   // ===================== Symbol Resolution Helpers =====================

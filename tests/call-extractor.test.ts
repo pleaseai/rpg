@@ -281,6 +281,129 @@ bar()`
     })
   })
 
+  describe('receiver info preservation', () => {
+    describe('TypeScript/JavaScript', () => {
+      it('bare function call has receiverKind none', () => {
+        const calls = extractor.extract('foo()', 'typescript', 'test.ts')
+        const call = calls.find(c => c.calleeSymbol === 'foo')
+        expect(call?.receiverKind).toBe('none')
+        expect(call?.receiver).toBeUndefined()
+      })
+
+      it('this.method() has receiverKind self', () => {
+        const code = `class A { m() { this.helper() } helper() {} }`
+        const calls = extractor.extract(code, 'typescript', 'test.ts')
+        const call = calls.find(c => c.calleeSymbol === 'helper')
+        expect(call?.receiver).toBe('this')
+        expect(call?.receiverKind).toBe('self')
+      })
+
+      it('super.method() has receiverKind super', () => {
+        const code = `class Child extends Parent { m() { super.parentMethod() } }`
+        const calls = extractor.extract(code, 'typescript', 'test.ts')
+        const call = calls.find(c => c.calleeSymbol === 'parentMethod')
+        expect(call?.receiver).toBe('super')
+        expect(call?.receiverKind).toBe('super')
+      })
+
+      it('obj.method() has receiverKind variable', () => {
+        const calls = extractor.extract('obj.doSomething()', 'typescript', 'test.ts')
+        const call = calls.find(c => c.calleeSymbol === 'doSomething')
+        expect(call?.receiver).toBe('obj')
+        expect(call?.receiverKind).toBe('variable')
+      })
+
+      it('qualifiedName is undefined (filled by TypeInferrer)', () => {
+        const calls = extractor.extract('this.helper()', 'typescript', 'test.ts')
+        expect(calls[0]?.qualifiedName).toBeUndefined()
+      })
+    })
+
+    describe('Python', () => {
+      it('bare function call has receiverKind none', () => {
+        const calls = extractor.extract('foo()', 'python', 'test.py')
+        const call = calls.find(c => c.calleeSymbol === 'foo')
+        expect(call?.receiverKind).toBe('none')
+      })
+
+      it('self.method() has receiverKind self', () => {
+        const calls = extractor.extract('self.method()', 'python', 'test.py')
+        const call = calls.find(c => c.calleeSymbol === 'method')
+        expect(call?.receiver).toBe('self')
+        expect(call?.receiverKind).toBe('self')
+      })
+
+      it('obj.method() has receiverKind variable', () => {
+        const calls = extractor.extract('foo.bar()', 'python', 'test.py')
+        const call = calls.find(c => c.calleeSymbol === 'bar')
+        expect(call?.receiver).toBe('foo')
+        expect(call?.receiverKind).toBe('variable')
+      })
+    })
+
+    describe('Java', () => {
+      it('this.method() has receiverKind self', () => {
+        const code = `class A { void m() { this.helper(); } }`
+        const calls = extractor.extract(code, 'java', 'test.java')
+        const call = calls.find(c => c.calleeSymbol === 'helper')
+        expect(call?.receiver).toBe('this')
+        expect(call?.receiverKind).toBe('self')
+      })
+
+      it('obj.method() has receiverKind variable', () => {
+        const code = `class A { void m() { obj.bar(); } }`
+        const calls = extractor.extract(code, 'java', 'test.java')
+        const call = calls.find(c => c.calleeSymbol === 'bar')
+        expect(call?.receiver).toBe('obj')
+        expect(call?.receiverKind).toBe('variable')
+      })
+
+      it('bare method call has receiverKind none', () => {
+        const code = `class A { void m() { foo(); } }`
+        const calls = extractor.extract(code, 'java', 'test.java')
+        const call = calls.find(c => c.calleeSymbol === 'foo')
+        expect(call?.receiverKind).toBe('none')
+      })
+    })
+
+    describe('Rust', () => {
+      it('self.method() has receiverKind self', () => {
+        const calls = extractor.extract('fn f() { self.helper(); }', 'rust', 'test.rs')
+        const call = calls.find(c => c.calleeSymbol === 'helper')
+        expect(call?.receiver).toBe('self')
+        expect(call?.receiverKind).toBe('self')
+      })
+
+      it('obj.method() has receiverKind variable', () => {
+        const calls = extractor.extract('fn f() { obj.bar(); }', 'rust', 'test.rs')
+        const call = calls.find(c => c.calleeSymbol === 'bar')
+        expect(call?.receiver).toBe('obj')
+        expect(call?.receiverKind).toBe('variable')
+      })
+
+      it('bare call has receiverKind none', () => {
+        const calls = extractor.extract('fn f() { foo(); }', 'rust', 'test.rs')
+        const call = calls.find(c => c.calleeSymbol === 'foo')
+        expect(call?.receiverKind).toBe('none')
+      })
+    })
+
+    describe('Go', () => {
+      it('selector call has receiverKind variable', () => {
+        const calls = extractor.extract('package main\nfunc main() { obj.Bar() }', 'go', 'test.go')
+        const call = calls.find(c => c.calleeSymbol === 'Bar')
+        expect(call?.receiver).toBe('obj')
+        expect(call?.receiverKind).toBe('variable')
+      })
+
+      it('bare call has receiverKind none', () => {
+        const calls = extractor.extract('package main\nfunc main() { foo() }', 'go', 'test.go')
+        const call = calls.find(c => c.calleeSymbol === 'foo')
+        expect(call?.receiverKind).toBe('none')
+      })
+    })
+  })
+
   describe('edge cases', () => {
     it('handles empty code', () => {
       const calls = extractor.extract('', 'typescript', 'test.ts')

@@ -1,13 +1,33 @@
 import type { DependencyType } from '@pleaseai/rpg-graph/edge'
 
 /**
+ * Receiver classification for a call site.
+ * - 'self': `this.method()` or `self.method()`
+ * - 'super': `super.method()` or Python `super().method()`
+ * - 'variable': any other receiver expression (e.g. `obj.method()`)
+ * - 'none': bare function call with no receiver (e.g. `fn()`)
+ */
+export type ReceiverKind = 'self' | 'super' | 'variable' | 'none'
+
+/**
  * Represents a call site in the dependency graph
  */
 export interface CallSite {
   callerFile: string
+  /** Format: "ClassName.methodName" for class methods, "functionName" for top-level functions */
   callerEntity?: string
   calleeSymbol: string
   line?: number
+  receiver?: string
+  receiverKind?: ReceiverKind
+}
+
+/**
+ * Represents a class/entity with its defined methods, used for type-aware call resolution
+ */
+export interface EntityNode {
+  className: string
+  methods: string[]
 }
 
 /**
