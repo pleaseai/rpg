@@ -20,6 +20,6 @@ export type {
 } from './semantic-search'
 export { SymbolResolver } from './symbol-resolver'
 export type { ResolvedCall, ResolvedInheritance, SymbolTable } from './symbol-resolver'
-export { TypeInferrer } from './type-inferrer'
 export { COMMON_METHOD_BLOCKLIST, INFERENCE_PATTERNS } from './type-inference-patterns'
 export type { LanguageInferencePatterns } from './type-inference-patterns'
+export { TypeInferrer } from './type-inferrer'
