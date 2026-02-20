@@ -1,0 +1,117 @@
+import type { VectorSearchOpts, VectorSearchResult } from '../types'
+import type { VectorStore } from '../vector-store'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+interface LocalVectorDocument {
+  embedding: number[]
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * LocalVectorStore — Zero-dependency, JSON file-based VectorStore.
+ *
+ * Inspired by Genkit's dev-local-vectorstore. Uses brute-force cosine
+ * similarity search. Suitable as a LanceDB fallback when native binaries
+ * are unavailable.
+ *
+ * Storage: single JSON file at `{path}/vectors.json`.
+ * Memory mode: pass path `'memory'` to use a temp directory.
+ */
+export class LocalVectorStore implements VectorStore {
+  private index: Map<string, LocalVectorDocument> = new Map()
+  private filePath: string | null = null
+
+  async open(config: unknown): Promise<void> {
+    const cfg = config as { path: string }
+    let dir = cfg.path
+
+    if (dir === 'memory') {
+      dir = mkdtempSync(join(tmpdir(), 'rpg-local-vectors-'))
+    }
+    else {
+      mkdirSync(dir, { recursive: true })
+    }
+
+    this.filePath = join(dir, 'vectors.json')
+
+    try {
+      const raw = readFileSync(this.filePath, 'utf8')
+      const stored = JSON.parse(raw) as Record<string, LocalVectorDocument>
+      this.index = new Map(Object.entries(stored))
+    }
+    catch {
+      // File doesn't exist yet — start with empty index
+      this.index = new Map()
+    }
+  }
+
+  async close(): Promise<void> {
+    this.flush()
+    this.index = new Map()
+    this.filePath = null
+  }
+
+  async upsert(id: string, embedding: number[], metadata?: Record<string, unknown>): Promise<void> {
+    this.index.set(id, { embedding, metadata })
+    this.flush()
+  }
+
+  async remove(id: string): Promise<void> {
+    this.index.delete(id)
+    this.flush()
+  }
+
+  async search(query: number[], opts?: VectorSearchOpts): Promise<VectorSearchResult[]> {
+    const topK = opts?.topK ?? 10
+    const results: VectorSearchResult[] = []
+
+    for (const [id, doc] of this.index) {
+      const score = cosineSimilarity(query, doc.embedding)
+      results.push({ id, score, metadata: doc.metadata })
+    }
+
+    results.sort((a, b) => b.score - a.score)
+    return results.slice(0, topK)
+  }
+
+  async upsertBatch(
+    docs: Array<{ id: string, embedding: number[], metadata?: Record<string, unknown> }>,
+  ): Promise<void> {
+    for (const doc of docs) {
+      this.index.set(doc.id, { embedding: doc.embedding, metadata: doc.metadata })
+    }
+    this.flush()
+  }
+
+  async count(): Promise<number> {
+    return this.index.size
+  }
+
+  private flush(): void {
+    if (!this.filePath)
+      return
+    const obj: Record<string, LocalVectorDocument> = {}
+    for (const [id, doc] of this.index) {
+      obj[id] = doc
+    }
+    writeFileSync(this.filePath, JSON.stringify(obj), 'utf8')
+  }
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  let dot = 0
+  let normA = 0
+  let normB = 0
+  const len = Math.min(a.length, b.length)
+  for (let i = 0; i < len; i++) {
+    const ai = a[i] ?? 0
+    const bi = b[i] ?? 0
+    dot += ai * bi
+    normA += ai * ai
+    normB += bi * bi
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB)
+  return denom === 0 ? 0 : dot / denom
+}
