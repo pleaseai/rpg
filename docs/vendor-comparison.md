@@ -153,7 +153,7 @@ class DependencyGraph          // packages/encoder/src/dependency-graph.ts (176 
 class CallExtractor            // packages/encoder/src/call-extractor.ts (282 lines)
 class InheritanceExtractor     // packages/encoder/src/inheritance-extractor.ts (393 lines)
 class SymbolResolver           // packages/encoder/src/symbol-resolver.ts (240 lines)
-class DependencyInjection      // packages/encoder/src/dependency-injection.ts (231 lines)
+injectDependencies             // packages/encoder/src/dependency-injection.ts (231 lines)
 ```
 
 **Key difference**: Ours uses tree-sitter (6 languages: TS, JS, Python, Rust, Go, Java) vs vendor's Python `ast` module (Python-only).
